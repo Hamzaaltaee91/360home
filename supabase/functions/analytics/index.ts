@@ -1,0 +1,241 @@
+// Analytics Service
+// Tracks user engagement, offer response rates, realtor performance
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+);
+
+interface AnalyticsQuery {
+  type: "realtor" | "buyer" | "platform";
+  user_id?: string;
+  date_from?: string;
+  date_to?: string;
+}
+
+interface RealtorStats {
+  total_offers: number;
+  accepted_offers: number;
+  rejected_offers: number;
+  pending_offers: number;
+  average_response_time: number; // بالساعات
+  total_interactions: number;
+}
+
+interface BuyerStats {
+  total_requests: number;
+  active_requests: number;
+  total_offers_received: number;
+  total_offers_accepted: number;
+  response_rate: number; // نسبة الرد (0-100)
+}
+
+serve(async (req) => {
+  try {
+    if (req.method !== "POST") {
+      return new Response(
+        JSON.stringify({ error: "Method not allowed" }),
+        { status: 405 }
+      );
+    }
+
+    const body: AnalyticsQuery = await req.json();
+    const {
+      type,
+      user_id,
+      date_from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      date_to = new Date().toISOString(),
+    } = body;
+
+    if (type === "realtor" && user_id) {
+      return new Response(
+        JSON.stringify(await getRealtorStats(user_id, date_from, date_to)),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    } else if (type === "buyer" && user_id) {
+      return new Response(
+        JSON.stringify(await getBuyerStats(user_id, date_from, date_to)),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    } else if (type === "platform") {
+      return new Response(
+        JSON.stringify(await getPlatformStats(date_from, date_to)),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ error: "Invalid analytics type" }),
+      { status: 400 }
+    );
+  } catch (error) {
+    console.error("Analytics error:", error);
+    return new Response(
+      JSON.stringify({ error: (error as Error).message }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+});
+
+async function getRealtorStats(
+  realtorId: string,
+  dateFrom: string,
+  dateTo: string
+): Promise<RealtorStats> {
+  // احسب إحصائيات الوسيط
+  const { data: offers } = await supabase
+    .from("realtor_offers")
+    .select("id, status, created_at, buyer_response, updated_at")
+    .eq("realtor_id", realtorId)
+    .gte("created_at", dateFrom)
+    .lte("created_at", dateTo);
+
+  const { data: interactions } = await supabase
+    .from("offer_interactions")
+    .select("*")
+    .eq("realtor_id", realtorId)
+    .gte("created_at", dateFrom)
+    .lte("created_at", dateTo);
+
+  if (!offers) {
+    return {
+      total_offers: 0,
+      accepted_offers: 0,
+      rejected_offers: 0,
+      pending_offers: 0,
+      average_response_time: 0,
+      total_interactions: 0,
+    };
+  }
+
+  const accepted = offers.filter(
+    (o: any) => o.buyer_response === "interested"
+  ).length;
+  const rejected = offers.filter(
+    (o: any) => o.buyer_response === "not_interested"
+  ).length;
+  const pending = offers.filter((o: any) => o.status === "pending").length;
+
+  // احسب وقت الرد المتوسط
+  const responseTimes = offers
+    .filter((o: any) => o.updated_at > o.created_at)
+    .map((o: any) => {
+      const diff =
+        new Date(o.updated_at).getTime() - new Date(o.created_at).getTime();
+      return diff / (1000 * 60 * 60); // تحويل إلى ساعات
+    });
+
+  const avgResponseTime =
+    responseTimes.length > 0
+      ? responseTimes.reduce((a: number, b: number) => a + b, 0) /
+        responseTimes.length
+      : 0;
+
+  return {
+    total_offers: offers.length,
+    accepted_offers: accepted,
+    rejected_offers: rejected,
+    pending_offers: pending,
+    average_response_time: Math.round(avgResponseTime * 100) / 100,
+    total_interactions: interactions?.length || 0,
+  };
+}
+
+async function getBuyerStats(
+  buyerId: string,
+  dateFrom: string,
+  dateTo: string
+): Promise<BuyerStats> {
+  // احسب إحصائيات المشتري
+  const { data: requests } = await supabase
+    .from("property_requests")
+    .select("id, status")
+    .eq("buyer_id", buyerId)
+    .gte("created_at", dateFrom)
+    .lte("created_at", dateTo);
+
+  const { data: offers } = await supabase
+    .from("realtor_offers")
+    .select("id, buyer_response, request_id")
+    .in(
+      "request_id",
+      requests?.map((r: any) => r.id) || []
+    )
+    .gte("created_at", dateFrom)
+    .lte("created_at", dateTo);
+
+  const active = requests?.filter((r: any) => r.status === "active").length || 0;
+  const accepted = offers?.filter((o: any) => o.buyer_response === "interested")
+    .length || 0;
+  const responseCount = offers?.filter((o: any) => o.buyer_response) || [];
+
+  const responseRate =
+    offers && offers.length > 0
+      ? Math.round((responseCount.length / offers.length) * 100)
+      : 0;
+
+  return {
+    total_requests: requests?.length || 0,
+    active_requests: active,
+    total_offers_received: offers?.length || 0,
+    total_offers_accepted: accepted,
+    response_rate: responseRate,
+  };
+}
+
+async function getPlatformStats(
+  dateFrom: string,
+  dateTo: string
+): Promise<Record<string, unknown>> {
+  // احسب إحصائيات المنصة الكلية
+
+  const { data: users } = await supabase
+    .from("users")
+    .select("id, role")
+    .gte("created_at", dateFrom)
+    .lte("created_at", dateTo);
+
+  const { data: requests } = await supabase
+    .from("property_requests")
+    .select("*")
+    .gte("created_at", dateFrom)
+    .lte("created_at", dateTo);
+
+  const { data: offers } = await supabase
+    .from("realtor_offers")
+    .select("*")
+    .gte("created_at", dateFrom)
+    .lte("created_at", dateTo);
+
+  const buyers = users?.filter((u: any) => u.role === "buyer").length || 0;
+  const realtors = users?.filter((u: any) => u.role === "realtor").length || 0;
+
+  const offerAcceptanceRate =
+    offers && offers.length > 0
+      ? Math.round(
+          (offers.filter((o: any) => o.buyer_response === "interested")
+            .length /
+            offers.length) *
+            100
+        )
+      : 0;
+
+  return {
+    period: { from: dateFrom, to: dateTo },
+    new_users: {
+      total: users?.length || 0,
+      buyers,
+      realtors,
+    },
+    property_requests: requests?.length || 0,
+    realtor_offers: offers?.length || 0,
+    offer_acceptance_rate: offerAcceptanceRate,
+    average_offers_per_request:
+      requests && requests.length > 0
+        ? Math.round((offers?.length || 0 / requests.length) * 100) / 100
+        : 0,
+  };
+}
