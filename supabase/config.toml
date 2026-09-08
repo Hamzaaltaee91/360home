@@ -1,0 +1,48 @@
+# Supabase Configuration for Dabberli
+# Project: Dabberli - Reverse Real Estate Platform
+
+[project]
+project_id = "dabberli"
+region = "us-east-1"
+database_version = "14"
+ssl_enforced = true
+
+[api]
+enabled = true
+max_body_size = 52428800 # 50MB for photo uploads
+
+[auth]
+# Email settings
+enable_signup = true
+enable_email_signup = true
+enable_email_confirmations = true
+email_rate_limit_token_aud = ""
+email_max_frequency = 0
+email_change_token_aud = "email_change"
+password_min_length = 8
+
+# OAuth providers (optional, configure in Supabase dashboard)
+google_enabled = false
+apple_enabled = false
+
+# JWT settings
+jwt_exp = 3600
+jwt_secret = "changeme-in-production"
+additional_jwt_claims = ""
+jwt_alg = "HS256"
+
+[database]
+# Connection limits
+max_connections = 20
+log_min_duration_statement = 100
+log_queries = false
+
+[realtime]
+# Real-time features for live notifications
+enabled = true
+max_bytes_per_second = 0
+max_connections = 500
+
+[storage]
+enabled = true
+file_size_limit = 52428800
