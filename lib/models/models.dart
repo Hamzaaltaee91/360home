@@ -1,0 +1,320 @@
+// Data Models for Dabberli
+
+class User {
+  final String id;
+  final String email;
+  final String fullName;
+  final String role; // 'buyer', 'realtor', 'admin'
+  final bool isVerified;
+  final String? profilePictureUrl;
+  final String? phone;
+  final String? bio;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  User({
+    required this.id,
+    required this.email,
+    required this.fullName,
+    required this.role,
+    this.isVerified = false,
+    this.profilePictureUrl,
+    this.phone,
+    this.bio,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] as String,
+      email: json['email'] as String,
+      fullName: json['full_name'] as String,
+      role: json['role'] as String,
+      isVerified: json['is_verified'] as bool? ?? false,
+      profilePictureUrl: json['profile_picture_url'] as String?,
+      phone: json['phone'] as String?,
+      bio: json['bio'] as String?,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'full_name': fullName,
+      'role': role,
+      'is_verified': isVerified,
+      'profile_picture_url': profilePictureUrl,
+      'phone': phone,
+      'bio': bio,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+}
+
+class PropertyRequest {
+  final String id;
+  final String buyerId;
+  final String category; // 'residential', 'commercial', 'land'
+  final String title;
+  final String? description;
+  final String city;
+  final String? areaName;
+  final double? latitude;
+  final double? longitude;
+  final double? minPrice;
+  final double? maxPrice;
+  final String currency;
+  final int? minAreaSqft;
+  final int? maxAreaSqft;
+  final int? bedrooms;
+  final int? bathrooms;
+  final bool? furnished;
+  final String status; // 'active', 'inactive', 'sold', 'rented'
+  final bool isUrgent;
+  final List<String>? preferredContact;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? expiresAt;
+
+  PropertyRequest({
+    required this.id,
+    required this.buyerId,
+    required this.category,
+    required this.title,
+    this.description,
+    required this.city,
+    this.areaName,
+    this.latitude,
+    this.longitude,
+    this.minPrice,
+    this.maxPrice,
+    this.currency = 'AED',
+    this.minAreaSqft,
+    this.maxAreaSqft,
+    this.bedrooms,
+    this.bathrooms,
+    this.furnished,
+    this.status = 'active',
+    this.isUrgent = false,
+    this.preferredContact,
+    required this.createdAt,
+    required this.updatedAt,
+    this.expiresAt,
+  });
+
+  factory PropertyRequest.fromJson(Map<String, dynamic> json) {
+    return PropertyRequest(
+      id: json['id'] as String,
+      buyerId: json['buyer_id'] as String,
+      category: json['category'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String?,
+      city: json['city'] as String,
+      areaName: json['area_name'] as String?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      minPrice: (json['min_price'] as num?)?.toDouble(),
+      maxPrice: (json['max_price'] as num?)?.toDouble(),
+      currency: json['currency'] as String? ?? 'AED',
+      minAreaSqft: json['min_area_sqft'] as int?,
+      maxAreaSqft: json['max_area_sqft'] as int?,
+      bedrooms: json['bedrooms'] as int?,
+      bathrooms: json['bathrooms'] as int?,
+      furnished: json['furnished'] as bool?,
+      status: json['status'] as String? ?? 'active',
+      isUrgent: json['is_urgent'] as bool? ?? false,
+      preferredContact: (json['preferred_contact'] as List?)?.cast<String>(),
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
+      expiresAt: json['expires_at'] != null
+          ? DateTime.parse(json['expires_at'] as String)
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'buyer_id': buyerId,
+      'category': category,
+      'title': title,
+      'description': description,
+      'city': city,
+      'area_name': areaName,
+      'latitude': latitude,
+      'longitude': longitude,
+      'min_price': minPrice,
+      'max_price': maxPrice,
+      'currency': currency,
+      'min_area_sqft': minAreaSqft,
+      'max_area_sqft': maxAreaSqft,
+      'bedrooms': bedrooms,
+      'bathrooms': bathrooms,
+      'furnished': furnished,
+      'status': status,
+      'is_urgent': isUrgent,
+      'preferred_contact': preferredContact,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+      'expires_at': expiresAt?.toIso8601String(),
+    };
+  }
+}
+
+class RealtorOffer {
+  final String id;
+  final String realtorId;
+  final String requestId;
+  final String propertyTitle;
+  final String? propertyDescription;
+  final String propertyAddress;
+  final double? latitude;
+  final double? longitude;
+  final double offeredPrice;
+  final String currency;
+  final String? leaseType; // 'rent', 'sale'
+  final int? leaseDurationMonths;
+  final int? areaSqft;
+  final int? bedrooms;
+  final int? bathrooms;
+  final bool? furnished;
+  final List<String>? photoUrls;
+  final List<String>? documentUrls;
+  final String status; // 'pending', 'accepted', 'rejected', 'expired'
+  final String? buyerResponse; // 'interested', 'not_interested'
+  final String? messageToBuyer;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime expiresAt;
+
+  RealtorOffer({
+    required this.id,
+    required this.realtorId,
+    required this.requestId,
+    required this.propertyTitle,
+    this.propertyDescription,
+    required this.propertyAddress,
+    this.latitude,
+    this.longitude,
+    required this.offeredPrice,
+    this.currency = 'AED',
+    this.leaseType,
+    this.leaseDurationMonths,
+    this.areaSqft,
+    this.bedrooms,
+    this.bathrooms,
+    this.furnished,
+    this.photoUrls,
+    this.documentUrls,
+    this.status = 'pending',
+    this.buyerResponse,
+    this.messageToBuyer,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.expiresAt,
+  });
+
+  factory RealtorOffer.fromJson(Map<String, dynamic> json) {
+    return RealtorOffer(
+      id: json['id'] as String,
+      realtorId: json['realtor_id'] as String,
+      requestId: json['request_id'] as String,
+      propertyTitle: json['property_title'] as String,
+      propertyDescription: json['property_description'] as String?,
+      propertyAddress: json['property_address'] as String,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      offeredPrice: (json['offered_price'] as num).toDouble(),
+      currency: json['currency'] as String? ?? 'AED',
+      leaseType: json['lease_type'] as String?,
+      leaseDurationMonths: json['lease_duration_months'] as int?,
+      areaSqft: json['area_sqft'] as int?,
+      bedrooms: json['bedrooms'] as int?,
+      bathrooms: json['bathrooms'] as int?,
+      furnished: json['furnished'] as bool?,
+      photoUrls: (json['photo_urls'] as List?)?.cast<String>(),
+      documentUrls: (json['document_urls'] as List?)?.cast<String>(),
+      status: json['status'] as String? ?? 'pending',
+      buyerResponse: json['buyer_response'] as String?,
+      messageToBuyer: json['message_to_buyer'] as String?,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
+      expiresAt: DateTime.parse(json['expires_at'] as String),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'realtor_id': realtorId,
+      'request_id': requestId,
+      'property_title': propertyTitle,
+      'property_description': propertyDescription,
+      'property_address': propertyAddress,
+      'latitude': latitude,
+      'longitude': longitude,
+      'offered_price': offeredPrice,
+      'currency': currency,
+      'lease_type': leaseType,
+      'lease_duration_months': leaseDurationMonths,
+      'area_sqft': areaSqft,
+      'bedrooms': bedrooms,
+      'bathrooms': bathrooms,
+      'furnished': furnished,
+      'photo_urls': photoUrls,
+      'document_urls': documentUrls,
+      'status': status,
+      'buyer_response': buyerResponse,
+      'message_to_buyer': messageToBuyer,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+      'expires_at': expiresAt.toIso8601String(),
+    };
+  }
+}
+
+class PropertyMatch {
+  final String requestId;
+  final String buyerId;
+  final String category;
+  final String title;
+  final String city;
+  final double? minPrice;
+  final double? maxPrice;
+  final int? bedrooms;
+  final int? bathrooms;
+  final int matchScore;
+
+  PropertyMatch({
+    required this.requestId,
+    required this.buyerId,
+    required this.category,
+    required this.title,
+    required this.city,
+    this.minPrice,
+    this.maxPrice,
+    this.bedrooms,
+    this.bathrooms,
+    required this.matchScore,
+  });
+
+  factory PropertyMatch.fromJson(Map<String, dynamic> json) {
+    return PropertyMatch(
+      requestId: json['request_id'] as String,
+      buyerId: json['buyer_id'] as String,
+      category: json['category'] as String,
+      title: json['title'] as String,
+      city: json['city'] as String,
+      minPrice: (json['min_price'] as num?)?.toDouble(),
+      maxPrice: (json['max_price'] as num?)?.toDouble(),
+      bedrooms: json['bedrooms'] as int?,
+      bathrooms: json['bathrooms'] as int?,
+      matchScore: json['match_score'] as int? ?? 0,
+    );
+  }
+}
