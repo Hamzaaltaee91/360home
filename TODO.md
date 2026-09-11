@@ -144,7 +144,7 @@
 
 ## 10. Localization & RTL
 
-- [ ] **Configure `flutter_localizations`** — Ensure dependencies in `pubspec.yaml`.
+- [x] **Configure `flutter_localizations`** — Ensure dependencies in `pubspec.yaml`.
 - [ ] **Setup `l10n.yaml`** — Localization generation configuration.
 - [ ] **Create `lib/l10n/app_ar.arb`** — Arabic string catalog.
 - [ ] **Create `lib/l10n/app_en.arb`** — English string catalog.
