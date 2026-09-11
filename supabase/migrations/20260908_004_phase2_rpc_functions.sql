@@ -185,10 +185,10 @@ RETURNS TABLE (
 DECLARE
   v_updated INT;
 BEGIN
-  UPDATE public.realtor_offers
-  SET buyer_response = p_responses ->> offer_id::TEXT
-  WHERE request_id = p_request_id
-    AND buyer_response IS NULL;
+  UPDATE public.realtor_offers ro
+  SET buyer_response = p_responses ->> ro.id::TEXT
+  WHERE ro.request_id = p_request_id
+    AND ro.buyer_response IS NULL;
 
   GET DIAGNOSTICS v_updated = ROW_COUNT;
 
@@ -279,7 +279,7 @@ DECLARE
 BEGIN
   -- احصل على بيانات الطلب والعرض
   WITH request_data AS (
-    SELECT min_price, max_price, area_sqft, bedrooms, bathrooms
+    SELECT min_price, max_price, min_area_sqft, max_area_sqft, bedrooms, bathrooms
     FROM property_requests WHERE id = p_request_id
   ),
   offer_data AS (
@@ -291,8 +291,9 @@ BEGIN
          WHEN od.offered_price BETWEEN rd.min_price AND rd.max_price THEN 1.2
          ELSE 0.8
     END,
-    CASE WHEN rd.area_sqft IS NULL THEN 1
-         WHEN ABS(od.area_sqft - rd.area_sqft) < 1000 THEN 1.1
+    CASE WHEN rd.min_area_sqft IS NULL AND rd.max_area_sqft IS NULL THEN 1
+         WHEN od.area_sqft BETWEEN COALESCE(rd.min_area_sqft, 0)
+                               AND COALESCE(rd.max_area_sqft, 2147483647) THEN 1.1
          ELSE 0.9
     END,
     (od.bedrooms = rd.bedrooms)

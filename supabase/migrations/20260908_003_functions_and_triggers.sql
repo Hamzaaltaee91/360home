@@ -7,13 +7,20 @@
 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_role TEXT;
 BEGIN
+  v_role := COALESCE(NEW.raw_user_meta_data->>'role', 'buyer');
+  IF v_role NOT IN ('buyer', 'realtor', 'admin') THEN
+    v_role := 'buyer';
+  END IF;
+
   INSERT INTO public.users (auth_id, email, full_name, role)
   VALUES (
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
-    COALESCE(NEW.raw_user_meta_data->>'role', 'buyer')
+    v_role
   );
   RETURN NEW;
 END;

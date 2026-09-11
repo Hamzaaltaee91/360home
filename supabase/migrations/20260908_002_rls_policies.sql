@@ -141,12 +141,12 @@ CREATE POLICY "verifications_update_admin" ON public.verifications
   FOR UPDATE USING (
     EXISTS (
       SELECT 1 FROM public.users
-      WHERE id = auth.uid() AND role = 'admin'
+      WHERE auth_id = auth.uid() AND role = 'admin'
     )
   )
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM public.users
-      WHERE id = auth.uid() AND role = 'admin'
+      WHERE auth_id = auth.uid() AND role = 'admin'
     )
   );
