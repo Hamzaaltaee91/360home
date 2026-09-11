@@ -36,6 +36,8 @@ create policy "audit_logs_admin_select"
   );
 
 -- Helper used by triggers and Edge Functions to record an audit entry.
+-- `search_path` is pinned to `public, pg_temp` to prevent search-path
+-- hijacking of the unqualified `audit_logs` reference.
 create or replace function public.write_audit_log(
   p_actor_id uuid,
   p_action text,
@@ -46,7 +48,7 @@ create or replace function public.write_audit_log(
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 begin
   insert into public.audit_logs (actor_id, action, entity_type, entity_id, metadata)
@@ -55,16 +57,23 @@ end;
 $$;
 
 -- Audit role modifications on users.
+--
+-- `auth.uid()` is not reliable inside a `security definer` trigger, so the
+-- actor is read directly from the request JWT claims when present.
 create or replace function public.audit_user_role_change()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
+declare
+  v_actor uuid;
 begin
+  v_actor := nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
+
   if new.role is distinct from old.role then
     perform public.write_audit_log(
-      auth.uid(),
+      v_actor,
       'role_modified',
       'user',
       new.id,
@@ -86,13 +95,17 @@ create or replace function public.audit_verification_decision()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
+declare
+  v_actor uuid;
 begin
+  v_actor := nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
+
   if new.status is distinct from old.status
      and new.status in ('approved', 'rejected') then
     perform public.write_audit_log(
-      auth.uid(),
+      v_actor,
       'verification_' || new.status,
       'realtor_verification',
       new.id,
@@ -119,11 +132,15 @@ create or replace function public.audit_user_deletion()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
+declare
+  v_actor uuid;
 begin
+  v_actor := nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
+
   perform public.write_audit_log(
-    auth.uid(),
+    v_actor,
     'account_deleted',
     'user',
     old.id,
@@ -139,6 +156,8 @@ create trigger trg_audit_user_deletion
   for each row
   execute function public.audit_user_deletion();
 
--- Only the service role may call the helper directly.
-revoke all on function public.write_audit_log(uuid, text, text, uuid, jsonb) from public;
+-- Only the service role may call the helper directly. `PUBLIC` is the
+-- pseudo-role that all roles inherit from; revoking from it removes the
+-- default execute grant.
+revoke all on function public.write_audit_log(uuid, text, text, uuid, jsonb) from PUBLIC;
 grant execute on function public.write_audit_log(uuid, text, text, uuid, jsonb) to service_role;
