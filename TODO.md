@@ -106,7 +106,7 @@
 - [x] **Complete `profile_screen.dart`** — Replace placeholder with live profile data display.
 - [x] **Implement `edit_profile_screen.dart`** — Profile edits and avatar upload.
 - [x] **Implement `settings_screen.dart`** — Language, notifications, and dark mode toggles.
-- [ ] **Implement `notifications_screen.dart`** — Notification list view.
+- [x] **Implement `notifications_screen.dart`** — Notification list view.
 - [ ] **Implement `about_screen.dart`** — About page and privacy policy view.
 
 ### Admin Panel
