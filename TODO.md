@@ -17,7 +17,7 @@
 
 ## 2. قاعدة البيانات والـ Migrations (Database)
 
-- [ ] **مراجعة `20260908_001_initial_schema.sql`** — التأكد من وجود جميع الجداول: `users`, `property_requests`, `realtor_offers`, `notifications`, `realtor_verifications`, `property_photos`.
+- [x] **مراجعة `20260908_001_initial_schema.sql`** — التأكد من وجود جميع الجداول: `users`, `property_requests`, `realtor_offers`, `notifications`, `realtor_verifications`, `property_photos`.
 - [ ] **مراجعة `20260908_002_rls_policies.sql`** — التأكد من تغطية جميع الجداول بسياسات RLS صحيحة لكل دور (buyer, realtor, admin).
 - [ ] **مراجعة `20260908_003_functions_and_triggers.sql`** — التأكد من وجود triggers لتحديث `updated_at` وإنشاء `users` تلقائياً عند التسجيل.
 - [ ] **مراجعة `20260908_004_phase2_rpc_functions.sql`** — التأكد من دوال RPC: `match_offers`, `search_requests`, `get_realtor_stats`, `get_buyer_stats`.

@@ -166,6 +166,60 @@ CREATE INDEX idx_verifications_user_id ON public.verifications(user_id);
 CREATE INDEX idx_verifications_status ON public.verifications(status);
 CREATE INDEX idx_verifications_verification_type ON public.verifications(verification_type);
 
+-- Notifications table
+CREATE TABLE public.notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('new_offer', 'offer_response', 'new_request', 'verification_status')),
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  data JSONB DEFAULT '{}',
+  is_read BOOLEAN DEFAULT false,
+
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_notifications_user_id ON public.notifications(user_id);
+CREATE INDEX idx_notifications_type ON public.notifications(type);
+CREATE INDEX idx_notifications_is_read ON public.notifications(is_read);
+CREATE INDEX idx_notifications_created_at ON public.notifications(created_at);
+
+-- Realtor verifications table
+CREATE TABLE public.realtor_verifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  realtor_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  document_url TEXT NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  rejection_reason TEXT,
+  reviewed_by UUID REFERENCES public.users(id),
+  reviewed_at TIMESTAMP,
+
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_realtor_verifications_realtor_id ON public.realtor_verifications(realtor_id);
+CREATE INDEX idx_realtor_verifications_status ON public.realtor_verifications(status);
+
+-- Property photos table
+CREATE TABLE public.property_photos (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_id UUID REFERENCES public.property_requests(id) ON DELETE CASCADE,
+  offer_id UUID REFERENCES public.realtor_offers(id) ON DELETE CASCADE,
+  photo_url TEXT NOT NULL,
+  caption TEXT,
+  display_order INT DEFAULT 0,
+
+  created_at TIMESTAMP DEFAULT NOW(),
+
+  CONSTRAINT property_photos_owner_check CHECK (
+    (request_id IS NOT NULL AND offer_id IS NULL) OR
+    (request_id IS NULL AND offer_id IS NOT NULL)
+  )
+);
+
+CREATE INDEX idx_property_photos_request_id ON public.property_photos(request_id);
+CREATE INDEX idx_property_photos_offer_id ON public.property_photos(offer_id);
+
 -- Enable RLS on all tables
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.realtors ENABLE ROW LEVEL SECURITY;
@@ -173,3 +227,6 @@ ALTER TABLE public.property_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.realtor_offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.offer_interactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.verifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.realtor_verifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.property_photos ENABLE ROW LEVEL SECURITY;
