@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'themes/app_theme.dart';
 import 'routes/app_routes.dart';
@@ -44,17 +46,14 @@ class DabberliApp extends StatelessWidget {
       animation: settings,
       builder: (context, _) {
         return MaterialApp.router(
-          title: 'دبّرلي',
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme(),
           darkTheme: AppTheme.darkTheme(),
           themeMode: settings.themeMode,
           routerConfig: appRoutes,
-          localizationsDelegates: const [],
-          supportedLocales: const [
-            Locale('ar', ''),
-            Locale('en', ''),
-          ],
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
         );
       },
     );
