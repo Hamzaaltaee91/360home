@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../services/supabase_service.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
+import '../screens/auth/forgot_password_screen.dart';
 import '../screens/buyer/buyer_home_screen.dart';
 import '../screens/buyer/create_request_screen.dart';
 import '../screens/buyer/browse_offers_screen.dart';
@@ -30,6 +31,7 @@ class RouteNames {
   static const String splash = '/splash';
   static const String login = '/login';
   static const String signup = '/signup';
+  static const String forgotPassword = '/forgot-password';
 
   // Buyer
   static const String buyer = '/buyer';
@@ -92,7 +94,12 @@ class RouteNames {
   }
 
   /// Routes reachable without an authenticated session.
-  static const Set<String> publicRoutes = {splash, login, signup};
+  static const Set<String> publicRoutes = {
+    splash,
+    login,
+    signup,
+    forgotPassword,
+  };
 
   /// Returns the home route for a given user role.
   static String homeForRole(String? role) {
@@ -188,6 +195,10 @@ final appRoutes = GoRouter(
     GoRoute(
       path: RouteNames.signup,
       builder: (context, state) => const SignupScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.forgotPassword,
+      builder: (context, state) => const ForgotPasswordScreen(),
     ),
 
     // Buyer Routes

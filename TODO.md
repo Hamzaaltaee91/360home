@@ -83,7 +83,7 @@
 ### Authentication
 - [x] **Complete `login_screen.dart`** — Add forgot password, remember me, and Supabase auth binding.
 - [x] **Complete `signup_screen.dart`** — Password strength validation and terms checkbox.
-- [ ] **Implement `forgot_password_screen.dart`** — Password reset flow.
+- [x] **Implement `forgot_password_screen.dart`** — Password reset flow.
 - [ ] **Implement `verify_email_screen.dart`** — Email verification handler screen.
 
 ### Buyer Flow
