@@ -3,7 +3,7 @@
 
 BEGIN;
 
-SELECT plan(6);
+SELECT plan(7);
 
 -- 1. PostGIS extension is installed
 SELECT has_extension('postgis', 'PostGIS extension should be installed');
@@ -33,6 +33,12 @@ SELECT has_trigger(
 SELECT has_function(
   'public', 'nearby_requests_postgis', ARRAY['numeric', 'numeric', 'integer'],
   'nearby_requests_postgis function should exist'
+);
+
+-- 7. location column is geography(Point, 4326)
+SELECT col_type_is(
+  'public', 'property_requests', 'location', 'geography',
+  'location column should be of type geography'
 );
 
 SELECT * FROM finish();

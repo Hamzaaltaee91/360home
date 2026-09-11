@@ -69,17 +69,17 @@ CREATE OR REPLACE FUNCTION public.nearby_requests_postgis(
   p_radius_m INT
 )
 RETURNS TABLE (
-  request_id UUID,
-  request_buyer_id UUID,
-  request_category TEXT,
-  request_title TEXT,
-  request_city TEXT,
-  request_min_price DECIMAL,
-  request_max_price DECIMAL,
-  request_bedrooms INT,
-  request_bathrooms INT,
-  request_status TEXT,
-  distance_m INT
+  out_request_id UUID,
+  out_buyer_id UUID,
+  out_category TEXT,
+  out_title TEXT,
+  out_city TEXT,
+  out_min_price DECIMAL,
+  out_max_price DECIMAL,
+  out_bedrooms INT,
+  out_bathrooms INT,
+  out_status TEXT,
+  out_distance_m INT
 ) AS $$
 BEGIN
   RETURN QUERY
@@ -97,7 +97,7 @@ BEGIN
     ST_Distance(
       pr.location,
       ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography
-    )::INT AS distance_m
+    )::INT
   FROM public.property_requests pr
   WHERE pr.status = 'active'
     AND pr.location IS NOT NULL
@@ -106,6 +106,6 @@ BEGIN
       ST_SetSRID(ST_MakePoint(p_lng, p_lat), 4326)::geography,
       p_radius_m
     )
-  ORDER BY distance_m ASC;
+  ORDER BY 11 ASC;
 END;
 $$ LANGUAGE plpgsql STABLE;
