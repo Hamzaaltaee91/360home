@@ -64,10 +64,11 @@ flutter:
   uses-material-design: true
 
   # Assets
-  assets:
-    - assets/images/
-    - assets/icons/
-    - assets/animations/
+  # TODO: Uncomment once the asset directories are populated.
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
+  #   - assets/animations/
 
   # Fonts
   fonts:

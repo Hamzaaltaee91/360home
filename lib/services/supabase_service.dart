@@ -1,5 +1,7 @@
 // Supabase Integration Service
 
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 
@@ -406,7 +408,7 @@ class SupabaseService {
     final filePath = 'property-photos/$requestId/$fileName';
     await _client.storage.from('dabberli').uploadBinary(
           filePath,
-          fileBytes,
+          Uint8List.fromList(fileBytes),
         );
 
     return _client.storage.from('dabberli').getPublicUrl(filePath);
@@ -420,7 +422,7 @@ class SupabaseService {
     final filePath = 'profile-pictures/$userId/$fileName';
     await _client.storage.from('dabberli').uploadBinary(
           filePath,
-          fileBytes,
+          Uint8List.fromList(fileBytes),
         );
 
     return _client.storage.from('dabberli').getPublicUrl(filePath);
