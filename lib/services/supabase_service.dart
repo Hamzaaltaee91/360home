@@ -19,6 +19,38 @@ class SupabaseService {
 
   SupabaseClient get client => _client;
 
+  /// Emits whenever the auth session changes (sign-in, sign-out, token
+  /// refresh). Used by the router to re-evaluate route guards.
+  Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
+
+  /// Cached role of the currently signed-in user, populated on auth changes.
+  /// `null` when signed out or not yet resolved.
+  String? _currentUserRole;
+
+  String? get currentUserRole => _currentUserRole;
+
+  /// Fetches and caches the role for the current user from the `users` table.
+  /// Returns `null` when signed out.
+  Future<String?> refreshCurrentUserRole() async {
+    final userId = getCurrentUserId();
+    if (userId == null) {
+      _currentUserRole = null;
+      return null;
+    }
+
+    try {
+      final response = await _client
+          .from('users')
+          .select('role')
+          .eq('auth_id', userId)
+          .single();
+      _currentUserRole = response['role'] as String?;
+    } catch (_) {
+      _currentUserRole = null;
+    }
+    return _currentUserRole;
+  }
+
   /// Runs [action], translating any thrown error into a standardized
   /// [AppException] with a user-friendly message.
   Future<T> _guard<T>(Future<T> Function() action) async {
@@ -62,14 +94,21 @@ class SupabaseService {
     required String email,
     required String password,
   }) {
-    return _guard(() => _client.auth.signInWithPassword(
-          email: email,
-          password: password,
-        ));
+    return _guard(() async {
+      final response = await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      await refreshCurrentUserRole();
+      return response;
+    });
   }
 
   Future<void> signOut() {
-    return _guard(() => _client.auth.signOut());
+    return _guard(() async {
+      await _client.auth.signOut();
+      _currentUserRole = null;
+    });
   }
 
   String? getCurrentUserId() {

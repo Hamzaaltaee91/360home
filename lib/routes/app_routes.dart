@@ -1,7 +1,10 @@
 // App Routes Navigation
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/supabase_service.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
 import '../screens/buyer/buyer_home_screen.dart';
@@ -42,15 +45,92 @@ class RouteNames {
   // Profile
   static const String profile = '/profile';
 
+  // Admin
+  static const String adminDashboard = '/admin';
+
   /// Builds the concrete path for an offer details route.
   static String offerDetailsPath(String offerId) => '/offer/$offerId';
 
   /// Builds the concrete path for a create-offer route.
   static String createOfferPath(String requestId) => '/create-offer/$requestId';
+
+  /// Routes reachable without an authenticated session.
+  static const Set<String> publicRoutes = {splash, login, signup};
+
+  /// Returns the home route for a given user role.
+  static String homeForRole(String? role) {
+    switch (role) {
+      case 'realtor':
+        return realtorHome;
+      case 'admin':
+        return adminDashboard;
+      case 'buyer':
+      default:
+        return buyerHome;
+    }
+  }
+}
+
+/// Bridges a [Stream] to a [Listenable] so [GoRouter] can re-run its
+/// `redirect` whenever the auth state changes.
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
 }
 
 final appRoutes = GoRouter(
   initialLocation: RouteNames.splash,
+  refreshListenable:
+      GoRouterRefreshStream(SupabaseService().authStateChanges),
+  redirect: (context, state) {
+    final service = SupabaseService();
+    final isAuthenticated = service.isAuthenticated();
+    final location = state.matchedLocation;
+    final isPublicRoute = RouteNames.publicRoutes.contains(location);
+
+    // Unauthenticated users may only access public routes.
+    if (!isAuthenticated) {
+      return isPublicRoute ? null : RouteNames.login;
+    }
+
+    // Authenticated users should not linger on auth/splash screens.
+    if (isPublicRoute) {
+      return RouteNames.homeForRole(service.currentUserRole);
+    }
+
+    // Role-based access control.
+    final role = service.currentUserRole;
+    final isBuyerRoute = location.startsWith('/buyer') ||
+        location == RouteNames.createRequest ||
+        location == RouteNames.browseOffers ||
+        location.startsWith('/offer/');
+    final isRealtorRoute = location.startsWith('/realtor') ||
+        location == RouteNames.browseRequests ||
+        location.startsWith('/create-offer/');
+    final isAdminRoute = location.startsWith('/admin');
+
+    if (isBuyerRoute && role != 'buyer') {
+      return RouteNames.homeForRole(role);
+    }
+    if (isRealtorRoute && role != 'realtor') {
+      return RouteNames.homeForRole(role);
+    }
+    if (isAdminRoute && role != 'admin') {
+      return RouteNames.homeForRole(role);
+    }
+
+    return null;
+  },
   routes: [
     // Splash & Auth
     GoRoute(
