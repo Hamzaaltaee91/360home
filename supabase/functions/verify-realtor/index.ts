@@ -12,6 +12,11 @@ import {
   RATE_LIMITS,
   resolveRateLimitIdentifier,
 } from "../_shared/rate_limit.ts";
+import {
+  sanitizeEnum,
+  sanitizeString,
+  sanitizeUuid,
+} from "../_shared/sanitize.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -123,8 +128,22 @@ serve(async (req) => {
     }
 
     // احصل على بيانات الطلب
-    const body: VerificationRequest = await req.json();
-    const { verification_id, status, rejection_reason } = body;
+    const rawBody: VerificationRequest = await req.json();
+    const verification_id = sanitizeUuid(rawBody.verification_id);
+    const status = sanitizeEnum(
+      rawBody.status,
+      ["approved", "rejected"] as const
+    );
+    const rejection_reason =
+      sanitizeString(rawBody.rejection_reason, 1000) || undefined;
+
+    if (!verification_id || !status) {
+      return jsonResponse(
+        { error: "Invalid verification payload" },
+        400,
+        origin
+      );
+    }
 
     const identifier = resolveRateLimitIdentifier(
       user.user.id,

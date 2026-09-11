@@ -1,5 +1,40 @@
 # Progress Log
 
+## Cycle: Input Sanitization
+
+### Accomplished
+- Added a shared sanitization helper
+  (`supabase/functions/_shared/sanitize.ts`) with pure, testable functions:
+  `sanitizeString`, `sanitizeEmail`, `sanitizeUuid`, `sanitizeEnum`,
+  `sanitizeNumber`, `sanitizeInt`, `sanitizeBoolean`, `sanitizeStringArray`,
+  and recursive `sanitizeObject`.
+  - Strips control characters, script/style/iframe tags, inline event
+    handlers, dangerous URL protocols (`javascript:`, `data:`, `vbscript:`),
+    and generic HTML tags; trims and caps length.
+- Wired sanitization into all five Edge Functions:
+  - `search-requests`: normalizes and clamps all query fields (category, city,
+    price range, rooms, lat/lng, radius, sort, status, limit, offset).
+  - `match-offers`: validates `realtor_id` as a UUID, sanitizes `category`,
+    clamps `limit`.
+  - `send-notification`: validates `user_id` UUID, sanitizes `title`/`message`,
+    recursively sanitizes `data`, and rejects empty payloads.
+  - `analytics`: validates `type` against an allow-list, sanitizes `user_id`
+    and date bounds.
+  - `verify-realtor`: validates `verification_id` UUID, restricts `status` to
+    `approved`/`rejected`, sanitizes `rejection_reason`.
+- Added unit tests in `test/functions/sanitize_test.dart` mirroring the
+  existing `rate_limit_test.dart` convention.
+- No previously applied migrations were edited (no schema changes required).
+- Marked the task as complete in `TODO.md`.
+
+### Blocked / Failing
+- None.
+
+### Next in Queue
+- Section 12 (Security & Optimization) remaining tasks:
+  secure storage, storage bucket rules, audit logging, pagination & lazy
+  loading, and image compression.
+
 ## Cycle: Edge Function Rate Limiting
 
 ### Accomplished

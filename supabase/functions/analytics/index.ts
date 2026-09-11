@@ -12,6 +12,7 @@ import {
   RATE_LIMITS,
   resolveRateLimitIdentifier,
 } from "../_shared/rate_limit.ts";
+import { sanitizeEnum, sanitizeString, sanitizeUuid } from "../_shared/sanitize.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -62,15 +63,18 @@ serve(async (req) => {
     }
 
     const body: AnalyticsQuery = await req.json();
-    const {
-      type,
-      user_id,
-      date_from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      date_to = new Date().toISOString(),
-    } = body;
+    const type = sanitizeEnum(
+      body.type,
+      ["realtor", "buyer", "platform"] as const
+    );
+    const user_id = sanitizeUuid(body.user_id);
+    const date_from =
+      sanitizeString(body.date_from, 40) ||
+      new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const date_to = sanitizeString(body.date_to, 40) || new Date().toISOString();
 
     const identifier = resolveRateLimitIdentifier(
-      user_id,
+      user_id || null,
       req.headers.get("x-forwarded-for")
     );
     const limited = await enforceRateLimit(

@@ -12,6 +12,12 @@ import {
   RATE_LIMITS,
   resolveRateLimitIdentifier,
 } from "../_shared/rate_limit.ts";
+import {
+  sanitizeEnum,
+  sanitizeInt,
+  sanitizeNumber,
+  sanitizeString,
+} from "../_shared/sanitize.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -68,21 +74,27 @@ export interface SearchFilters {
   offset: number;
 }
 
+const SORT_OPTIONS = ["recent", "price_low", "price_high"] as const;
+
 export function normalizeSearchQuery(body: SearchQuery): SearchFilters {
+  const category = sanitizeString(body.category, 64) || undefined;
+  const city = sanitizeString(body.city, 128) || undefined;
+  const status = sanitizeString(body.status, 32) || "active";
+
   return {
-    category: body.category,
-    city: body.city,
-    min_price: body.min_price,
-    max_price: body.max_price,
-    bedrooms: body.bedrooms,
-    bathrooms: body.bathrooms,
-    latitude: body.latitude,
-    longitude: body.longitude,
-    radius_km: body.radius_km ?? 10,
-    sort_by: body.sort_by ?? "recent",
-    status: body.status ?? "active",
-    limit: body.limit ?? 20,
-    offset: body.offset ?? 0,
+    category,
+    city,
+    min_price: sanitizeNumber(body.min_price, { min: 0 }),
+    max_price: sanitizeNumber(body.max_price, { min: 0 }),
+    bedrooms: sanitizeInt(body.bedrooms, { min: 0, max: 100 }),
+    bathrooms: sanitizeInt(body.bathrooms, { min: 0, max: 100 }),
+    latitude: sanitizeNumber(body.latitude, { min: -90, max: 90 }),
+    longitude: sanitizeNumber(body.longitude, { min: -180, max: 180 }),
+    radius_km: sanitizeNumber(body.radius_km, { min: 0, max: 500 }) ?? 10,
+    sort_by: sanitizeEnum(body.sort_by, SORT_OPTIONS, "recent") ?? "recent",
+    status,
+    limit: sanitizeInt(body.limit, { min: 1, max: 100 }) ?? 20,
+    offset: sanitizeInt(body.offset, { min: 0 }) ?? 0,
   };
 }
 

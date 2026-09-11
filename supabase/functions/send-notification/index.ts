@@ -12,6 +12,11 @@ import {
   RATE_LIMITS,
   resolveRateLimitIdentifier,
 } from "../_shared/rate_limit.ts";
+import {
+  sanitizeObject,
+  sanitizeString,
+  sanitizeUuid,
+} from "../_shared/sanitize.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -84,8 +89,12 @@ serve(async (req) => {
       return jsonResponse({ error: "Method not allowed" }, 405, origin);
     }
 
-    const body: NotificationPayload = await req.json();
-    const { user_id, type, title, message } = body;
+    const rawBody: NotificationPayload = await req.json();
+    const user_id = sanitizeUuid(rawBody.user_id);
+    const type = rawBody.type;
+    const title = sanitizeString(rawBody.title, 200);
+    const message = sanitizeString(rawBody.message, 2000);
+    const data = sanitizeObject<Record<string, unknown>>(rawBody.data ?? {});
 
     const identifier = resolveRateLimitIdentifier(
       user_id,
@@ -98,13 +107,15 @@ serve(async (req) => {
     );
     if (limited) return limited;
 
-    if (!user_id || !isValidNotificationType(type)) {
+    if (!user_id || !isValidNotificationType(type) || !title || !message) {
       return jsonResponse(
         { error: "Invalid notification payload" },
         400,
         origin
       );
     }
+
+    const body: NotificationPayload = { user_id, type, title, message, data };
 
     // احفظ الإخطار في قاعدة البيانات (اختياري)
     // يمكن إنشاء جدول notifications للتخزين التاريخي

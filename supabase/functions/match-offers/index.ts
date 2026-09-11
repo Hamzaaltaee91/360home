@@ -12,6 +12,7 @@ import {
   RATE_LIMITS,
   resolveRateLimitIdentifier,
 } from "../_shared/rate_limit.ts";
+import { sanitizeInt, sanitizeString, sanitizeUuid } from "../_shared/sanitize.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -96,7 +97,13 @@ serve(async (req) => {
     }
 
     const body: MatchRequest = await req.json();
-    const { realtor_id, category, limit = 10 } = body;
+    const realtor_id = sanitizeUuid(body.realtor_id);
+    const category = sanitizeString(body.category, 64) || undefined;
+    const limit = sanitizeInt(body.limit, { min: 1, max: 100 }) ?? 10;
+
+    if (!realtor_id) {
+      return jsonResponse({ error: "Invalid realtor_id" }, 400, origin);
+    }
 
     const identifier = resolveRateLimitIdentifier(
       realtor_id,
