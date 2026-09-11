@@ -266,12 +266,173 @@ CREATE TRIGGER on_offer_insert_check_realtor
   FOR EACH ROW EXECUTE FUNCTION public.check_realtor_verified();
 
 -- ============================================
+-- FUNCTION: Match offers for a realtor
+-- Returns active requests matching the realtor's category,
+-- ordered by calculated match score (descending).
+-- ============================================
+
+CREATE OR REPLACE FUNCTION public.match_offers(
+  p_realtor_id UUID,
+  p_category TEXT DEFAULT NULL,
+  p_limit INT DEFAULT 20
+)
+RETURNS TABLE (
+  match_request_id UUID,
+  match_buyer_id UUID,
+  match_category TEXT,
+  match_title TEXT,
+  match_city TEXT,
+  match_min_price DECIMAL,
+  match_max_price DECIMAL,
+  match_bedrooms INT,
+  match_bathrooms INT,
+  match_score DECIMAL
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    pr.id,
+    pr.buyer_id,
+    pr.category,
+    pr.title,
+    pr.city,
+    pr.min_price,
+    pr.max_price,
+    pr.bedrooms,
+    pr.bathrooms,
+    public.calculate_match_score(pr.id, NULL) AS score
+  FROM public.property_requests pr
+  WHERE pr.status = 'active'
+    AND (p_category IS NULL OR pr.category = p_category)
+  ORDER BY score DESC, pr.created_at DESC
+  LIMIT GREATEST(p_limit, 1);
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- ============================================
+-- FUNCTION: Search property requests (advanced filters)
+-- ============================================
+
+CREATE OR REPLACE FUNCTION public.search_requests(
+  p_category TEXT DEFAULT NULL,
+  p_city TEXT DEFAULT NULL,
+  p_min_price DECIMAL DEFAULT NULL,
+  p_max_price DECIMAL DEFAULT NULL,
+  p_bedrooms INT DEFAULT NULL,
+  p_bathrooms INT DEFAULT NULL,
+  p_lat DECIMAL DEFAULT NULL,
+  p_lng DECIMAL DEFAULT NULL,
+  p_radius_km DECIMAL DEFAULT NULL,
+  p_limit INT DEFAULT 50,
+  p_offset INT DEFAULT 0
+)
+RETURNS TABLE (
+  search_request_id UUID,
+  search_buyer_id UUID,
+  search_category TEXT,
+  search_title TEXT,
+  search_city TEXT,
+  search_min_price DECIMAL,
+  search_max_price DECIMAL,
+  search_bedrooms INT,
+  search_bathrooms INT,
+  search_distance_m INT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    pr.id,
+    pr.buyer_id,
+    pr.category,
+    pr.title,
+    pr.city,
+    pr.min_price,
+    pr.max_price,
+    pr.bedrooms,
+    pr.bathrooms,
+    CASE
+      WHEN p_lat IS NULL OR p_lng IS NULL
+        OR pr.latitude IS NULL OR pr.longitude IS NULL THEN NULL
+      ELSE (earth_distance(ll_to_earth(pr.latitude, pr.longitude),
+                           ll_to_earth(p_lat, p_lng)))::INT
+    END AS distance_m
+  FROM public.property_requests pr
+  WHERE pr.status = 'active'
+    AND (p_category IS NULL OR pr.category = p_category)
+    AND (p_city IS NULL OR pr.city = p_city)
+    AND (p_min_price IS NULL OR pr.max_price >= p_min_price)
+    AND (p_max_price IS NULL OR pr.min_price <= p_max_price)
+    AND (p_bedrooms IS NULL OR pr.bedrooms = p_bedrooms)
+    AND (p_bathrooms IS NULL OR pr.bathrooms = p_bathrooms)
+    AND (
+      p_lat IS NULL OR p_lng IS NULL OR p_radius_km IS NULL
+      OR (
+        pr.latitude IS NOT NULL AND pr.longitude IS NOT NULL
+        AND earth_distance(ll_to_earth(pr.latitude, pr.longitude),
+                           ll_to_earth(p_lat, p_lng)) <= (p_radius_km * 1000)
+      )
+    )
+  ORDER BY pr.created_at DESC
+  LIMIT GREATEST(p_limit, 1)
+  OFFSET GREATEST(p_offset, 0);
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- ============================================
+-- FUNCTION: Get realtor stats (wrapper)
+-- ============================================
+
+CREATE OR REPLACE FUNCTION public.get_realtor_stats(p_realtor_id UUID)
+RETURNS TABLE (
+  total_offers INT,
+  accepted_offers INT,
+  rejection_rate DECIMAL,
+  average_days_to_response DECIMAL,
+  total_interactions INT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    perf_total_offers,
+    perf_accepted_offers,
+    perf_rejection_rate,
+    perf_average_days_to_response,
+    perf_total_interactions
+  FROM public.get_realtor_performance(p_realtor_id);
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- ============================================
+-- FUNCTION: Get buyer stats (wrapper)
+-- ============================================
+
+CREATE OR REPLACE FUNCTION public.get_buyer_stats(p_buyer_id UUID)
+RETURNS TABLE (
+  total_offers INT,
+  accepted_offers INT,
+  rejected_offers INT,
+  pending_offers INT,
+  response_rate DECIMAL
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    stat_total_offers,
+    stat_accepted_offers,
+    stat_rejected_offers,
+    stat_pending_offers,
+    stat_response_rate
+  FROM public.get_buyer_offer_stats(p_buyer_id);
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- ============================================
 -- FUNCTION: Calculate match score
 -- ============================================
 
 CREATE OR REPLACE FUNCTION public.calculate_match_score(
   p_request_id UUID,
-  p_offer_id UUID
+  p_offer_id UUID DEFAULT NULL
 )
 RETURNS DECIMAL AS $$
 DECLARE
@@ -309,4 +470,4 @@ BEGIN
 
   RETURN ROUND(v_score, 2);
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql STABLE;
