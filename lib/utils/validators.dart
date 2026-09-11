@@ -84,4 +84,43 @@ class Validators {
     }
     return null;
   }
+
+  /// Evaluates password strength on a 0–4 scale.
+  ///
+  /// A point is awarded for each of: length >= 8, length >= 12, containing
+  /// a letter and a digit, and containing a symbol. Returns 0 for an empty
+  /// password.
+  static int passwordStrength(String? value) {
+    final password = value ?? '';
+    if (password.isEmpty) {
+      return 0;
+    }
+
+    var score = 0;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (RegExp(r'[A-Za-z]').hasMatch(password) &&
+        RegExp(r'[0-9]').hasMatch(password)) {
+      score++;
+    }
+    if (RegExp(r'[^A-Za-z0-9]').hasMatch(password)) {
+      score++;
+    }
+    return score;
+  }
+
+  /// Human-readable label for a [passwordStrength] score.
+  static String passwordStrengthLabel(int score) {
+    switch (score) {
+      case 0:
+      case 1:
+        return 'ضعيفة';
+      case 2:
+        return 'متوسطة';
+      case 3:
+        return 'جيدة';
+      default:
+        return 'قوية';
+    }
+  }
 }
