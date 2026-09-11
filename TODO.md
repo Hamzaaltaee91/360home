@@ -123,7 +123,7 @@
 - [x] **Build `error_widget.dart`** — Reusable error view with retry action.
 - [x] **Build `custom_button.dart`** — Common button supporting loading and disabled states.
 - [x] **Build `custom_text_field.dart`** — Form text input with inline error validation.
-- [ ] **Build `property_card.dart`** — Standardized property card.
+- [x] **Build `property_card.dart`** — Standardized property card.
 - [ ] **Build `offer_card.dart`** — Standardized offer item card.
 - [ ] **Build `request_card.dart`** — Standardized request item card.
 - [ ] **Build `image_picker_widget.dart`** — Multi-image picker and preview component.
