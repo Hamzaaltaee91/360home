@@ -28,7 +28,7 @@ DECLARE
   idx TEXT;
   found BOOLEAN;
 BEGIN
-  FOREACH idx IN ARRAY expected_indexes LOOP
+  FOR idx IN SELECT unnest(expected_indexes) LOOP
     SELECT EXISTS (
       SELECT 1
       FROM pg_indexes
