@@ -16,6 +16,7 @@ import '../screens/realtor/browse_requests_screen.dart';
 import '../screens/realtor/create_offer_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/splash_screen.dart';
+import '../screens/not_found_screen.dart';
 
 /// Centralized route path constants.
 ///
@@ -198,10 +199,6 @@ final appRoutes = GoRouter(
       builder: (context, state) => const ProfileScreen(),
     ),
   ],
-  errorBuilder: (context, state) => Scaffold(
-    appBar: AppBar(title: const Text('خطأ')),
-    body: Center(
-      child: Text('الصفحة غير موجودة: ${state.location}'),
-    ),
-  ),
+  errorBuilder: (context, state) =>
+      NotFoundScreen(location: state.location),
 );
