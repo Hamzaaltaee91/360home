@@ -118,7 +118,7 @@
 
 ## 8. Shared Widgets
 
-- [ ] **Build `loading_indicator.dart`** — Standardized progress loader.
+- [x] **Build `loading_indicator.dart`** — Standardized progress loader.
 - [ ] **Build `empty_state.dart`** — Uniform empty state with icon and message.
 - [ ] **Build `error_widget.dart`** — Reusable error view with retry action.
 - [ ] **Build `custom_button.dart`** — Common button supporting loading and disabled states.
