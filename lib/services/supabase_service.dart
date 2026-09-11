@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 import '../utils/error_handler.dart';
+import 'secure_storage_service.dart';
 
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
@@ -16,6 +17,16 @@ class SupabaseService {
   SupabaseService._internal();
 
   late final SupabaseClient _client;
+
+  /// Secure storage used to persist sensitive session data.
+  ///
+  /// Overridable for tests via [secureStorageOverride].
+  SecureStorage _secureStorage = SecureStorageService();
+
+  /// Overrides the secure storage implementation (used in tests).
+  set secureStorageOverride(SecureStorage storage) {
+    _secureStorage = storage;
+  }
 
   SupabaseClient get client => _client;
 
@@ -45,6 +56,12 @@ class SupabaseService {
           .eq('auth_id', userId)
           .single();
       _currentUserRole = response['role'] as String?;
+      if (_currentUserRole != null) {
+        await _secureStorage.write(
+          SecureStorageKeys.userRole,
+          _currentUserRole!,
+        );
+      }
     } catch (_) {
       _currentUserRole = null;
     }
@@ -68,6 +85,11 @@ class SupabaseService {
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
+      // Persist the auth session in the platform secure store rather than
+      // the default (plain) local storage.
+      authOptions: FlutterAuthClientOptions(
+        localStorage: SecureLocalStorage(_secureStorage),
+      ),
     );
     _client = Supabase.instance.client;
   }
@@ -108,6 +130,7 @@ class SupabaseService {
     return _guard(() async {
       await _client.auth.signOut();
       _currentUserRole = null;
+      await _secureStorage.delete(SecureStorageKeys.userRole);
     });
   }
 

@@ -177,7 +177,7 @@
 - [x] **Audit RLS Policies** — Review all policies against privilege escalation.
 - [x] **Rate Limiting** — Enforce rate limits on Edge Functions.
 - [x] **Input Sanitization** — Prevent malicious payload injections.
-- [ ] **Secure Storage** — Secure storage integration for sensitive tokens.
+- [x] **Secure Storage** — Secure storage integration for sensitive tokens.
 - [ ] **Storage Bucket Rules** — Validate access rules for property image buckets.
 - [ ] **Audit Logging** — Trace sensitive operations (verification, deletion, role modification).
 - [ ] **Pagination & Lazy Loading** — Implement pagination across requests, offers, and notifications.
