@@ -8,6 +8,34 @@
 -- ---------------------------------------------------------------------------
 -- Users must never be able to change their own `role` column. Only an admin
 -- (or the service role, which bypasses RLS) may change roles.
+--
+-- NOTE: policies on `public.users` must not query `public.users` directly,
+-- otherwise Postgres raises "infinite recursion detected in policy for
+-- relation users". We use SECURITY DEFINER helper functions that bypass RLS
+-- to read the caller's role safely.
+
+create or replace function public.current_user_role()
+  returns text
+  language sql
+  stable
+  security definer
+  set search_path = public
+as $$
+  select role from public.users where id = auth.uid();
+$$;
+
+create or replace function public.is_admin()
+  returns boolean
+  language sql
+  stable
+  security definer
+  set search_path = public
+as $$
+  select exists (
+    select 1 from public.users
+    where id = auth.uid() and role = 'admin'
+  );
+$$;
 
 drop policy if exists "users_update_own" on public.users;
 
@@ -18,7 +46,7 @@ create policy "users_update_own"
   with check (
     auth.uid() = id
     -- role must remain unchanged for non-admins
-    and role = (select role from public.users where id = auth.uid())
+    and role = public.current_user_role()
   );
 
 -- Admins may update any user row (including roles).
@@ -27,18 +55,8 @@ drop policy if exists "admins_update_users" on public.users;
 create policy "admins_update_users"
   on public.users
   for update
-  using (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.role = 'admin'
-    )
-  )
-  with check (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.role = 'admin'
-    )
-  );
+  using (public.is_admin())
+  with check (public.is_admin());
 
 -- ---------------------------------------------------------------------------
 -- 2. Property requests: buyers may only mutate their own requests.
@@ -121,18 +139,8 @@ drop policy if exists "admins_update_verifications" on public.realtor_verificati
 create policy "admins_update_verifications"
   on public.realtor_verifications
   for update
-  using (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.role = 'admin'
-    )
-  )
-  with check (
-    exists (
-      select 1 from public.users u
-      where u.id = auth.uid() and u.role = 'admin'
-    )
-  );
+  using (public.is_admin())
+  with check (public.is_admin());
 
 -- ---------------------------------------------------------------------------
 -- 5. Subscriptions: users may read their own subscription but never write
