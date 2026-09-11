@@ -363,6 +363,50 @@ class SupabaseService {
         }).eq('id', offerId));
   }
 
+  // ==================== Realtor Verifications ====================
+
+  /// Returns the current user's verification request, or `null` if none
+  /// has been submitted yet.
+  Future<RealtorVerification?> getMyVerification() {
+    return _guard(() async {
+      final userId = getCurrentUserId();
+      if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
+
+      final response = await _client
+          .from('realtor_verifications')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (response == null) return null;
+      return RealtorVerification.fromJson(response);
+    });
+  }
+
+  /// Submits a new verification request for the current user.
+  Future<RealtorVerification> submitVerification({
+    required String licenseNumber,
+    required String documentUrl,
+  }) {
+    return _guard(() async {
+      final userId = getCurrentUserId();
+      if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
+
+      final response = await _client
+          .from('realtor_verifications')
+          .insert({
+            'user_id': userId,
+            'status': 'pending',
+            'license_number': licenseNumber,
+            'document_url': documentUrl,
+          })
+          .select()
+          .single();
+
+      return RealtorVerification.fromJson(response);
+    });
+  }
+
   // ==================== Search & Matching ====================
 
   Future<List<PropertyMatch>> getMatchingOffers({
