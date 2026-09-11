@@ -4,35 +4,15 @@
 
 BEGIN;
 
-DO $$
-DECLARE
-  required_tables TEXT[] := ARRAY[
-    'users',
-    'property_requests',
-    'realtor_offers',
-    'notifications',
-    'realtor_verifications',
-    'property_photos'
-  ];
-  tbl TEXT;
-  missing TEXT[] := '{}';
-BEGIN
-  FOREACH tbl IN ARRAY required_tables LOOP
-    IF NOT EXISTS (
-      SELECT 1
-      FROM information_schema.tables
-      WHERE table_schema = 'public'
-        AND table_name = tbl
-    ) THEN
-      missing := array_append(missing, tbl);
-    END IF;
-  END LOOP;
+SELECT plan(6);
 
-  IF array_length(missing, 1) > 0 THEN
-    RAISE EXCEPTION 'Missing required tables: %', array_to_string(missing, ', ');
-  END IF;
+SELECT has_table('public', 'users', 'users table exists');
+SELECT has_table('public', 'property_requests', 'property_requests table exists');
+SELECT has_table('public', 'realtor_offers', 'realtor_offers table exists');
+SELECT has_table('public', 'notifications', 'notifications table exists');
+SELECT has_table('public', 'realtor_verifications', 'realtor_verifications table exists');
+SELECT has_table('public', 'property_photos', 'property_photos table exists');
 
-  RAISE NOTICE 'All required tables exist.';
-END $$;
+SELECT * FROM finish();
 
 ROLLBACK;
