@@ -18,8 +18,17 @@ DECLARE
   v_status TEXT;
   v_verified_at TIMESTAMP;
 BEGIN
-  INSERT INTO auth.users (id, email)
-  VALUES (v_auth_id, 'realtor-test@example.com');
+  INSERT INTO auth.users (
+    id, instance_id, aud, role, email,
+    encrypted_password, email_confirmed_at,
+    created_at, updated_at
+  )
+  VALUES (
+    v_auth_id, '00000000-0000-0000-0000-000000000000',
+    'authenticated', 'authenticated', 'realtor-test@example.com',
+    crypt('password123', gen_salt('bf')), NOW(),
+    NOW(), NOW()
+  );
 
   SELECT id INTO v_user_id FROM public.users WHERE auth_id = v_auth_id;
   IF v_user_id IS NULL THEN

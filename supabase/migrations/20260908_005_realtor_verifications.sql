@@ -50,7 +50,11 @@ CREATE TRIGGER update_realtor_verifications_updated_at
 -- ============================================
 
 CREATE OR REPLACE FUNCTION public.sync_realtor_verification()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   IF NEW.status = 'approved' AND (OLD.status IS DISTINCT FROM 'approved') THEN
     UPDATE public.realtors
@@ -64,7 +68,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$;
 
 DROP TRIGGER IF EXISTS on_realtor_verification_status_change
   ON public.realtor_verifications;
@@ -83,7 +87,11 @@ CREATE OR REPLACE FUNCTION public.submit_realtor_verification(
 RETURNS TABLE (
   verification_id UUID,
   verification_status TEXT
-) AS $$
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   v_user_id UUID;
   v_id UUID;
@@ -114,7 +122,7 @@ BEGIN
 
   RETURN QUERY SELECT v_id, 'pending'::TEXT;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$;
 
 -- ============================================
 -- FUNCTION: Get current realtor's verification status
@@ -129,7 +137,11 @@ RETURNS TABLE (
   document_url TEXT,
   created_at TIMESTAMP,
   reviewed_at TIMESTAMP
-) AS $$
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   RETURN QUERY
   SELECT
@@ -145,4 +157,4 @@ BEGIN
   ORDER BY rv.created_at DESC
   LIMIT 1;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$;
