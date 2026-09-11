@@ -20,6 +20,8 @@ BEGIN
     id, instance_id, aud, role, email,
     encrypted_password, email_confirmed_at,
     raw_app_meta_data, raw_user_meta_data,
+    confirmation_token, recovery_token,
+    email_change_token_new, email_change,
     created_at, updated_at
   )
   VALUES (
@@ -32,6 +34,7 @@ BEGIN
     NOW(),
     '{"provider": "email", "providers": ["email"]}'::jsonb,
     '{"role": "buyer", "full_name": "Test Buyer"}'::jsonb,
+    '', '', '', '',
     NOW(),
     NOW()
   );
@@ -63,6 +66,8 @@ BEGIN
     id, instance_id, aud, role, email,
     encrypted_password, email_confirmed_at,
     raw_app_meta_data, raw_user_meta_data,
+    confirmation_token, recovery_token,
+    email_change_token_new, email_change,
     created_at, updated_at
   )
   VALUES (
@@ -75,6 +80,7 @@ BEGIN
     NOW(),
     '{"provider": "email", "providers": ["email"]}'::jsonb,
     '{"role": "superadmin"}'::jsonb,
+    '', '', '', '',
     NOW(),
     NOW()
   );
@@ -88,6 +94,37 @@ BEGIN
   END IF;
 
   RAISE NOTICE 'Test 2 passed: invalid role defaults to buyer';
+END $$;
+
+-- ============================================
+-- Setup: create a realtor user for Tests 4 & 5
+-- ============================================
+DO $$
+DECLARE
+  v_auth_id UUID := gen_random_uuid();
+BEGIN
+  INSERT INTO auth.users (
+    id, instance_id, aud, role, email,
+    encrypted_password, email_confirmed_at,
+    raw_app_meta_data, raw_user_meta_data,
+    confirmation_token, recovery_token,
+    email_change_token_new, email_change,
+    created_at, updated_at
+  )
+  VALUES (
+    v_auth_id,
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
+    'test_realtor@example.com',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    '{"provider": "email", "providers": ["email"]}'::jsonb,
+    '{"role": "realtor", "full_name": "Test Realtor"}'::jsonb,
+    '', '', '', '',
+    NOW(),
+    NOW()
+  );
 END $$;
 
 -- ============================================
