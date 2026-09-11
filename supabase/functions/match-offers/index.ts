@@ -7,6 +7,11 @@ import {
   handleCorsPreflight,
   jsonResponse,
 } from "../_shared/cors.ts";
+import {
+  enforceRateLimit,
+  RATE_LIMITS,
+  resolveRateLimitIdentifier,
+} from "../_shared/rate_limit.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -92,6 +97,17 @@ serve(async (req) => {
 
     const body: MatchRequest = await req.json();
     const { realtor_id, category, limit = 10 } = body;
+
+    const identifier = resolveRateLimitIdentifier(
+      realtor_id,
+      req.headers.get("x-forwarded-for")
+    );
+    const limited = await enforceRateLimit(
+      supabase,
+      RATE_LIMITS["match-offers"],
+      identifier
+    );
+    if (limited) return limited;
 
     // احصل على بيانات الوسيط
     const { data: realtor } = await supabase

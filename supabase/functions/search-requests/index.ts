@@ -7,6 +7,11 @@ import {
   handleCorsPreflight,
   jsonResponse,
 } from "../_shared/cors.ts";
+import {
+  enforceRateLimit,
+  RATE_LIMITS,
+  resolveRateLimitIdentifier,
+} from "../_shared/rate_limit.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -174,6 +179,17 @@ serve(async (req) => {
     if (req.method !== "POST") {
       return jsonResponse({ error: "Method not allowed" }, 405, origin);
     }
+
+    const identifier = resolveRateLimitIdentifier(
+      null,
+      req.headers.get("x-forwarded-for")
+    );
+    const limited = await enforceRateLimit(
+      supabase,
+      RATE_LIMITS["search-requests"],
+      identifier
+    );
+    if (limited) return limited;
 
     const body: SearchQuery = await req.json();
     const filters = normalizeSearchQuery(body);

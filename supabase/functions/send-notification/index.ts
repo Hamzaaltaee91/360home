@@ -7,6 +7,11 @@ import {
   handleCorsPreflight,
   jsonResponse,
 } from "../_shared/cors.ts";
+import {
+  enforceRateLimit,
+  RATE_LIMITS,
+  resolveRateLimitIdentifier,
+} from "../_shared/rate_limit.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -81,6 +86,17 @@ serve(async (req) => {
 
     const body: NotificationPayload = await req.json();
     const { user_id, type, title, message } = body;
+
+    const identifier = resolveRateLimitIdentifier(
+      user_id,
+      req.headers.get("x-forwarded-for")
+    );
+    const limited = await enforceRateLimit(
+      supabase,
+      RATE_LIMITS["send-notification"],
+      identifier
+    );
+    if (limited) return limited;
 
     if (!user_id || !isValidNotificationType(type)) {
       return jsonResponse(

@@ -7,6 +7,11 @@ import {
   handleCorsPreflight,
   jsonResponse,
 } from "../_shared/cors.ts";
+import {
+  enforceRateLimit,
+  RATE_LIMITS,
+  resolveRateLimitIdentifier,
+} from "../_shared/rate_limit.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -63,6 +68,17 @@ serve(async (req) => {
       date_from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
       date_to = new Date().toISOString(),
     } = body;
+
+    const identifier = resolveRateLimitIdentifier(
+      user_id,
+      req.headers.get("x-forwarded-for")
+    );
+    const limited = await enforceRateLimit(
+      supabase,
+      RATE_LIMITS["analytics"],
+      identifier
+    );
+    if (limited) return limited;
 
     if (type === "realtor" && user_id) {
       return jsonResponse(

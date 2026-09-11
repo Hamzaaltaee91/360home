@@ -7,6 +7,11 @@ import {
   handleCorsPreflight,
   jsonResponse,
 } from "../_shared/cors.ts";
+import {
+  enforceRateLimit,
+  RATE_LIMITS,
+  resolveRateLimitIdentifier,
+} from "../_shared/rate_limit.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -120,6 +125,17 @@ serve(async (req) => {
     // احصل على بيانات الطلب
     const body: VerificationRequest = await req.json();
     const { verification_id, status, rejection_reason } = body;
+
+    const identifier = resolveRateLimitIdentifier(
+      user.user.id,
+      req.headers.get("x-forwarded-for")
+    );
+    const limited = await enforceRateLimit(
+      supabase,
+      RATE_LIMITS["verify-realtor"],
+      identifier
+    );
+    if (limited) return limited;
 
     // تحديث حالة التحقق
     const { error: updateError } = await supabase

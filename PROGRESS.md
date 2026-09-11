@@ -1,5 +1,34 @@
 # Progress Log
 
+## Cycle: Edge Function Rate Limiting
+
+### Accomplished
+- Added a new additive migration
+  (`supabase/migrations/20260911000001_rate_limiting.sql`) introducing a
+  generic fixed-window rate limiter:
+  - New `rate_limits` table keyed by `(bucket, identifier, window_start)`.
+  - `check_rate_limit(bucket, identifier, limit, window_seconds)` RPC that
+    atomically increments the current window's counter, prunes stale windows,
+    and returns `(allowed, remaining, reset_at)`.
+  - RLS enabled; execute granted only to `service_role`.
+- Added a shared helper `supabase/functions/_shared/rate_limit.ts` with
+  per-function `RATE_LIMITS` config, identifier resolution (user → IP →
+  anonymous), result parsing, a standard 429 response, and a fail-open
+  `enforceRateLimit` wrapper.
+- Wired rate limiting into all five Edge Functions: `search-requests`,
+  `match-offers`, `send-notification`, `analytics`, and `verify-realtor`.
+- Added unit tests for the pure helpers in `test/functions/rate_limit_test.dart`.
+- No previously applied migrations were edited.
+- Marked the task as complete in `TODO.md`.
+
+### Blocked / Failing
+- None.
+
+### Next in Queue
+- Section 12 (Security & Optimization) remaining tasks:
+  input sanitization, secure storage, storage bucket rules, audit logging,
+  pagination & lazy loading, and image compression.
+
 ## Cycle: RLS Privilege Escalation Audit
 
 ### Accomplished
