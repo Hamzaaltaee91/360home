@@ -2,7 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../services/supabase_service.dart';
+
+import '../../services/analytics_service.dart';
 
 class RealtorHomeScreen extends StatefulWidget {
   const RealtorHomeScreen({Key? key}) : super(key: key);
@@ -12,46 +13,17 @@ class RealtorHomeScreen extends StatefulWidget {
 }
 
 class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
-  late Future<Map<String, dynamic>> _statsFuture;
+  final AnalyticsService _analytics = AnalyticsService();
+  late Future<RealtorStats> _statsFuture;
 
   @override
   void initState() {
     super.initState();
-    _statsFuture = _fetchStats();
+    _statsFuture = _analytics.getRealtorStats();
   }
 
-  Future<Map<String, dynamic>> _fetchStats() async {
-    try {
-      final offers = await SupabaseService().getRealtorOffers();
-
-      int pending = 0;
-      int accepted = 0;
-      int rejected = 0;
-
-      for (final offer in offers) {
-        if (offer.buyerResponse == null) {
-          pending++;
-        } else if (offer.buyerResponse == 'interested') {
-          accepted++;
-        } else if (offer.buyerResponse == 'not_interested') {
-          rejected++;
-        }
-      }
-
-      final total = offers.length;
-      final acceptanceRate =
-          total > 0 ? ((accepted / total) * 100).toStringAsFixed(1) : '0.0';
-
-      return {
-        'total_offers': total,
-        'pending_offers': pending,
-        'accepted_offers': accepted,
-        'rejected_offers': rejected,
-        'acceptance_rate': acceptanceRate,
-      };
-    } catch (e) {
-      rethrow;
-    }
+  void _reload() {
+    setState(() => _statsFuture = _analytics.getRealtorStats());
   }
 
   @override
@@ -68,9 +40,9 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () {
-          setState(() => _statsFuture = _fetchStats());
-          return _statsFuture;
+        onRefresh: () async {
+          _reload();
+          await _statsFuture;
         },
         child: SingleChildScrollView(
           child: Column(
@@ -109,13 +81,13 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
                 ),
               ),
               // Statistics Cards
-              FutureBuilder<Map<String, dynamic>>(
+              FutureBuilder<RealtorStats>(
                 future: _statsFuture,
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.loading) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Padding(
                       padding: EdgeInsets.all(32),
-                      child: CircularProgressIndicator(),
+                      child: Center(child: CircularProgressIndicator()),
                     );
                   }
 
@@ -128,10 +100,7 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
                             Text('خطأ: ${snapshot.error}'),
                             const SizedBox(height: 16),
                             ElevatedButton(
-                              onPressed: () {
-                                setState(
-                                    () => _statsFuture = _fetchStats());
-                              },
+                              onPressed: _reload,
                               child: const Text('إعادة محاولة'),
                             ),
                           ],
@@ -141,10 +110,9 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
                   }
 
                   final stats = snapshot.data!;
-                  final totalOffers = stats['total_offers'] as int;
-                  final pendingOffers = stats['pending_offers'] as int;
-                  final acceptedOffers = stats['accepted_offers'] as int;
-                  final acceptanceRate = stats['acceptance_rate'] as String;
+                  final acceptanceRate = stats.totalOffers > 0
+                      ? (stats.acceptedOffers / stats.totalOffers) * 100
+                      : 0.0;
 
                   return Column(
                     children: [
@@ -158,7 +126,7 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
                                   child: _buildStatCard(
                                     icon: Icons.send,
                                     label: 'العروض',
-                                    value: totalOffers.toString(),
+                                    value: stats.totalOffers.toString(),
                                     color: Colors.blue,
                                   ),
                                 ),
@@ -167,7 +135,7 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
                                   child: _buildStatCard(
                                     icon: Icons.schedule,
                                     label: 'قيد الانتظار',
-                                    value: pendingOffers.toString(),
+                                    value: stats.pendingOffers.toString(),
                                     color: Colors.orange,
                                   ),
                                 ),
@@ -180,7 +148,7 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
                                   child: _buildStatCard(
                                     icon: Icons.check_circle,
                                     label: 'مقبولة',
-                                    value: acceptedOffers.toString(),
+                                    value: stats.acceptedOffers.toString(),
                                     color: Colors.green,
                                   ),
                                 ),
@@ -189,7 +157,8 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
                                   child: _buildStatCard(
                                     icon: Icons.trending_up,
                                     label: 'معدل القبول',
-                                    value: '$acceptanceRate%',
+                                    value:
+                                        '${acceptanceRate.toStringAsFixed(1)}%',
                                     color: Colors.indigo,
                                   ),
                                 ),
@@ -197,6 +166,10 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
                             ),
                           ],
                         ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: _buildOfferBreakdownChart(stats),
                       ),
                     ],
                   );
@@ -269,6 +242,98 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
           if (index == 1) context.go('/browse-requests');
           if (index == 2) context.go('/profile');
         },
+      ),
+    );
+  }
+
+  Widget _buildOfferBreakdownChart(RealtorStats stats) {
+    final bars = <_ChartBar>[
+      _ChartBar(label: 'مقبولة', value: stats.acceptedOffers, color: Colors.green),
+      _ChartBar(label: 'مرفوضة', value: stats.rejectedOffers, color: Colors.red),
+      _ChartBar(label: 'قيد الانتظار', value: stats.pendingOffers, color: Colors.orange),
+    ];
+
+    final maxValue = bars.fold<int>(0, (max, bar) => bar.value > max ? bar.value : max);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'توزيع العروض',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 16),
+          if (maxValue == 0)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: Text('لا توجد بيانات بعد')),
+            )
+          else
+            SizedBox(
+              height: 160,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: bars
+                    .map((bar) => Expanded(
+                          child: _buildChartBar(bar, maxValue),
+                        ))
+                    .toList(),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChartBar(_ChartBar bar, int maxValue) {
+    final ratio = maxValue > 0 ? bar.value / maxValue : 0.0;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Text(
+            bar.value.toString(),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: bar.color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Expanded(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: FractionallySizedBox(
+                heightFactor: ratio == 0 ? 0.02 : ratio,
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: bar.color.withOpacity(0.8),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(6),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            bar.label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -346,4 +411,16 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
       ),
     );
   }
+}
+
+class _ChartBar {
+  const _ChartBar({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final int value;
+  final Color color;
 }
