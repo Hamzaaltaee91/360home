@@ -3,6 +3,10 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  handleCorsPreflight,
+  jsonResponse,
+} from "../_shared/cors.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -77,12 +81,13 @@ export function buildMatches(
 }
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  const preflight = handleCorsPreflight(req);
+  if (preflight) return preflight;
+
   try {
     if (req.method !== "POST") {
-      return new Response(
-        JSON.stringify({ error: "Method not allowed" }),
-        { status: 405 }
-      );
+      return jsonResponse({ error: "Method not allowed" }, 405, origin);
     }
 
     const body: MatchRequest = await req.json();
@@ -96,10 +101,7 @@ serve(async (req) => {
       .single();
 
     if (!realtor) {
-      return new Response(
-        JSON.stringify({ error: "Realtor not found" }),
-        { status: 404 }
-      );
+      return jsonResponse({ error: "Realtor not found" }, 404, origin);
     }
 
     // ابحث عن الطلبات المطابقة بناءً على:
@@ -136,10 +138,7 @@ serve(async (req) => {
     const { data: requests } = await query.limit(limit);
 
     if (!requests || requests.length === 0) {
-      return new Response(
-        JSON.stringify({ matches: [] }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ matches: [] }, 200, origin);
     }
 
     // اجلب معرفات الطلبات التي أنشأ لها الوسيط عرضًا سابقًا
@@ -159,15 +158,9 @@ serve(async (req) => {
     // احسب المطابقات ورتبها حسب درجة المطابقة
     const matches = buildMatches(requests, existingOfferRequestIds);
 
-    return new Response(
-      JSON.stringify({ matches }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ matches }, 200, origin);
   } catch (error) {
     console.error("Matching error:", error);
-    return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ error: (error as Error).message }, 500, origin);
   }
 });

@@ -3,6 +3,10 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  handleCorsPreflight,
+  jsonResponse,
+} from "../_shared/cors.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -73,22 +77,20 @@ export function buildApprovalUpdates(
 }
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  const preflight = handleCorsPreflight(req);
+  if (preflight) return preflight;
+
   try {
     // التحقق من أن الطلب POST
     if (req.method !== "POST") {
-      return new Response(
-        JSON.stringify({ error: "Method not allowed" }),
-        { status: 405 }
-      );
+      return jsonResponse({ error: "Method not allowed" }, 405, origin);
     }
 
     // التحقق من أن المستخدم admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Missing authorization" }),
-        { status: 401 }
-      );
+      return jsonResponse({ error: "Missing authorization" }, 401, origin);
     }
 
     const token = authHeader.replace("Bearer ", "");
@@ -97,10 +99,7 @@ serve(async (req) => {
     );
 
     if (userError || !user?.user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401 }
-      );
+      return jsonResponse({ error: "Unauthorized" }, 401, origin);
     }
 
     // تحقق من أن المستخدم admin
@@ -111,9 +110,10 @@ serve(async (req) => {
       .single();
 
     if (!isAuthorizedAdmin(adminUser?.role)) {
-      return new Response(
-        JSON.stringify({ error: "Only admins can verify realtors" }),
-        { status: 403 }
+      return jsonResponse(
+        { error: "Only admins can verify realtors" },
+        403,
+        origin
       );
     }
 
@@ -155,18 +155,16 @@ serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({
+    return jsonResponse(
+      {
         success: true,
         message: `Verification ${status} successfully`,
-      }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+      },
+      200,
+      origin
     );
   } catch (error) {
     console.error("Verification error:", error);
-    return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ error: (error as Error).message }, 500, origin);
   }
 });

@@ -3,6 +3,10 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  handleCorsPreflight,
+  jsonResponse,
+} from "../_shared/cors.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -66,21 +70,23 @@ export function buildRealtimePayload(
 }
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  const preflight = handleCorsPreflight(req);
+  if (preflight) return preflight;
+
   try {
     if (req.method !== "POST") {
-      return new Response(
-        JSON.stringify({ error: "Method not allowed" }),
-        { status: 405 }
-      );
+      return jsonResponse({ error: "Method not allowed" }, 405, origin);
     }
 
     const body: NotificationPayload = await req.json();
     const { user_id, type, title, message } = body;
 
     if (!user_id || !isValidNotificationType(type)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid notification payload" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+      return jsonResponse(
+        { error: "Invalid notification payload" },
+        400,
+        origin
       );
     }
 
@@ -105,16 +111,10 @@ serve(async (req) => {
     // أرسل بريدًا إلكترونيًا (إذا أراد المستخدم)
     await sendEmailNotification(user_id, type, title, message);
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ success: true }, 200, origin);
   } catch (error) {
     console.error("Notification error:", error);
-    return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ error: (error as Error).message }, 500, origin);
   }
 });
 

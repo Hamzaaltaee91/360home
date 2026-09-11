@@ -3,6 +3,10 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  handleCorsPreflight,
+  jsonResponse,
+} from "../_shared/cors.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -43,12 +47,13 @@ export interface PlatformStats {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  const preflight = handleCorsPreflight(req);
+  if (preflight) return preflight;
+
   try {
     if (req.method !== "POST") {
-      return new Response(
-        JSON.stringify({ error: "Method not allowed" }),
-        { status: 405 }
-      );
+      return jsonResponse({ error: "Method not allowed" }, 405, origin);
     }
 
     const body: AnalyticsQuery = await req.json();
@@ -60,32 +65,29 @@ serve(async (req) => {
     } = body;
 
     if (type === "realtor" && user_id) {
-      return new Response(
-        JSON.stringify(await getRealtorStats(user_id, date_from, date_to)),
-        { status: 200, headers: { "Content-Type": "application/json" } }
+      return jsonResponse(
+        await getRealtorStats(user_id, date_from, date_to),
+        200,
+        origin
       );
     } else if (type === "buyer" && user_id) {
-      return new Response(
-        JSON.stringify(await getBuyerStats(user_id, date_from, date_to)),
-        { status: 200, headers: { "Content-Type": "application/json" } }
+      return jsonResponse(
+        await getBuyerStats(user_id, date_from, date_to),
+        200,
+        origin
       );
     } else if (type === "platform") {
-      return new Response(
-        JSON.stringify(await getPlatformStats(date_from, date_to)),
-        { status: 200, headers: { "Content-Type": "application/json" } }
+      return jsonResponse(
+        await getPlatformStats(date_from, date_to),
+        200,
+        origin
       );
     }
 
-    return new Response(
-      JSON.stringify({ error: "Invalid analytics type" }),
-      { status: 400 }
-    );
+    return jsonResponse({ error: "Invalid analytics type" }, 400, origin);
   } catch (error) {
     console.error("Analytics error:", error);
-    return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ error: (error as Error).message }, 500, origin);
   }
 });
 

@@ -40,7 +40,7 @@
 - [x] **Create `create-checkout` Function** — Subscription payment handling via Stripe/local gateway.
 - [x] **Create `webhook-handler` Function** — Process payment gateway webhooks and update subscription status.
 - [x] **Create `delete-account` Function** — GDPR-compliant user account and data deletion.
-- [ ] **Configure CORS Headers** — Verify CORS headers for Flutter Web requests across all functions.
+- [x] **Configure CORS Headers** — Verify CORS headers for Flutter Web requests across all functions.
 
 ---
 

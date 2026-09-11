@@ -3,6 +3,10 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  handleCorsPreflight,
+  jsonResponse,
+} from "../_shared/cors.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -162,12 +166,13 @@ export function buildSearchResponse(
 }
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  const preflight = handleCorsPreflight(req);
+  if (preflight) return preflight;
+
   try {
     if (req.method !== "POST") {
-      return new Response(
-        JSON.stringify({ error: "Method not allowed" }),
-        { status: 405 }
-      );
+      return jsonResponse({ error: "Method not allowed" }, 405, origin);
     }
 
     const body: SearchQuery = await req.json();
@@ -197,15 +202,13 @@ serve(async (req) => {
 
     const { count: totalCount } = await countQuery;
 
-    return new Response(
-      JSON.stringify(buildSearchResponse(results, totalCount, filters)),
-      { status: 200, headers: { "Content-Type": "application/json" } }
+    return jsonResponse(
+      buildSearchResponse(results, totalCount, filters),
+      200,
+      origin
     );
   } catch (error) {
     console.error("Search error:", error);
-    return new Response(
-      JSON.stringify({ error: (error as Error).message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ error: (error as Error).message }, 500, origin);
   }
 });
