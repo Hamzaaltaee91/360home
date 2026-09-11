@@ -781,6 +781,21 @@ class PropertyMatch {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'request_id': requestId,
+      'buyer_id': buyerId,
+      'category': category,
+      'title': title,
+      'city': city,
+      'min_price': minPrice,
+      'max_price': maxPrice,
+      'bedrooms': bedrooms,
+      'bathrooms': bathrooms,
+      'match_score': matchScore,
+    };
+  }
+
   PropertyMatch copyWith({
     String? requestId,
     String? buyerId,

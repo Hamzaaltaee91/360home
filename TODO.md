@@ -65,7 +65,7 @@
 - [x] **Add `Subscription` Model** — Realtor subscription state.
 - [x] **Add `copyWith` Methods** — Implement `copyWith` on all domain models for state management.
 - [x] **Implement Equality (`==` and `hashCode`)** — Consistent value equality across models.
-- [ ] **Add `toJson` to `PropertyMatch`** — Implement serialization for `PropertyMatch`.
+- [x] **Add `toJson` to `PropertyMatch`** — Implement serialization for `PropertyMatch`.
 
 ---
 
