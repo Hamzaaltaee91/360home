@@ -50,7 +50,7 @@ dependencies:
   # Environment
   flutter_dotenv: ^5.1.0
 
-dependencies_overrides: {}
+dependency_overrides: {}
 
 dev_dependencies:
   flutter_test:
