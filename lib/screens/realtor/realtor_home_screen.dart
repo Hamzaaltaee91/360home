@@ -196,10 +196,10 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
                     const SizedBox(height: 12),
                     _buildActionButton(
                       context,
-                      icon: Icons.add_circle_outline,
-                      label: 'عرض جديد',
+                      icon: Icons.list_alt,
+                      label: 'عروضي',
                       color: Colors.green,
-                      onTap: () => context.go('/browse-requests'),
+                      onTap: () => context.go('/my-offers'),
                     ),
                     const SizedBox(height: 12),
                     _buildActionButton(

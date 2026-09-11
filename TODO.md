@@ -98,7 +98,7 @@
 - [x] **Complete `realtor_home_screen.dart`** — Dashboard analytics charts integrated with Edge Function.
 - [x] **Complete `browse_requests_screen.dart`** — Map search view and filters.
 - [x] **Complete `create_offer_screen.dart`** — Photo uploads and geo-location picker.
-- [ ] **Implement `my_offers_screen.dart`** — List and manage submitted offers.
+- [x] **Implement `my_offers_screen.dart`** — List and manage submitted offers.
 - [ ] **Implement `verification_screen.dart`** — Verification document submission.
 - [ ] **Implement `subscription_screen.dart`** — Tier selection and payment checkout.
 
