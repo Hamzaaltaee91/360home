@@ -9,7 +9,7 @@
 CREATE OR REPLACE FUNCTION public.current_user_id()
 RETURNS UUID AS $$
   SELECT id FROM public.users WHERE auth_id = auth.uid();
-$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, auth;
 
 -- Check whether the current auth user is an admin (bypasses RLS to avoid recursion)
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -17,7 +17,11 @@ RETURNS BOOLEAN AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.users WHERE auth_id = auth.uid() AND role = 'admin'
   );
-$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, auth;
+
+-- Ensure the helper functions can bypass RLS regardless of owner privileges
+ALTER FUNCTION public.current_user_id() SET row_security = off;
+ALTER FUNCTION public.is_admin() SET row_security = off;
 
 -- ============================================
 -- USERS TABLE POLICIES
@@ -51,9 +55,9 @@ CREATE POLICY "users_update_admin" ON public.users
 CREATE POLICY "users_delete_admin" ON public.users
   FOR DELETE USING (public.is_admin());
 
--- Public can view minimal realtor profiles (verified only)
-CREATE POLICY "users_select_realtor_public" ON public.users
-  FOR SELECT USING (role = 'realtor' AND is_verified = true);
+-- NOTE: Public realtor visibility is intentionally NOT granted on public.users
+-- to avoid leaking PII (email, phone, bio). Use the realtors table's
+-- realtors_select_public policy or a dedicated view/RPC for public profiles.
 
 -- ============================================
 -- REALTORS TABLE POLICIES
