@@ -166,7 +166,7 @@
 - [x] **Component Tests** — Widget tests for shared components.
 
 ### Integration Tests
-- [ ] **Auth Journey** — End-to-end authentication flow.
+- [x] **Auth Journey** — End-to-end authentication flow.
 - [ ] **Offer Lifecycle** — Flow: Create Request → Submit Offer → Accept Offer.
 - [ ] **Verification Workflow** — End-to-end realtor verification submit.
 
