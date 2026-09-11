@@ -167,7 +167,7 @@
 
 ### Integration Tests
 - [x] **Auth Journey** — End-to-end authentication flow.
-- [ ] **Offer Lifecycle** — Flow: Create Request → Submit Offer → Accept Offer.
+- [x] **Offer Lifecycle** — Flow: Create Request → Submit Offer → Accept Offer.
 - [ ] **Verification Workflow** — End-to-end realtor verification submit.
 
 ---
