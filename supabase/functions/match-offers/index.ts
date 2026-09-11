@@ -28,6 +28,54 @@ interface PropertyMatch {
   match_score: number;
 }
 
+// احسب درجة المطابقة (0-100) لطلب واحد مقابل وسيط
+export function computeMatchScore(
+  request: any,
+  options: { hasExistingOffer: boolean; now?: number }
+): number {
+  const now = options.now ?? Date.now();
+  let matchScore = 50; // درجة أساسية
+
+  // +20 إذا كان الطلب حديثًا (أقل من 7 أيام)
+  const requestAge =
+    (now - new Date(request.created_at).getTime()) / (1000 * 60 * 60 * 24);
+  if (requestAge < 7) matchScore += 20;
+
+  // +15 إذا لم يكن هناك عرض سابق
+  if (!options.hasExistingOffer) matchScore += 15;
+
+  // -10 إذا كان الطلب عاجلًا (ربما أقل عرضًا)
+  if (request.is_urgent) matchScore -= 10;
+
+  return Math.max(0, Math.min(100, matchScore));
+}
+
+// ابنِ قائمة المطابقات مرتبة حسب درجة المطابقة
+export function buildMatches(
+  requests: any[],
+  existingOfferRequestIds: Set<string>,
+  now?: number
+): PropertyMatch[] {
+  const matches: PropertyMatch[] = requests.map((request: any) => ({
+    request_id: request.id,
+    buyer_id: request.buyer_id,
+    category: request.category,
+    title: request.title,
+    city: request.city,
+    min_price: request.min_price,
+    max_price: request.max_price,
+    bedrooms: request.bedrooms,
+    bathrooms: request.bathrooms,
+    match_score: computeMatchScore(request, {
+      hasExistingOffer: existingOfferRequestIds.has(request.id),
+      now,
+    }),
+  }));
+
+  matches.sort((a, b) => b.match_score - a.match_score);
+  return matches;
+}
+
 serve(async (req) => {
   try {
     if (req.method !== "POST") {
@@ -94,49 +142,22 @@ serve(async (req) => {
       );
     }
 
-    // للطلب الواحد، احسب درجة المطابقة
-    const matches: PropertyMatch[] = await Promise.all(
-      requests.map(async (request: any) => {
-        // تحقق من أن الوسيط لم ينشئ عرضًا سابقًا
-        const { count: existingOffers } = await supabase
-          .from("realtor_offers")
-          .select("*", { count: "exact" })
-          .eq("realtor_id", realtor_id)
-          .eq("request_id", request.id);
+    // اجلب معرفات الطلبات التي أنشأ لها الوسيط عرضًا سابقًا
+    const { data: existingOffers } = await supabase
+      .from("realtor_offers")
+      .select("request_id")
+      .eq("realtor_id", realtor_id)
+      .in(
+        "request_id",
+        requests.map((r: any) => r.id)
+      );
 
-        // احسب درجة المطابقة (0-100)
-        let matchScore = 50; // درجة أساسية
-
-        // +20 إذا كان الطلب حديثًا (أقل من 7 أيام)
-        const requestAge =
-          (Date.now() -
-            new Date(request.created_at).getTime()) /
-          (1000 * 60 * 60 * 24);
-        if (requestAge < 7) matchScore += 20;
-
-        // +15 إذا لم يكن هناك عرض سابق
-        if (!existingOffers || existingOffers === 0) matchScore += 15;
-
-        // -10 إذا كان الطلب عاجلًا (ربما أقل عرضًا)
-        if (request.is_urgent) matchScore -= 10;
-
-        return {
-          request_id: request.id,
-          buyer_id: request.buyer_id,
-          category: request.category,
-          title: request.title,
-          city: request.city,
-          min_price: request.min_price,
-          max_price: request.max_price,
-          bedrooms: request.bedrooms,
-          bathrooms: request.bathrooms,
-          match_score: Math.max(0, Math.min(100, matchScore)),
-        };
-      })
+    const existingOfferRequestIds = new Set<string>(
+      (existingOffers || []).map((o: any) => o.request_id)
     );
 
-    // رتب حسب درجة المطابقة
-    matches.sort((a, b) => b.match_score - a.match_score);
+    // احسب المطابقات ورتبها حسب درجة المطابقة
+    const matches = buildMatches(requests, existingOfferRequestIds);
 
     return new Response(
       JSON.stringify({ matches }),
