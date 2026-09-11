@@ -68,7 +68,9 @@ class _SignupScreenState extends State<SignupScreen> {
       );
 
       if (!mounted) return;
-      context.go('/login');
+      context.go(
+        '/verify-email?email=${Uri.encodeComponent(_emailController.text.trim())}',
+      );
     } on AppException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (e) {

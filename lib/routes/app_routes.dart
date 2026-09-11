@@ -8,6 +8,7 @@ import '../services/supabase_service.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
+import '../screens/auth/verify_email_screen.dart';
 import '../screens/buyer/buyer_home_screen.dart';
 import '../screens/buyer/create_request_screen.dart';
 import '../screens/buyer/browse_offers_screen.dart';
@@ -32,6 +33,7 @@ class RouteNames {
   static const String login = '/login';
   static const String signup = '/signup';
   static const String forgotPassword = '/forgot-password';
+  static const String verifyEmail = '/verify-email';
 
   // Buyer
   static const String buyer = '/buyer';
@@ -99,6 +101,7 @@ class RouteNames {
     login,
     signup,
     forgotPassword,
+    verifyEmail,
   };
 
   /// Returns the home route for a given user role.
@@ -199,6 +202,13 @@ final appRoutes = GoRouter(
     GoRoute(
       path: RouteNames.forgotPassword,
       builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.verifyEmail,
+      builder: (context, state) {
+        final email = state.uri.queryParameters['email'];
+        return VerifyEmailScreen(email: email);
+      },
     ),
 
     // Buyer Routes
