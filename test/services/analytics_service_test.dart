@@ -1,7 +1,115 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:dabberli/services/analytics_service.dart';
+import 'package:dabberli/utils/error_handler.dart';
+
+import 'test_helpers.dart';
 
 void main() {
+  group('AnalyticsService', () {
+    late MockSupabaseService supabaseService;
+    late MockSupabaseClient client;
+    late MockFunctionsClient functions;
+    late AnalyticsService service;
+
+    setUpAll(registerServiceFallbacks);
+
+    setUp(() {
+      supabaseService = MockSupabaseService();
+      client = MockSupabaseClient();
+      functions = MockFunctionsClient();
+      when(() => supabaseService.client).thenReturn(client);
+      when(() => client.functions).thenReturn(functions);
+      service = AnalyticsService(supabaseService: supabaseService);
+    });
+
+    test('getRealtorStats throws AppException when signed out', () async {
+      when(() => supabaseService.getCurrentUserId()).thenReturn(null);
+
+      expect(
+        () => service.getRealtorStats(),
+        throwsA(isA<AppException>()),
+      );
+    });
+
+    test('getRealtorStats parses the function response', () async {
+      when(() => supabaseService.getCurrentUserId()).thenReturn('user-1');
+      when(
+        () => functions.invoke('analytics', body: any(named: 'body')),
+      ).thenAnswer((_) async => {
+            'total_offers': 10,
+            'accepted_offers': 4,
+            'rejected_offers': 2,
+            'pending_offers': 4,
+            'average_response_time': 3.5,
+            'total_interactions': 25,
+          });
+
+      final stats = await service.getRealtorStats();
+
+      expect(stats.totalOffers, 10);
+      expect(stats.acceptedOffers, 4);
+      expect(stats.averageResponseTime, 3.5);
+    });
+
+    test('getRealtorStats translates FunctionException into AppException',
+        () async {
+      when(() => supabaseService.getCurrentUserId()).thenReturn('user-1');
+      when(
+        () => functions.invoke('analytics', body: any(named: 'body')),
+      ).thenThrow(
+        const FunctionException(status: 500, details: {'message': 'فشل'}),
+      );
+
+      expect(
+        () => service.getRealtorStats(),
+        throwsA(
+          isA<AppException>().having((e) => e.message, 'message', 'فشل'),
+        ),
+      );
+    });
+
+    test('getBuyerStats parses the function response', () async {
+      when(() => supabaseService.getCurrentUserId()).thenReturn('user-1');
+      when(
+        () => functions.invoke('analytics', body: any(named: 'body')),
+      ).thenAnswer((_) async => {
+            'total_requests': 5,
+            'active_requests': 2,
+            'total_offers_received': 8,
+            'total_offers_accepted': 3,
+            'response_rate': 62.5,
+          });
+
+      final stats = await service.getBuyerStats();
+
+      expect(stats.totalRequests, 5);
+      expect(stats.responseRate, 62.5);
+    });
+
+    test('getPlatformStats parses nested period and new_users fields',
+        () async {
+      when(
+        () => functions.invoke('analytics', body: any(named: 'body')),
+      ).thenAnswer((_) async => {
+            'period': {'from': '2024-01-01', 'to': '2024-01-31'},
+            'new_users': {'total': 100, 'buyers': 70, 'realtors': 30},
+            'property_requests': 40,
+            'realtor_offers': 120,
+            'offer_acceptance_rate': 25.0,
+            'average_offers_per_request': 3.0,
+          });
+
+      final stats = await service.getPlatformStats();
+
+      expect(stats.newUsersTotal, 100);
+      expect(stats.newUsersRealtors, 30);
+      expect(stats.offerAcceptanceRate, 25.0);
+    });
+  });
+
   group('RealtorStats', () {
     final json = {
       'total_offers': 10,

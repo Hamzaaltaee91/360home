@@ -157,7 +157,7 @@
 
 ### Unit Tests
 - [x] **Model Tests** — Unit coverage for User, PropertyRequest, RealtorOffer.
-- [ ] **Service Tests** — Mock Supabase client tests in `test/services/`.
+- [x] **Service Tests** — Mock Supabase client tests in `test/services/`.
 - [ ] **Validator Tests** — Comprehensive validator coverage in `test/utils/`.
 - [ ] **Error Handler Tests** — Translate and handle Supabase exceptions.
 
