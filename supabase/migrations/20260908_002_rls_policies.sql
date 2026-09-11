@@ -14,6 +14,12 @@ CREATE POLICY "users_update_own" ON public.users
   FOR UPDATE USING (auth.uid() = auth_id)
   WITH CHECK (auth.uid() = auth_id);
 
+-- Helper: resolve the current auth user's public.users.id
+CREATE OR REPLACE FUNCTION public.current_user_id()
+RETURNS UUID AS $$
+  SELECT id FROM public.users WHERE auth_id = auth.uid();
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+
 -- Users cannot delete their own profile (admin only)
 CREATE POLICY "users_delete_none" ON public.users
   FOR DELETE USING (FALSE);
@@ -28,12 +34,12 @@ CREATE POLICY "users_select_realtor_public" ON public.users
 
 -- Realtors can view their own profile
 CREATE POLICY "realtors_select_own" ON public.realtors
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (public.current_user_id() = user_id);
 
 -- Realtors can update their own profile
 CREATE POLICY "realtors_update_own" ON public.realtors
-  FOR UPDATE USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  FOR UPDATE USING (public.current_user_id() = user_id)
+  WITH CHECK (public.current_user_id() = user_id);
 
 -- Public can view verified realtor profiles
 CREATE POLICY "realtors_select_public" ON public.realtors
@@ -45,27 +51,27 @@ CREATE POLICY "realtors_select_public" ON public.realtors
 
 -- Buyers can only view their own requests
 CREATE POLICY "property_requests_select_own" ON public.property_requests
-  FOR SELECT USING (auth.uid() = buyer_id);
+  FOR SELECT USING (public.current_user_id() = buyer_id);
 
 -- Buyers can only insert their own requests
 CREATE POLICY "property_requests_insert_own" ON public.property_requests
-  FOR INSERT WITH CHECK (auth.uid() = buyer_id);
+  FOR INSERT WITH CHECK (public.current_user_id() = buyer_id);
 
 -- Buyers can only update their own requests
 CREATE POLICY "property_requests_update_own" ON public.property_requests
-  FOR UPDATE USING (auth.uid() = buyer_id)
-  WITH CHECK (auth.uid() = buyer_id);
+  FOR UPDATE USING (public.current_user_id() = buyer_id)
+  WITH CHECK (public.current_user_id() = buyer_id);
 
 -- Buyers can only delete their own requests
 CREATE POLICY "property_requests_delete_own" ON public.property_requests
-  FOR DELETE USING (auth.uid() = buyer_id);
+  FOR DELETE USING (public.current_user_id() = buyer_id);
 
 -- Realtors can view active requests to create offers
 CREATE POLICY "property_requests_select_active_for_realtor" ON public.property_requests
   FOR SELECT USING (
     status = 'active'
     AND expires_at > NOW()
-    AND EXISTS (SELECT 1 FROM public.realtors WHERE user_id = auth.uid() AND verified_at IS NOT NULL)
+    AND EXISTS (SELECT 1 FROM public.realtors WHERE user_id = public.current_user_id() AND verified_at IS NOT NULL)
   );
 
 -- ============================================
@@ -74,38 +80,38 @@ CREATE POLICY "property_requests_select_active_for_realtor" ON public.property_r
 
 -- Realtors can only view their own offers
 CREATE POLICY "realtor_offers_select_own" ON public.realtor_offers
-  FOR SELECT USING (auth.uid() = realtor_id);
+  FOR SELECT USING (public.current_user_id() = realtor_id);
 
 -- Realtors can create offers
 CREATE POLICY "realtor_offers_insert_own" ON public.realtor_offers
   FOR INSERT WITH CHECK (
-    auth.uid() = realtor_id
-    AND EXISTS (SELECT 1 FROM public.realtors WHERE user_id = auth.uid() AND verified_at IS NOT NULL)
+    public.current_user_id() = realtor_id
+    AND EXISTS (SELECT 1 FROM public.realtors WHERE user_id = public.current_user_id() AND verified_at IS NOT NULL)
   );
 
 -- Realtors can update their own offers
 CREATE POLICY "realtor_offers_update_own" ON public.realtor_offers
-  FOR UPDATE USING (auth.uid() = realtor_id)
-  WITH CHECK (auth.uid() = realtor_id);
+  FOR UPDATE USING (public.current_user_id() = realtor_id)
+  WITH CHECK (public.current_user_id() = realtor_id);
 
 -- Buyers can view offers on their own requests
 CREATE POLICY "realtor_offers_select_for_buyer" ON public.realtor_offers
   FOR SELECT USING (
-    auth.uid() = (
-      SELECT buyer_id FROM public.property_requests WHERE id = request_id
+    public.current_user_id() = (
+      SELECT buyer_id FROM public.property_requests WHERE id = realtor_offers.request_id
     )
   );
 
 -- Buyers can update offer response (accept/reject)
 CREATE POLICY "realtor_offers_update_buyer_response" ON public.realtor_offers
   FOR UPDATE USING (
-    auth.uid() = (
-      SELECT buyer_id FROM public.property_requests WHERE id = request_id
+    public.current_user_id() = (
+      SELECT buyer_id FROM public.property_requests WHERE id = realtor_offers.request_id
     )
   )
   WITH CHECK (
-    auth.uid() = (
-      SELECT buyer_id FROM public.property_requests WHERE id = request_id
+    public.current_user_id() = (
+      SELECT buyer_id FROM public.property_requests WHERE id = realtor_offers.request_id
     )
     AND (buyer_response IS NULL OR buyer_response IN ('interested', 'not_interested'))
   );
@@ -117,7 +123,7 @@ CREATE POLICY "realtor_offers_update_buyer_response" ON public.realtor_offers
 -- Only involved parties can view interactions
 CREATE POLICY "offer_interactions_select_involved" ON public.offer_interactions
   FOR SELECT USING (
-    auth.uid() = buyer_id OR auth.uid() = realtor_id
+    public.current_user_id() = buyer_id OR public.current_user_id() = realtor_id
   );
 
 -- System can insert interactions
@@ -130,11 +136,11 @@ CREATE POLICY "offer_interactions_insert" ON public.offer_interactions
 
 -- Users can view their own verification records
 CREATE POLICY "verifications_select_own" ON public.verifications
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (public.current_user_id() = user_id);
 
 -- Users can only insert their own verification records
 CREATE POLICY "verifications_insert_own" ON public.verifications
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
+  FOR INSERT WITH CHECK (public.current_user_id() = user_id);
 
 -- Only admins can update verification status
 CREATE POLICY "verifications_update_admin" ON public.verifications

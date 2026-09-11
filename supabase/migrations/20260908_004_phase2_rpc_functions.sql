@@ -6,21 +6,21 @@
 -- ============================================
 
 CREATE OR REPLACE FUNCTION public.nearby_requests(
-  lat DECIMAL,
-  lng DECIMAL,
-  radius_m INT
+  p_lat DECIMAL,
+  p_lng DECIMAL,
+  p_radius_m INT
 )
 RETURNS TABLE (
-  id UUID,
-  buyer_id UUID,
-  category TEXT,
-  title TEXT,
-  city TEXT,
-  min_price DECIMAL,
-  max_price DECIMAL,
-  bedrooms INT,
-  bathrooms INT,
-  status TEXT,
+  request_id UUID,
+  request_buyer_id UUID,
+  request_category TEXT,
+  request_title TEXT,
+  request_city TEXT,
+  request_min_price DECIMAL,
+  request_max_price DECIMAL,
+  request_bedrooms INT,
+  request_bathrooms INT,
+  request_status TEXT,
   distance_m INT
 ) AS $$
 BEGIN
@@ -37,11 +37,13 @@ BEGIN
     pr.bathrooms,
     pr.status,
     (earth_distance(ll_to_earth(pr.latitude, pr.longitude),
-                    ll_to_earth(lat, lng)))::INT AS distance_m
+                    ll_to_earth(p_lat, p_lng)))::INT AS distance_m
   FROM public.property_requests pr
   WHERE pr.status = 'active'
+    AND pr.latitude IS NOT NULL
+    AND pr.longitude IS NOT NULL
     AND earth_distance(ll_to_earth(pr.latitude, pr.longitude),
-                       ll_to_earth(lat, lng)) <= radius_m
+                       ll_to_earth(p_lat, p_lng)) <= p_radius_m
   ORDER BY distance_m ASC;
 END;
 $$ LANGUAGE plpgsql;
@@ -50,7 +52,7 @@ $$ LANGUAGE plpgsql;
 -- FUNCTION: Get buyer's offer statistics
 -- ============================================
 
-CREATE OR REPLACE FUNCTION public.get_buyer_offer_stats(buyer_id_param UUID)
+CREATE OR REPLACE FUNCTION public.get_buyer_offer_stats(p_buyer_id UUID)
 RETURNS TABLE (
   total_offers INT,
   accepted_offers INT,
@@ -68,35 +70,35 @@ BEGIN
   SELECT COUNT(*) INTO v_total_offers
   FROM public.realtor_offers
   WHERE request_id IN (
-    SELECT id FROM public.property_requests WHERE buyer_id = buyer_id_param
+    SELECT id FROM public.property_requests WHERE buyer_id = p_buyer_id
   );
 
   SELECT COUNT(*) INTO v_accepted
   FROM public.realtor_offers
   WHERE buyer_response = 'interested'
     AND request_id IN (
-      SELECT id FROM public.property_requests WHERE buyer_id = buyer_id_param
+      SELECT id FROM public.property_requests WHERE buyer_id = p_buyer_id
     );
 
   SELECT COUNT(*) INTO v_rejected
   FROM public.realtor_offers
   WHERE buyer_response = 'not_interested'
     AND request_id IN (
-      SELECT id FROM public.property_requests WHERE buyer_id = buyer_id_param
+      SELECT id FROM public.property_requests WHERE buyer_id = p_buyer_id
     );
 
   SELECT COUNT(*) INTO v_pending
   FROM public.realtor_offers
   WHERE status = 'pending'
     AND request_id IN (
-      SELECT id FROM public.property_requests WHERE buyer_id = buyer_id_param
+      SELECT id FROM public.property_requests WHERE buyer_id = p_buyer_id
     );
 
   SELECT COUNT(*) INTO v_responded
   FROM public.realtor_offers
   WHERE buyer_response IS NOT NULL
     AND request_id IN (
-      SELECT id FROM public.property_requests WHERE buyer_id = buyer_id_param
+      SELECT id FROM public.property_requests WHERE buyer_id = p_buyer_id
     );
 
   v_total_offers := COALESCE(v_total_offers, 0);
@@ -120,7 +122,7 @@ $$ LANGUAGE plpgsql;
 -- FUNCTION: Get realtor's performance metrics
 -- ============================================
 
-CREATE OR REPLACE FUNCTION public.get_realtor_performance(realtor_id_param UUID)
+CREATE OR REPLACE FUNCTION public.get_realtor_performance(p_realtor_id UUID)
 RETURNS TABLE (
   total_offers INT,
   accepted_offers INT,
@@ -136,22 +138,22 @@ DECLARE
 BEGIN
   SELECT COUNT(*) INTO v_total
   FROM public.realtor_offers
-  WHERE realtor_id = realtor_id_param;
+  WHERE realtor_id = p_realtor_id;
 
   SELECT COUNT(*) INTO v_accepted
   FROM public.realtor_offers
-  WHERE realtor_id = realtor_id_param
+  WHERE realtor_id = p_realtor_id
     AND buyer_response = 'interested';
 
   SELECT COUNT(*) INTO v_interactions
   FROM public.offer_interactions
-  WHERE realtor_id = realtor_id_param;
+  WHERE realtor_id = p_realtor_id;
 
   -- حساب عدد الأيام المتوسط للرد
   SELECT AVG(EXTRACT(EPOCH FROM (updated_at - created_at)) / 86400)::DECIMAL
   INTO v_avg_days
   FROM public.realtor_offers
-  WHERE realtor_id = realtor_id_param
+  WHERE realtor_id = p_realtor_id
     AND updated_at > created_at;
 
   v_total := COALESCE(v_total, 0);
@@ -188,7 +190,8 @@ BEGIN
   UPDATE public.realtor_offers ro
   SET buyer_response = p_responses ->> ro.id::TEXT
   WHERE ro.request_id = p_request_id
-    AND ro.buyer_response IS NULL;
+    AND ro.buyer_response IS NULL
+    AND p_responses ? ro.id::TEXT;
 
   GET DIAGNOSTICS v_updated = ROW_COUNT;
 
@@ -300,8 +303,8 @@ BEGIN
   INTO v_price_match, v_area_match, v_bedroom_match
   FROM request_data rd, offer_data od;
 
-  v_score := v_score * v_price_match;
-  v_score := v_score * v_area_match;
+  v_score := v_score * COALESCE(v_price_match, 1);
+  v_score := v_score * COALESCE(v_area_match, 1);
   IF v_bedroom_match THEN v_score := v_score * 1.1; END IF;
 
   RETURN ROUND(v_score, 2);

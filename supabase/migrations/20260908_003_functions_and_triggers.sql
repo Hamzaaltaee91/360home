@@ -163,14 +163,14 @@ $$ LANGUAGE plpgsql;
 -- FUNCTION: Get matching offers for buyer request
 -- ============================================
 
-CREATE OR REPLACE FUNCTION public.get_matching_offers(request_id UUID)
+CREATE OR REPLACE FUNCTION public.get_matching_offers(p_request_id UUID)
 RETURNS TABLE (
-  id UUID,
-  realtor_id UUID,
-  property_title TEXT,
-  offered_price DECIMAL,
-  status TEXT,
-  created_at TIMESTAMP,
+  offer_id UUID,
+  offer_realtor_id UUID,
+  offer_property_title TEXT,
+  offer_offered_price DECIMAL,
+  offer_status TEXT,
+  offer_created_at TIMESTAMP,
   realtor_name TEXT,
   realtor_rating DECIMAL
 ) AS $$
@@ -188,7 +188,7 @@ BEGIN
   FROM public.realtor_offers ro
   JOIN public.users u ON ro.realtor_id = u.id
   LEFT JOIN public.realtors r ON r.user_id = u.id
-  WHERE ro.request_id = request_id
+  WHERE ro.request_id = p_request_id
     AND ro.expires_at > NOW()
   ORDER BY ro.created_at DESC;
 END;
