@@ -133,7 +133,7 @@
 
 ## 9. State Management
 
-- [ ] **Establish State Management Choice** — Select and document Riverpod or Bloc.
+- [x] **Establish State Management Choice** — Select and document Riverpod or Bloc.
 - [ ] **Implement `auth_provider.dart`** — Global authentication state.
 - [ ] **Implement `user_provider.dart`** — Current user session and profile data.
 - [ ] **Implement `requests_provider.dart`** — Buyer requests state.
