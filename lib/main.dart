@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'themes/app_theme.dart';
 import 'routes/app_routes.dart';
 import 'services/settings_service.dart';
@@ -29,7 +30,7 @@ void main() async {
   // Load persisted user preferences (language, notifications, theme).
   await SettingsService().load();
 
-  runApp(const DabberliApp());
+  runApp(const ProviderScope(child: DabberliApp()));
 }
 
 class DabberliApp extends StatelessWidget {
