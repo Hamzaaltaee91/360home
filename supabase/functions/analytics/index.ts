@@ -16,7 +16,7 @@ interface AnalyticsQuery {
   date_to?: string;
 }
 
-interface RealtorStats {
+export interface RealtorStats {
   total_offers: number;
   accepted_offers: number;
   rejected_offers: number;
@@ -25,12 +25,21 @@ interface RealtorStats {
   total_interactions: number;
 }
 
-interface BuyerStats {
+export interface BuyerStats {
   total_requests: number;
   active_requests: number;
   total_offers_received: number;
   total_offers_accepted: number;
   response_rate: number; // نسبة الرد (0-100)
+}
+
+export interface PlatformStats {
+  period: { from: string; to: string };
+  new_users: { total: number; buyers: number; realtors: number };
+  property_requests: number;
+  realtor_offers: number;
+  offer_acceptance_rate: number;
+  average_offers_per_request: number;
 }
 
 serve(async (req) => {
@@ -80,26 +89,10 @@ serve(async (req) => {
   }
 });
 
-async function getRealtorStats(
-  realtorId: string,
-  dateFrom: string,
-  dateTo: string
-): Promise<RealtorStats> {
-  // احسب إحصائيات الوسيط
-  const { data: offers } = await supabase
-    .from("realtor_offers")
-    .select("id, status, created_at, buyer_response, updated_at")
-    .eq("realtor_id", realtorId)
-    .gte("created_at", dateFrom)
-    .lte("created_at", dateTo);
-
-  const { data: interactions } = await supabase
-    .from("offer_interactions")
-    .select("*")
-    .eq("realtor_id", realtorId)
-    .gte("created_at", dateFrom)
-    .lte("created_at", dateTo);
-
+export function computeRealtorStats(
+  offers: any[] | null,
+  interactions: any[] | null
+): RealtorStats {
   if (!offers) {
     return {
       total_offers: 0,
@@ -144,29 +137,32 @@ async function getRealtorStats(
   };
 }
 
-async function getBuyerStats(
-  buyerId: string,
+async function getRealtorStats(
+  realtorId: string,
   dateFrom: string,
   dateTo: string
-): Promise<BuyerStats> {
-  // احسب إحصائيات المشتري
-  const { data: requests } = await supabase
-    .from("property_requests")
-    .select("id, status")
-    .eq("buyer_id", buyerId)
-    .gte("created_at", dateFrom)
-    .lte("created_at", dateTo);
-
+): Promise<RealtorStats> {
   const { data: offers } = await supabase
     .from("realtor_offers")
-    .select("id, buyer_response, request_id")
-    .in(
-      "request_id",
-      requests?.map((r: any) => r.id) || []
-    )
+    .select("id, status, created_at, buyer_response, updated_at")
+    .eq("realtor_id", realtorId)
     .gte("created_at", dateFrom)
     .lte("created_at", dateTo);
 
+  const { data: interactions } = await supabase
+    .from("offer_interactions")
+    .select("*")
+    .eq("realtor_id", realtorId)
+    .gte("created_at", dateFrom)
+    .lte("created_at", dateTo);
+
+  return computeRealtorStats(offers, interactions);
+}
+
+export function computeBuyerStats(
+  requests: any[] | null,
+  offers: any[] | null
+): BuyerStats {
   const active = requests?.filter((r: any) => r.status === "active").length || 0;
   const accepted = offers?.filter((o: any) => o.buyer_response === "interested")
     .length || 0;
@@ -186,30 +182,38 @@ async function getBuyerStats(
   };
 }
 
-async function getPlatformStats(
+async function getBuyerStats(
+  buyerId: string,
   dateFrom: string,
   dateTo: string
-): Promise<Record<string, unknown>> {
-  // احسب إحصائيات المنصة الكلية
-
-  const { data: users } = await supabase
-    .from("users")
-    .select("id, role")
-    .gte("created_at", dateFrom)
-    .lte("created_at", dateTo);
-
+): Promise<BuyerStats> {
   const { data: requests } = await supabase
     .from("property_requests")
-    .select("*")
+    .select("id, status")
+    .eq("buyer_id", buyerId)
     .gte("created_at", dateFrom)
     .lte("created_at", dateTo);
 
   const { data: offers } = await supabase
     .from("realtor_offers")
-    .select("*")
+    .select("id, buyer_response, request_id")
+    .in(
+      "request_id",
+      requests?.map((r: any) => r.id) || []
+    )
     .gte("created_at", dateFrom)
     .lte("created_at", dateTo);
 
+  return computeBuyerStats(requests, offers);
+}
+
+export function computePlatformStats(
+  users: any[] | null,
+  requests: any[] | null,
+  offers: any[] | null,
+  dateFrom: string,
+  dateTo: string
+): PlatformStats {
   const buyers = users?.filter((u: any) => u.role === "buyer").length || 0;
   const realtors = users?.filter((u: any) => u.role === "realtor").length || 0;
 
@@ -235,7 +239,32 @@ async function getPlatformStats(
     offer_acceptance_rate: offerAcceptanceRate,
     average_offers_per_request:
       requests && requests.length > 0
-        ? Math.round((offers?.length || 0 / requests.length) * 100) / 100
+        ? Math.round(((offers?.length || 0) / requests.length) * 100) / 100
         : 0,
   };
+}
+
+async function getPlatformStats(
+  dateFrom: string,
+  dateTo: string
+): Promise<PlatformStats> {
+  const { data: users } = await supabase
+    .from("users")
+    .select("id, role")
+    .gte("created_at", dateFrom)
+    .lte("created_at", dateTo);
+
+  const { data: requests } = await supabase
+    .from("property_requests")
+    .select("*")
+    .gte("created_at", dateFrom)
+    .lte("created_at", dateTo);
+
+  const { data: offers } = await supabase
+    .from("realtor_offers")
+    .select("*")
+    .gte("created_at", dateFrom)
+    .lte("created_at", dateTo);
+
+  return computePlatformStats(users, requests, offers, dateFrom, dateTo);
 }

@@ -32,7 +32,7 @@
 
 ## 3. Edge Functions
 
-- [ ] **Test `analytics/index.ts`** — Unit tests for realtor, buyer, and platform stats.
+- [x] **Test `analytics/index.ts`** — Unit tests for realtor, buyer, and platform stats.
 - [ ] **Test `match-offers/index.ts`** — Matching logic by category, budget, and location.
 - [ ] **Test `search-requests/index.ts`** — Radius search and advanced filtering.
 - [ ] **Test `send-notification/index.ts`** — In-app and email notifications.
