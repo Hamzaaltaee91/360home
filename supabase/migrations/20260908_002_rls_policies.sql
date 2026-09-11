@@ -2,6 +2,24 @@
 -- Created: 2026-09-08
 
 -- ============================================
+-- HELPER FUNCTIONS (must be defined before policies)
+-- ============================================
+
+-- Resolve the current auth user's public.users.id (bypasses RLS)
+CREATE OR REPLACE FUNCTION public.current_user_id()
+RETURNS UUID AS $$
+  SELECT id FROM public.users WHERE auth_id = auth.uid();
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+
+-- Check whether the current auth user is an admin (bypasses RLS to avoid recursion)
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.users WHERE auth_id = auth.uid() AND role = 'admin'
+  );
+$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+
+-- ============================================
 -- USERS TABLE POLICIES
 -- ============================================
 
@@ -14,12 +32,6 @@ CREATE POLICY "users_update_own" ON public.users
   FOR UPDATE USING (auth.uid() = auth_id)
   WITH CHECK (auth.uid() = auth_id);
 
--- Helper: resolve the current auth user's public.users.id
-CREATE OR REPLACE FUNCTION public.current_user_id()
-RETURNS UUID AS $$
-  SELECT id FROM public.users WHERE auth_id = auth.uid();
-$$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
-
 -- Users can insert their own profile (normally done by trigger)
 CREATE POLICY "users_insert_own" ON public.users
   FOR INSERT WITH CHECK (auth.uid() = auth_id);
@@ -30,22 +42,14 @@ CREATE POLICY "users_delete_none" ON public.users
 
 -- Admins can view and manage all users
 CREATE POLICY "users_select_admin" ON public.users
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR SELECT USING (public.is_admin());
 
 CREATE POLICY "users_update_admin" ON public.users
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  )
-  WITH CHECK (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR UPDATE USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 CREATE POLICY "users_delete_admin" ON public.users
-  FOR DELETE USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR DELETE USING (public.is_admin());
 
 -- Public can view minimal realtor profiles (verified only)
 CREATE POLICY "users_select_realtor_public" ON public.users
@@ -69,12 +73,8 @@ CREATE POLICY "realtors_delete_own" ON public.realtors
 
 -- Admins can manage all realtor profiles
 CREATE POLICY "realtors_admin_all" ON public.realtors
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  )
-  WITH CHECK (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR ALL USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 -- Realtors can update their own profile
 CREATE POLICY "realtors_update_own" ON public.realtors
@@ -116,12 +116,8 @@ CREATE POLICY "property_requests_select_active_for_realtor" ON public.property_r
 
 -- Admins can view and manage all requests
 CREATE POLICY "property_requests_admin_all" ON public.property_requests
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  )
-  WITH CHECK (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR ALL USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 -- ============================================
 -- REALTOR OFFERS TABLE POLICIES
@@ -171,12 +167,8 @@ CREATE POLICY "realtor_offers_delete_own" ON public.realtor_offers
 
 -- Admins can manage all offers
 CREATE POLICY "realtor_offers_admin_all" ON public.realtor_offers
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  )
-  WITH CHECK (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR ALL USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 -- ============================================
 -- OFFER INTERACTIONS TABLE POLICIES
@@ -196,9 +188,7 @@ CREATE POLICY "offer_interactions_insert_involved" ON public.offer_interactions
 
 -- Admins can view all interactions
 CREATE POLICY "offer_interactions_select_admin" ON public.offer_interactions
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR SELECT USING (public.is_admin());
 
 -- ============================================
 -- VERIFICATIONS TABLE POLICIES
@@ -214,30 +204,16 @@ CREATE POLICY "verifications_insert_own" ON public.verifications
 
 -- Only admins can update verification status
 CREATE POLICY "verifications_update_admin" ON public.verifications
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM public.users
-      WHERE auth_id = auth.uid() AND role = 'admin'
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.users
-      WHERE auth_id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR UPDATE USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 -- Admins can view all verifications
 CREATE POLICY "verifications_select_admin" ON public.verifications
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR SELECT USING (public.is_admin());
 
 -- Admins can delete verifications
 CREATE POLICY "verifications_delete_admin" ON public.verifications
-  FOR DELETE USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR DELETE USING (public.is_admin());
 
 -- ============================================
 -- NOTIFICATIONS TABLE POLICIES
@@ -258,12 +234,8 @@ CREATE POLICY "notifications_delete_own" ON public.notifications
 
 -- Admins can manage all notifications
 CREATE POLICY "notifications_admin_all" ON public.notifications
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  )
-  WITH CHECK (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR ALL USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 -- ============================================
 -- REALTOR VERIFICATIONS TABLE POLICIES
@@ -279,24 +251,16 @@ CREATE POLICY "realtor_verifications_insert_own" ON public.realtor_verifications
 
 -- Admins can review and update verification requests
 CREATE POLICY "realtor_verifications_update_admin" ON public.realtor_verifications
-  FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  )
-  WITH CHECK (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR UPDATE USING (public.is_admin())
+  WITH CHECK (public.is_admin());
 
 -- Admins can view all verification requests
 CREATE POLICY "realtor_verifications_select_admin" ON public.realtor_verifications
-  FOR SELECT USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR SELECT USING (public.is_admin());
 
 -- Admins can delete verification requests
 CREATE POLICY "realtor_verifications_delete_admin" ON public.realtor_verifications
-  FOR DELETE USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR DELETE USING (public.is_admin());
 
 -- ============================================
 -- PROPERTY PHOTOS TABLE POLICIES
@@ -368,9 +332,5 @@ CREATE POLICY "property_photos_delete_owner" ON public.property_photos
 
 -- Admins can manage all photos
 CREATE POLICY "property_photos_admin_all" ON public.property_photos
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  )
-  WITH CHECK (
-    EXISTS (SELECT 1 FROM public.users u WHERE u.auth_id = auth.uid() AND u.role = 'admin')
-  );
+  FOR ALL USING (public.is_admin())
+  WITH CHECK (public.is_admin());
