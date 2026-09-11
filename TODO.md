@@ -125,7 +125,7 @@
 - [x] **Build `custom_text_field.dart`** — Form text input with inline error validation.
 - [x] **Build `property_card.dart`** — Standardized property card.
 - [x] **Build `offer_card.dart`** — Standardized offer item card.
-- [ ] **Build `request_card.dart`** — Standardized request item card.
+- [x] **Build `request_card.dart`** — Standardized request item card.
 - [ ] **Build `image_picker_widget.dart`** — Multi-image picker and preview component.
 - [ ] **Build `map_picker.dart`** — Interactive location selector.
 
