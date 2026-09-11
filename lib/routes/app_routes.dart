@@ -11,6 +11,7 @@ import '../screens/auth/forgot_password_screen.dart';
 import '../screens/auth/verify_email_screen.dart';
 import '../screens/buyer/buyer_home_screen.dart';
 import '../screens/buyer/create_request_screen.dart';
+import '../screens/buyer/edit_request_screen.dart';
 import '../screens/buyer/browse_offers_screen.dart';
 import '../screens/buyer/offer_details_screen.dart';
 import '../screens/buyer/request_details_screen.dart';
@@ -39,6 +40,7 @@ class RouteNames {
   static const String buyer = '/buyer';
   static const String buyerHome = '/buyer-home';
   static const String createRequest = '/create-request';
+  static const String editRequest = '/edit-request/:requestId';
   static const String browseOffers = '/browse-offers';
   static const String offerDetails = '/offer/:offerId';
   static const String requestDetails = '/request/:requestId';
@@ -63,6 +65,9 @@ class RouteNames {
 
   /// Builds the concrete path for a create-offer route.
   static String createOfferPath(String requestId) => '/create-offer/$requestId';
+
+  /// Builds the concrete path for an edit-request route.
+  static String editRequestPath(String requestId) => '/edit-request/$requestId';
 
   /// Resolves an incoming deep link (full URL or path) to a valid in-app
   /// location. Returns `null` when the link cannot be resolved, letting the
@@ -90,6 +95,8 @@ class RouteNames {
         return requestDetailsPath(id);
       case 'create-offer':
         return createOfferPath(id);
+      case 'edit-request':
+        return editRequestPath(id);
       default:
         return null;
     }
@@ -167,7 +174,8 @@ final appRoutes = GoRouter(
         location == RouteNames.createRequest ||
         location == RouteNames.browseOffers ||
         location.startsWith('/offer/') ||
-        location.startsWith('/request/');
+        location.startsWith('/request/') ||
+        location.startsWith('/edit-request/');
     final isRealtorRoute = location.startsWith('/realtor') ||
         location == RouteNames.browseRequests ||
         location.startsWith('/create-offer/');
@@ -227,6 +235,13 @@ final appRoutes = GoRouter(
     GoRoute(
       path: RouteNames.browseOffers,
       builder: (context, state) => const BrowseOffersScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.editRequest,
+      builder: (context, state) {
+        final requestId = state.pathParameters['requestId']!;
+        return EditRequestScreen(requestId: requestId);
+      },
     ),
     GoRoute(
       path: RouteNames.offerDetails,
