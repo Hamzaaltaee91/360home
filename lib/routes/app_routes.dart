@@ -14,38 +14,77 @@ import '../screens/realtor/create_offer_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/splash_screen.dart';
 
+/// Centralized route path constants.
+///
+/// Use these instead of raw string literals so that route definitions,
+/// navigation calls, and deep links stay in sync.
+class RouteNames {
+  const RouteNames._();
+
+  // Splash & Auth
+  static const String splash = '/splash';
+  static const String login = '/login';
+  static const String signup = '/signup';
+
+  // Buyer
+  static const String buyer = '/buyer';
+  static const String buyerHome = '/buyer-home';
+  static const String createRequest = '/create-request';
+  static const String browseOffers = '/browse-offers';
+  static const String offerDetails = '/offer/:offerId';
+
+  // Realtor
+  static const String realtor = '/realtor';
+  static const String realtorHome = '/realtor-home';
+  static const String browseRequests = '/browse-requests';
+  static const String createOffer = '/create-offer/:requestId';
+
+  // Profile
+  static const String profile = '/profile';
+
+  /// Builds the concrete path for an offer details route.
+  static String offerDetailsPath(String offerId) => '/offer/$offerId';
+
+  /// Builds the concrete path for a create-offer route.
+  static String createOfferPath(String requestId) => '/create-offer/$requestId';
+}
+
 final appRoutes = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: RouteNames.splash,
   routes: [
     // Splash & Auth
     GoRoute(
-      path: '/splash',
+      path: RouteNames.splash,
       builder: (context, state) => const SplashScreen(),
     ),
     GoRoute(
-      path: '/login',
+      path: RouteNames.login,
       builder: (context, state) => const LoginScreen(),
     ),
     GoRoute(
-      path: '/signup',
+      path: RouteNames.signup,
       builder: (context, state) => const SignupScreen(),
     ),
 
     // Buyer Routes
     GoRoute(
-      path: '/buyer-home',
+      path: RouteNames.buyer,
       builder: (context, state) => const BuyerHomeScreen(),
     ),
     GoRoute(
-      path: '/create-request',
+      path: RouteNames.buyerHome,
+      builder: (context, state) => const BuyerHomeScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.createRequest,
       builder: (context, state) => const CreateRequestScreen(),
     ),
     GoRoute(
-      path: '/browse-offers',
+      path: RouteNames.browseOffers,
       builder: (context, state) => const BrowseOffersScreen(),
     ),
     GoRoute(
-      path: '/offer/:offerId',
+      path: RouteNames.offerDetails,
       builder: (context, state) {
         final offerId = state.pathParameters['offerId']!;
         return OfferDetailsScreen(offerId: offerId);
@@ -54,15 +93,19 @@ final appRoutes = GoRouter(
 
     // Realtor Routes
     GoRoute(
-      path: '/realtor-home',
+      path: RouteNames.realtor,
       builder: (context, state) => const RealtorHomeScreen(),
     ),
     GoRoute(
-      path: '/browse-requests',
+      path: RouteNames.realtorHome,
+      builder: (context, state) => const RealtorHomeScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.browseRequests,
       builder: (context, state) => const BrowseRequestsScreen(),
     ),
     GoRoute(
-      path: '/create-offer/:requestId',
+      path: RouteNames.createOffer,
       builder: (context, state) {
         final requestId = state.pathParameters['requestId']!;
         return CreateOfferScreen(requestId: requestId);
@@ -71,7 +114,7 @@ final appRoutes = GoRouter(
 
     // Profile
     GoRoute(
-      path: '/profile',
+      path: RouteNames.profile,
       builder: (context, state) => const ProfileScreen(),
     ),
   ],
