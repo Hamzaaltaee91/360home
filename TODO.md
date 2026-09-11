@@ -107,7 +107,7 @@
 - [x] **Implement `edit_profile_screen.dart`** — Profile edits and avatar upload.
 - [x] **Implement `settings_screen.dart`** — Language, notifications, and dark mode toggles.
 - [x] **Implement `notifications_screen.dart`** — Notification list view.
-- [ ] **Implement `about_screen.dart`** — About page and privacy policy view.
+- [x] **Implement `about_screen.dart`** — About page and privacy policy view.
 
 ### Admin Panel
 - [ ] **Implement `admin_dashboard_screen.dart`** — Core metric summaries.
