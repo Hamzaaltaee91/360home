@@ -2,7 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/supabase_service.dart';
+import '../../utils/error_handler.dart';
+import '../../utils/validators.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -12,10 +15,21 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  static const _rememberedEmailKey = 'remembered_email';
+
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _rememberMe = false;
+  bool _obscurePassword = true;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedEmail();
+  }
 
   @override
   void dispose() {
@@ -24,9 +38,28 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _loadRememberedEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedEmail = prefs.getString(_rememberedEmailKey);
+    if (savedEmail != null && savedEmail.isNotEmpty && mounted) {
+      setState(() {
+        _emailController.text = savedEmail;
+        _rememberMe = true;
+      });
+    }
+  }
+
+  Future<void> _persistRememberedEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_rememberMe) {
+      await prefs.setString(_rememberedEmailKey, _emailController.text.trim());
+    } else {
+      await prefs.remove(_rememberedEmailKey);
+    }
+  }
+
   Future<void> _handleLogin() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      setState(() => _errorMessage = 'الرجاء ملء جميع الحقول');
+    if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
 
@@ -42,18 +75,61 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
 
+      await _persistRememberedEmail();
+
       if (!mounted) return;
 
       final user = await supabase.getCurrentUser();
-      if (mounted) {
-        if (user.role == 'buyer') {
+      if (!mounted) return;
+
+      switch (user.role) {
+        case 'buyer':
           context.go('/buyer-home');
-        } else if (user.role == 'realtor') {
+          break;
+        case 'realtor':
           context.go('/realtor-home');
-        }
+          break;
+        case 'admin':
+          context.go('/admin');
+          break;
+        default:
+          setState(() => _errorMessage = 'دور المستخدم غير معروف');
       }
+    } on AppException catch (e) {
+      setState(() => _errorMessage = e.message);
     } catch (e) {
       setState(() => _errorMessage = 'خطأ في تسجيل الدخول: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (Validators.email(email) != null) {
+      setState(() => _errorMessage = 'أدخل بريدك الإلكتروني أولاً لإعادة التعيين');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await SupabaseService().client.auth.resetPasswordForEmail(email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك'),
+        ),
+      );
+    } on AppException catch (e) {
+      setState(() => _errorMessage = e.message);
+    } catch (e) {
+      setState(() => _errorMessage = 'تعذر إرسال رابط إعادة التعيين: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -118,26 +194,71 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               const SizedBox(height: 16),
-              // Email Field
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  hintText: 'البريد الإلكتروني',
-                  prefixIcon: Icon(Icons.email),
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    // Email Field
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        hintText: 'البريد الإلكتروني',
+                        prefixIcon: Icon(Icons.email),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      validator: Validators.email,
+                    ),
+                    const SizedBox(height: 16),
+                    // Password Field
+                    TextFormField(
+                      controller: _passwordController,
+                      decoration: InputDecoration(
+                        hintText: 'كلمة المرور',
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
+                        ),
+                      ),
+                      obscureText: _obscurePassword,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _handleLogin(),
+                      validator: (value) =>
+                          Validators.required(value, field: 'كلمة المرور'),
+                    ),
+                  ],
                 ),
-                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 8),
+              // Remember Me & Forgot Password
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _rememberMe,
+                        onChanged: (value) => setState(
+                          () => _rememberMe = value ?? false,
+                        ),
+                      ),
+                      const Text('تذكرني'),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: _isLoading ? null : _handleForgotPassword,
+                    child: const Text('نسيت كلمة المرور؟'),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
-              // Password Field
-              TextField(
-                controller: _passwordController,
-                decoration: const InputDecoration(
-                  hintText: 'كلمة المرور',
-                  prefixIcon: Icon(Icons.lock),
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 24),
               // Login Button
               SizedBox(
                 width: double.infinity,
