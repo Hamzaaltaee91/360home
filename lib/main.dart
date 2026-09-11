@@ -51,6 +51,7 @@ class DabberliApp extends StatelessWidget {
           theme: AppTheme.lightTheme(),
           darkTheme: AppTheme.darkTheme(),
           themeMode: settings.themeMode,
+          locale: Locale(settings.language),
           routerConfig: appRoutes,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,

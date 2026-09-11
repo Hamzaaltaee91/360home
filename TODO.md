@@ -149,7 +149,7 @@
 - [x] **Create `lib/l10n/app_ar.arb`** — Arabic string catalog.
 - [x] **Create `lib/l10n/app_en.arb`** — English string catalog.
 - [x] **Update `main.dart`** — Register `localizationsDelegates` and `supportedLocales`.
-- [ ] **Verify RTL Alignment** — Ensure bidirectional layout support.
+- [x] **Verify RTL Alignment** — Ensure bidirectional layout support.
 
 ---
 
