@@ -17,6 +17,7 @@ import {
   sanitizeString,
   sanitizeUuid,
 } from "../_shared/sanitize.ts";
+import { writeAuditLog } from "../_shared/audit.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -165,6 +166,18 @@ serve(async (req) => {
     if (updateError) {
       throw updateError;
     }
+
+    // سجّل عملية التحقق في سجل التدقيق
+    await writeAuditLog(supabase, {
+      actorId: user.user.id,
+      action: `verification_${status}`,
+      entityType: "realtor_verification",
+      entityId: verification_id,
+      metadata: {
+        status,
+        rejection_reason: rejection_reason ?? null,
+      },
+    });
 
     // إذا تمت الموافقة، حدّث is_verified في جدول المستخدمين
     if (status === "approved") {

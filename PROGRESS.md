@@ -1,5 +1,32 @@
 # Progress Log
 
+## Cycle: Audit Logging
+
+### Accomplished
+- Added a new additive migration
+  (`supabase/migrations/20260911000003_audit_logging.sql`) introducing an
+  `audit_logs` table to trace sensitive operations:
+  - Columns: `actor_id`, `action`, `entity_type`, `entity_id`, `metadata`,
+    `created_at`, with indexes on actor, entity, action, and recency.
+  - RLS enabled; only admins may read. Writes go through a `security definer`
+    helper or the service role.
+  - `write_audit_log(...)` helper for triggers and Edge Functions.
+  - Triggers capture role modifications (`users`), verification decisions
+    (`realtor_verifications`), and account deletions (`users`).
+- Added a shared Edge Function helper
+  (`supabase/functions/_shared/audit.ts`) exposing `writeAuditLog`, which
+  records entries via the service role and never throws.
+- Wired audit logging into `verify-realtor` after a successful decision.
+- No previously applied migrations were edited.
+- Marked the task as complete in `TODO.md`.
+
+### Blocked / Failing
+- None.
+
+### Next in Queue
+- Section 12 (Security & Optimization) remaining tasks:
+  pagination & lazy loading, and image compression.
+
 ## Cycle: Storage Bucket Rules
 
 ### Accomplished
