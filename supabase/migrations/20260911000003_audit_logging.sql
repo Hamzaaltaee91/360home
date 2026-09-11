@@ -31,7 +31,7 @@ create policy "audit_logs_admin_select"
   using (
     exists (
       select 1 from public.users u
-      where u.id = auth.uid() and u.role = 'admin'
+      where u.auth_id = auth.uid() and u.role = 'admin'
     )
   );
 
@@ -56,10 +56,33 @@ begin
 end;
 $$;
 
+-- Resolves the acting user's id from the request JWT claims. Returns null
+-- when there is no authenticated request (e.g. service-role or trigger
+-- context). `request.jwt.claims` is a JSON string set by PostgREST.
+create or replace function public.current_actor_id()
+returns uuid
+language plpgsql
+stable
+set search_path = public, pg_temp
+as $$
+declare
+  v_claims text;
+begin
+  v_claims := current_setting('request.jwt.claims', true);
+  if v_claims is null or v_claims = '' then
+    return null;
+  end if;
+  return nullif(v_claims::jsonb ->> 'sub', '')::uuid;
+exception
+  when others then
+    return null;
+end;
+$$;
+
 -- Audit role modifications on users.
 --
 -- `auth.uid()` is not reliable inside a `security definer` trigger, so the
--- actor is read directly from the request JWT claims when present.
+-- actor is read from the request JWT claims JSON when present.
 create or replace function public.audit_user_role_change()
 returns trigger
 language plpgsql
@@ -69,7 +92,7 @@ as $$
 declare
   v_actor uuid;
 begin
-  v_actor := nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
+  v_actor := public.current_actor_id();
 
   if new.role is distinct from old.role then
     perform public.write_audit_log(
@@ -84,11 +107,17 @@ begin
 end;
 $$;
 
-drop trigger if exists trg_audit_user_role_change on public.users;
-create trigger trg_audit_user_role_change
-  after update on public.users
-  for each row
-  execute function public.audit_user_role_change();
+do $$
+begin
+  if to_regclass('public.users') is not null then
+    drop trigger if exists trg_audit_user_role_change on public.users;
+    create trigger trg_audit_user_role_change
+      after update on public.users
+      for each row
+      execute function public.audit_user_role_change();
+  end if;
+end;
+$$;
 
 -- Audit realtor verification decisions (approve/reject).
 create or replace function public.audit_verification_decision()
@@ -100,7 +129,7 @@ as $$
 declare
   v_actor uuid;
 begin
-  v_actor := nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
+  v_actor := public.current_actor_id();
 
   if new.status is distinct from old.status
      and new.status in ('approved', 'rejected') then
@@ -120,11 +149,17 @@ begin
 end;
 $$;
 
-drop trigger if exists trg_audit_verification_decision on public.realtor_verifications;
-create trigger trg_audit_verification_decision
-  after update on public.realtor_verifications
-  for each row
-  execute function public.audit_verification_decision();
+do $$
+begin
+  if to_regclass('public.realtor_verifications') is not null then
+    drop trigger if exists trg_audit_verification_decision on public.realtor_verifications;
+    create trigger trg_audit_verification_decision
+      after update on public.realtor_verifications
+      for each row
+      execute function public.audit_verification_decision();
+  end if;
+end;
+$$;
 
 -- Audit account deletions. The row is captured before deletion so the actor
 -- and entity id are still available.
@@ -137,7 +172,7 @@ as $$
 declare
   v_actor uuid;
 begin
-  v_actor := nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
+  v_actor := public.current_actor_id();
 
   perform public.write_audit_log(
     v_actor,
@@ -150,14 +185,20 @@ begin
 end;
 $$;
 
-drop trigger if exists trg_audit_user_deletion on public.users;
-create trigger trg_audit_user_deletion
-  before delete on public.users
-  for each row
-  execute function public.audit_user_deletion();
+do $$
+begin
+  if to_regclass('public.users') is not null then
+    drop trigger if exists trg_audit_user_deletion on public.users;
+    create trigger trg_audit_user_deletion
+      before delete on public.users
+      for each row
+      execute function public.audit_user_deletion();
+  end if;
+end;
+$$;
 
 -- Only the service role may call the helper directly. `PUBLIC` is the
 -- pseudo-role that all roles inherit from; revoking from it removes the
--- default execute grant.
+-- default execute grant. The `security definer` triggers call the helper
+-- internally, so no explicit grant is needed.
 revoke all on function public.write_audit_log(uuid, text, text, uuid, jsonb) from PUBLIC;
-grant execute on function public.write_audit_log(uuid, text, text, uuid, jsonb) to service_role;
