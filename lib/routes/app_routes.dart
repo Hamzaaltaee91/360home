@@ -19,6 +19,7 @@ import '../screens/realtor/realtor_home_screen.dart';
 import '../screens/realtor/browse_requests_screen.dart';
 import '../screens/realtor/create_offer_screen.dart';
 import '../screens/realtor/my_offers_screen.dart';
+import '../screens/realtor/subscription_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/splash_screen.dart';
 import '../screens/not_found_screen.dart';
@@ -52,6 +53,7 @@ class RouteNames {
   static const String browseRequests = '/browse-requests';
   static const String createOffer = '/create-offer/:requestId';
   static const String myOffers = '/my-offers';
+  static const String subscription = '/subscription';
 
   // Profile
   static const String profile = '/profile';
@@ -181,6 +183,7 @@ final appRoutes = GoRouter(
     final isRealtorRoute = location.startsWith('/realtor') ||
         location == RouteNames.browseRequests ||
         location == RouteNames.myOffers ||
+        location == RouteNames.subscription ||
         location.startsWith('/create-offer/');
     final isAdminRoute = location.startsWith('/admin');
 
@@ -284,6 +287,10 @@ final appRoutes = GoRouter(
     GoRoute(
       path: RouteNames.myOffers,
       builder: (context, state) => const MyOffersScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.subscription,
+      builder: (context, state) => const SubscriptionScreen(),
     ),
 
     // Profile

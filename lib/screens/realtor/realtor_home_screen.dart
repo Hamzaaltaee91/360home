@@ -204,16 +204,10 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
                     const SizedBox(height: 12),
                     _buildActionButton(
                       context,
-                      icon: Icons.analytics,
-                      label: 'إحصائيات مفصلة',
+                      icon: Icons.workspace_premium,
+                      label: 'الاشتراك',
                       color: Colors.indigo,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('قريبا - سيتم إضافة الإحصائيات المفصلة'),
-                          ),
-                        );
-                      },
+                      onTap: () => context.go('/subscription'),
                     ),
                   ],
                 ),
