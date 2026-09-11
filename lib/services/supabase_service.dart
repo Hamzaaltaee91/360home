@@ -271,6 +271,12 @@ class SupabaseService {
         }).eq('id', requestId));
   }
 
+  Future<void> deletePropertyRequest(String requestId) {
+    return _guard(
+      () => _client.from('property_requests').delete().eq('id', requestId),
+    );
+  }
+
   // ==================== Realtor Offers ====================
 
   Future<List<RealtorOffer>> getOffersForRequest(String requestId) {
