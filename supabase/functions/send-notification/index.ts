@@ -9,12 +9,60 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
-interface NotificationPayload {
+export type NotificationType =
+  | "new_offer"
+  | "offer_response"
+  | "new_request"
+  | "verification_status";
+
+export interface NotificationPayload {
   user_id: string;
-  type: "new_offer" | "offer_response" | "new_request" | "verification_status";
+  type: NotificationType;
   title: string;
   message: string;
   data: Record<string, unknown>;
+}
+
+export interface RealtimePayload {
+  type: NotificationType;
+  title: string;
+  message: string;
+  timestamp: string;
+  data: Record<string, unknown>;
+}
+
+const VALID_NOTIFICATION_TYPES: readonly NotificationType[] = [
+  "new_offer",
+  "offer_response",
+  "new_request",
+  "verification_status",
+];
+
+// يتحقق أن نوع الإخطار ضمن الأنواع المدعومة
+export function isValidNotificationType(type: unknown): type is NotificationType {
+  return (
+    typeof type === "string" &&
+    (VALID_NOTIFICATION_TYPES as readonly string[]).includes(type)
+  );
+}
+
+// اسم قناة Realtime الخاصة بالمستخدم
+export function buildNotificationChannel(userId: string): string {
+  return `notifications:${userId}`;
+}
+
+// يبني حمولة البث المرسلة عبر Realtime
+export function buildRealtimePayload(
+  payload: NotificationPayload,
+  timestamp: string = new Date().toISOString()
+): RealtimePayload {
+  return {
+    type: payload.type,
+    title: payload.title,
+    message: payload.message,
+    timestamp,
+    data: payload.data,
+  };
 }
 
 serve(async (req) => {
@@ -27,24 +75,25 @@ serve(async (req) => {
     }
 
     const body: NotificationPayload = await req.json();
-    const { user_id, type, title, message, data } = body;
+    const { user_id, type, title, message } = body;
+
+    if (!user_id || !isValidNotificationType(type)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid notification payload" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
     // احفظ الإخطار في قاعدة البيانات (اختياري)
     // يمكن إنشاء جدول notifications للتخزين التاريخي
 
     // أرسل عبر Supabase Realtime
     // الاشتراك في القناة: realtime:notifications:{user_id}
-    const realtimePayload = {
-      type,
-      title,
-      message,
-      timestamp: new Date().toISOString(),
-      data,
-    };
+    const realtimePayload = buildRealtimePayload(body);
 
     // استخدم Supabase Realtime broadcast
     const { error: broadcastError } = await supabase.realtime.broadcast(
-      `notifications:${user_id}`,
+      buildNotificationChannel(user_id),
       realtimePayload
     );
 

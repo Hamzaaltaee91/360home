@@ -35,7 +35,7 @@
 - [x] **Test `analytics/index.ts`** — Unit tests for realtor, buyer, and platform stats.
 - [x] **Test `match-offers/index.ts`** — Matching logic by category, budget, and location.
 - [x] **Test `search-requests/index.ts`** — Radius search and advanced filtering.
-- [ ] **Test `send-notification/index.ts`** — In-app and email notifications.
+- [x] **Test `send-notification/index.ts`** — In-app and email notifications.
 - [ ] **Test `verify-realtor/index.ts`** — Verification approval/rejection logic.
 - [ ] **Create `create-checkout` Function** — Subscription payment handling via Stripe/local gateway.
 - [ ] **Create `webhook-handler` Function** — Process payment gateway webhooks and update subscription status.
