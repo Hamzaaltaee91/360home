@@ -47,7 +47,7 @@
 ## 4. Services Layer
 
 - [x] **Complete `supabase_service.dart`** — Refactor error handling (try/catch) and return standard user messages.
-- [ ] **Implement `notification_service.dart`** — Fetch, mark as read, and subscribe to realtime events.
+- [x] **Implement `notification_service.dart`** — Fetch, mark as read, and subscribe to realtime events.
 - [ ] **Implement `storage_service.dart`** — Upload/delete images via Supabase Storage.
 - [ ] **Implement `location_service.dart`** — Current location capture and distance calculation.
 - [ ] **Implement `payment_service.dart`** — Subscription and payment lifecycle handling.
