@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'themes/app_theme.dart';
 import 'routes/app_routes.dart';
+import 'services/settings_service.dart';
 import 'services/supabase_service.dart';
 
 void main() async {
@@ -25,6 +26,9 @@ void main() async {
     supabaseAnonKey: supabaseAnonKey,
   );
 
+  // Load persisted user preferences (language, notifications, theme).
+  await SettingsService().load();
+
   runApp(const DabberliApp());
 }
 
@@ -33,18 +37,25 @@ class DabberliApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'دبّرلي',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme(),
-      darkTheme: AppTheme.darkTheme(),
-      themeMode: ThemeMode.light,
-      routerConfig: appRoutes,
-      localizationsDelegates: const [],
-      supportedLocales: const [
-        Locale('ar', ''),
-        Locale('en', ''),
-      ],
+    final settings = SettingsService();
+
+    return AnimatedBuilder(
+      animation: settings,
+      builder: (context, _) {
+        return MaterialApp.router(
+          title: 'دبّرلي',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme(),
+          darkTheme: AppTheme.darkTheme(),
+          themeMode: settings.themeMode,
+          routerConfig: appRoutes,
+          localizationsDelegates: const [],
+          supportedLocales: const [
+            Locale('ar', ''),
+            Locale('en', ''),
+          ],
+        );
+      },
     );
   }
 }

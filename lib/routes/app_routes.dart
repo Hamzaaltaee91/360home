@@ -21,6 +21,7 @@ import '../screens/realtor/create_offer_screen.dart';
 import '../screens/realtor/my_offers_screen.dart';
 import '../screens/realtor/subscription_screen.dart';
 import '../screens/profile/profile_screen.dart';
+import '../screens/settings_screen.dart';
 import '../screens/splash_screen.dart';
 import '../screens/not_found_screen.dart';
 
@@ -57,6 +58,7 @@ class RouteNames {
 
   // Profile
   static const String profile = '/profile';
+  static const String settings = '/settings';
 
   // Admin
   static const String adminDashboard = '/admin';
@@ -297,6 +299,10 @@ final appRoutes = GoRouter(
     GoRoute(
       path: RouteNames.profile,
       builder: (context, state) => const ProfileScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.settings,
+      builder: (context, state) => const SettingsScreen(),
     ),
   ],
   errorBuilder: (context, state) =>
