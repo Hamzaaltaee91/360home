@@ -140,7 +140,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                         ),
                       ),
                     ),
-                    onTap: () => context.go('/browse-offers'),
+                    onTap: () => context.go('/request/${request.id}'),
                   ),
                 );
               },

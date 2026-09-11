@@ -92,7 +92,7 @@
 - [x] **Complete `browse_offers_screen.dart`** — Search, sort, and filtering controls.
 - [x] **Complete `offer_details_screen.dart`** — Photo viewer, map display, and realtor contact action.
 - [x] **Implement `edit_request_screen.dart`** — Request editing workflow.
-- [ ] **Implement `request_details_screen.dart`** — Details view with received offers list.
+- [x] **Implement `request_details_screen.dart`** — Details view with received offers list.
 
 ### Realtor Flow
 - [ ] **Complete `realtor_home_screen.dart`** — Dashboard analytics charts integrated with Edge Function.
