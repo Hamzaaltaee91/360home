@@ -62,7 +62,7 @@
 - [x] **Add `Notification` Model** — Include `fromJson` and `toJson`.
 - [x] **Add `RealtorVerification` Model** — Verification request data structure.
 - [x] **Add `PropertyPhoto` Model** — Property image attachment model.
-- [ ] **Add `Subscription` Model** — Realtor subscription state.
+- [x] **Add `Subscription` Model** — Realtor subscription state.
 - [ ] **Add `copyWith` Methods** — Implement `copyWith` on all domain models for state management.
 - [ ] **Implement Equality (`==` and `hashCode`)** — Consistent value equality across models.
 - [ ] **Add `toJson` to `PropertyMatch`** — Implement serialization for `PropertyMatch`.
