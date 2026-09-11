@@ -1,9 +1,14 @@
 // Create Offer Screen for Realtors
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../services/supabase_service.dart';
+import '../../services/location_service.dart';
 import '../../models/models.dart';
+import '../../utils/validators.dart';
 
 class CreateOfferScreen extends StatefulWidget {
   final String requestId;
@@ -31,6 +36,17 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   bool _furnished = false;
   bool _isLoading = false;
 
+  final _imagePicker = ImagePicker();
+  final _locationService = LocationService();
+
+  /// Photos selected by the realtor, kept in memory until the offer is
+  /// submitted and uploaded to storage.
+  final List<_PickedPhoto> _photos = [];
+
+  /// Location captured for the offered property, if any.
+  Coordinates? _coordinates;
+  bool _isLocating = false;
+
   @override
   void initState() {
     super.initState();
@@ -47,10 +63,72 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     return PropertyRequest.fromJson(response);
   }
 
+  Future<void> _pickPhotos() async {
+    try {
+      final picked = await _imagePicker.pickMultiImage();
+      if (picked.isEmpty) return;
+
+      final added = <_PickedPhoto>[];
+      for (final file in picked) {
+        final bytes = await file.readAsBytes();
+        added.add(_PickedPhoto(name: file.name, bytes: bytes));
+      }
+
+      if (!mounted) return;
+      setState(() => _photos.addAll(added));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تعذر اختيار الصور: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _captureLocation() async {
+    setState(() => _isLocating = true);
+    try {
+      final coordinates = await _locationService.getCurrentLocation();
+      if (!mounted) return;
+      setState(() => _coordinates = coordinates);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('تعذر تحديد الموقع: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLocating = false);
+    }
+  }
+
+  Future<List<String>> _uploadPhotos() async {
+    final urls = <String>[];
+    for (var i = 0; i < _photos.length; i++) {
+      final photo = _photos[i];
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_$i_${photo.name}';
+      final url = await SupabaseService().uploadPropertyPhoto(
+        requestId: widget.requestId,
+        fileName: fileName,
+        fileBytes: photo.bytes,
+      );
+      urls.add(url);
+    }
+    return urls;
+  }
+
   Future<void> _submitOffer(PropertyRequest request) async {
-    if (_titleController.text.isEmpty || _addressController.text.isEmpty) {
+    final titleError = Validators.required(_titleController.text,
+        field: 'اسم العقار');
+    final addressError = Validators.required(_addressController.text,
+        field: 'العنوان');
+    final priceError = Validators.price(_priceController.text);
+
+    final error = titleError ?? addressError ?? priceError;
+    if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الرجاء ملء الحقول المطلوبة')),
+        SnackBar(content: Text(error)),
       );
       return;
     }
@@ -58,16 +136,19 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final price = double.parse(_priceController.text);
+      final price = double.parse(_priceController.text.trim());
+      final photoUrls = await _uploadPhotos();
 
       await SupabaseService().createOffer(
         requestId: widget.requestId,
-        propertyTitle: _titleController.text,
-        propertyAddress: _addressController.text,
+        propertyTitle: _titleController.text.trim(),
+        propertyAddress: _addressController.text.trim(),
         offeredPrice: price,
         propertyDescription: _descriptionController.text.isNotEmpty
             ? _descriptionController.text
             : null,
+        latitude: _coordinates?.latitude,
+        longitude: _coordinates?.longitude,
         leaseType: _leaseType,
         leaseDurationMonths: _leaseType == 'rent' ? _durationMonths : null,
         areaSqft: _areaController.text.isNotEmpty
@@ -80,6 +161,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
             ? int.parse(_bathroomsController.text)
             : null,
         furnished: _furnished,
+        photoUrls: photoUrls.isEmpty ? null : photoUrls,
       );
 
       if (!mounted) return;
@@ -335,6 +417,90 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 24),
+                  // Photos
+                  Text(
+                    'صور العقار',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  if (_photos.isNotEmpty)
+                    SizedBox(
+                      height: 100,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _photos.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final photo = _photos[index];
+                          return Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.memory(
+                                  Uint8List.fromList(photo.bytes),
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: IconButton(
+                                  icon: const Icon(Icons.cancel,
+                                      color: Colors.red),
+                                  onPressed: () {
+                                    setState(() => _photos.removeAt(index));
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: _isLoading ? null : _pickPhotos,
+                    icon: const Icon(Icons.add_photo_alternate),
+                    label: const Text('إضافة صور'),
+                  ),
+                  const SizedBox(height: 24),
+                  // Location
+                  Text(
+                    'موقع العقار',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  if (_coordinates != null)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.location_on, color: Colors.green),
+                      title: Text(
+                        '${_coordinates!.latitude.toStringAsFixed(5)}, '
+                        '${_coordinates!.longitude.toStringAsFixed(5)}',
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => setState(() => _coordinates = null),
+                      ),
+                    ),
+                  OutlinedButton.icon(
+                    onPressed: (_isLoading || _isLocating) ? null : _captureLocation,
+                    icon: _isLocating
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.my_location),
+                    label: Text(
+                      _coordinates == null
+                          ? 'تحديد الموقع الحالي'
+                          : 'تحديث الموقع',
+                    ),
+                  ),
                   const SizedBox(height: 32),
                   // Submit Button
                   SizedBox(
@@ -376,4 +542,12 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         return category;
     }
   }
+}
+
+/// A photo selected by the realtor, held in memory until upload.
+class _PickedPhoto {
+  const _PickedPhoto({required this.name, required this.bytes});
+
+  final String name;
+  final List<int> bytes;
 }
