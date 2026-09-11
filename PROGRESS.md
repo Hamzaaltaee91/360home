@@ -1,5 +1,31 @@
 # Progress Log
 
+## Cycle: Storage Bucket Rules
+
+### Accomplished
+- Added a new additive migration
+  (`supabase/migrations/20260911000002_storage_bucket_rules.sql`) hardening
+  access to the `dabberli` storage bucket:
+  - Ensures the bucket exists and is private (idempotent upsert).
+  - Enables RLS on `storage.objects`.
+  - Property photos (`property-photos/{request_id}/{file}`):
+    - Readable by any authenticated user (buyers viewing offers, realtors
+      viewing requests).
+    - Insert/update/delete restricted to the uploader (`owner = auth.uid()`).
+  - Profile pictures (`profile-pictures/{user_id}/{file}`):
+    - Read/write/delete restricted to the owning user's folder via
+      `storage.foldername(name)[2] = auth.uid()::text`.
+  - Policies are dropped-if-exists first so the migration is idempotent.
+- No previously applied migrations were edited.
+- Marked the task as complete in `TODO.md`.
+
+### Blocked / Failing
+- None.
+
+### Next in Queue
+- Section 12 (Security & Optimization) remaining tasks:
+  audit logging, pagination & lazy loading, and image compression.
+
 ## Cycle: Secure Storage
 
 ### Accomplished
