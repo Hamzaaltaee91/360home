@@ -15,11 +15,20 @@ class BrowseOffersScreen extends StatefulWidget {
 class _BrowseOffersScreenState extends State<BrowseOffersScreen> {
   late Future<List<RealtorOffer>> _offersFuture;
   String _selectedFilter = 'all'; // 'all', 'pending', 'interested'
+  String _sortBy = 'newest'; // 'newest', 'price_asc', 'price_desc'
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _loadOffers();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _loadOffers() {
@@ -56,6 +65,32 @@ class _BrowseOffersScreenState extends State<BrowseOffersScreen> {
       default:
         return offers.where((o) => o.buyerResponse == null).toList();
     }
+  }
+
+  List<RealtorOffer> _searchOffers(List<RealtorOffer> offers) {
+    final query = _searchQuery.trim().toLowerCase();
+    if (query.isEmpty) return offers;
+
+    return offers.where((o) {
+      return o.propertyTitle.toLowerCase().contains(query) ||
+          o.propertyAddress.toLowerCase().contains(query);
+    }).toList();
+  }
+
+  List<RealtorOffer> _sortOffers(List<RealtorOffer> offers) {
+    final sorted = List<RealtorOffer>.from(offers);
+    switch (_sortBy) {
+      case 'price_asc':
+        sorted.sort((a, b) => a.offeredPrice.compareTo(b.offeredPrice));
+        break;
+      case 'price_desc':
+        sorted.sort((a, b) => b.offeredPrice.compareTo(a.offeredPrice));
+        break;
+      case 'newest':
+      default:
+        sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    }
+    return sorted;
   }
 
   Future<void> _respondToOffer(
@@ -98,6 +133,73 @@ class _BrowseOffersScreenState extends State<BrowseOffersScreen> {
       ),
       body: Column(
         children: [
+          // Search Field
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) => setState(() => _searchQuery = value),
+              decoration: InputDecoration(
+                hintText: 'ابحث بالعنوان أو الموقع',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                isDense: true,
+              ),
+            ),
+          ),
+          // Sort Dropdown
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Row(
+              children: [
+                const Icon(Icons.sort, size: 20, color: Colors.grey),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _sortBy,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'newest',
+                        child: Text('الأحدث'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'price_asc',
+                        child: Text('السعر: من الأقل للأعلى'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'price_desc',
+                        child: Text('السعر: من الأعلى للأقل'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) setState(() => _sortBy = value);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
           // Filter Pills
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -152,9 +254,11 @@ class _BrowseOffersScreenState extends State<BrowseOffersScreen> {
                 }
 
                 final allOffers = snapshot.data ?? [];
-                final filteredOffers = _selectedFilter == 'all'
+                final statusFiltered = _selectedFilter == 'all'
                     ? allOffers
                     : _filterOffers(allOffers);
+                final filteredOffers =
+                    _sortOffers(_searchOffers(statusFiltered));
 
                 if (filteredOffers.isEmpty) {
                   return Center(
@@ -168,9 +272,11 @@ class _BrowseOffersScreenState extends State<BrowseOffersScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          _selectedFilter == 'all'
-                              ? 'لا توجد عروض بعد'
-                              : 'لا توجد عروض في هذه الفئة',
+                          _searchQuery.isNotEmpty
+                              ? 'لا توجد نتائج مطابقة'
+                              : _selectedFilter == 'all'
+                                  ? 'لا توجد عروض بعد'
+                                  : 'لا توجد عروض في هذه الفئة',
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 8),

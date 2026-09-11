@@ -89,7 +89,7 @@
 ### Buyer Flow
 - [x] **Complete `buyer_home_screen.dart`** — Pull-to-refresh, empty states, and notification badge.
 - [x] **Complete `create_request_screen.dart`** — Image upload, geo-location picker, and field validation.
-- [ ] **Complete `browse_offers_screen.dart`** — Search, sort, and filtering controls.
+- [x] **Complete `browse_offers_screen.dart`** — Search, sort, and filtering controls.
 - [ ] **Complete `offer_details_screen.dart`** — Photo viewer, map display, and realtor contact action.
 - [ ] **Implement `edit_request_screen.dart`** — Request editing workflow.
 - [ ] **Implement `request_details_screen.dart`** — Details view with received offers list.
