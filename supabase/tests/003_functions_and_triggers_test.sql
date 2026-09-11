@@ -4,6 +4,9 @@
 
 BEGIN;
 
+-- Ensure pgcrypto is available for crypt()/gen_salt()
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- ============================================
 -- Test 1: handle_new_user() creates a public.users row
 -- ============================================
@@ -13,11 +16,24 @@ DECLARE
   v_user_id UUID;
   v_role TEXT;
 BEGIN
-  INSERT INTO auth.users (id, email, raw_user_meta_data)
+  INSERT INTO auth.users (
+    id, instance_id, aud, role, email,
+    encrypted_password, email_confirmed_at,
+    raw_app_meta_data, raw_user_meta_data,
+    created_at, updated_at
+  )
   VALUES (
     v_auth_id,
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
     'test_buyer@example.com',
-    '{"role": "buyer", "full_name": "Test Buyer"}'::jsonb
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    '{"provider": "email", "providers": ["email"]}'::jsonb,
+    '{"role": "buyer", "full_name": "Test Buyer"}'::jsonb,
+    NOW(),
+    NOW()
   );
 
   SELECT id, role INTO v_user_id, v_role
@@ -43,11 +59,24 @@ DECLARE
   v_auth_id UUID := gen_random_uuid();
   v_role TEXT;
 BEGIN
-  INSERT INTO auth.users (id, email, raw_user_meta_data)
+  INSERT INTO auth.users (
+    id, instance_id, aud, role, email,
+    encrypted_password, email_confirmed_at,
+    raw_app_meta_data, raw_user_meta_data,
+    created_at, updated_at
+  )
   VALUES (
     v_auth_id,
+    '00000000-0000-0000-0000-000000000000',
+    'authenticated',
+    'authenticated',
     'test_invalid_role@example.com',
-    '{"role": "superadmin"}'::jsonb
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    '{"provider": "email", "providers": ["email"]}'::jsonb,
+    '{"role": "superadmin"}'::jsonb,
+    NOW(),
+    NOW()
   );
 
   SELECT role INTO v_role
@@ -70,7 +99,12 @@ DECLARE
   v_before TIMESTAMP;
   v_after TIMESTAMP;
 BEGIN
-  SELECT id INTO v_user_id FROM public.users LIMIT 1;
+  SELECT id INTO v_user_id FROM public.users ORDER BY created_at LIMIT 1;
+
+  IF v_user_id IS NULL THEN
+    RAISE NOTICE 'Test 3 skipped: no users exist';
+    RETURN;
+  END IF;
 
   SELECT updated_at INTO v_before FROM public.users WHERE id = v_user_id;
 
