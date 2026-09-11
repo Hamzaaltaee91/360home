@@ -36,7 +36,7 @@
 - [x] **Test `match-offers/index.ts`** — Matching logic by category, budget, and location.
 - [x] **Test `search-requests/index.ts`** — Radius search and advanced filtering.
 - [x] **Test `send-notification/index.ts`** — In-app and email notifications.
-- [ ] **Test `verify-realtor/index.ts`** — Verification approval/rejection logic.
+- [x] **Test `verify-realtor/index.ts`** — Verification approval/rejection logic.
 - [ ] **Create `create-checkout` Function** — Subscription payment handling via Stripe/local gateway.
 - [ ] **Create `webhook-handler` Function** — Process payment gateway webhooks and update subscription status.
 - [ ] **Create `delete-account` Function** — GDPR-compliant user account and data deletion.
