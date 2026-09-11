@@ -163,7 +163,7 @@
 
 ### Widget Tests
 - [x] **Screen Tests** — Widget tests for login, signup, request, and offer screens.
-- [ ] **Component Tests** — Widget tests for shared components.
+- [x] **Component Tests** — Widget tests for shared components.
 
 ### Integration Tests
 - [ ] **Auth Journey** — End-to-end authentication flow.
