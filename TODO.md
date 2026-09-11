@@ -59,7 +59,7 @@
 
 ## 5. Models
 
-- [ ] **Add `Notification` Model** — Include `fromJson` and `toJson`.
+- [x] **Add `Notification` Model** — Include `fromJson` and `toJson`.
 - [ ] **Add `RealtorVerification` Model** — Verification request data structure.
 - [ ] **Add `PropertyPhoto` Model** — Property image attachment model.
 - [ ] **Add `Subscription` Model** — Realtor subscription state.
