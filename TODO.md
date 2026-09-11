@@ -60,7 +60,7 @@
 ## 5. Models
 
 - [x] **Add `Notification` Model** — Include `fromJson` and `toJson`.
-- [ ] **Add `RealtorVerification` Model** — Verification request data structure.
+- [x] **Add `RealtorVerification` Model** — Verification request data structure.
 - [ ] **Add `PropertyPhoto` Model** — Property image attachment model.
 - [ ] **Add `Subscription` Model** — Realtor subscription state.
 - [ ] **Add `copyWith` Methods** — Implement `copyWith` on all domain models for state management.
