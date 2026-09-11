@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../models/models.dart';
 import '../../services/supabase_service.dart';
 import '../../utils/error_handler.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -79,6 +80,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.all(16),
               children: [
                 _ProfileHeader(user: user),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final updated = await Navigator.of(context).push<User>(
+                      MaterialPageRoute(
+                        builder: (_) => const EditProfileScreen(),
+                      ),
+                    );
+                    if (updated != null) {
+                      _reload();
+                    }
+                  },
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text('تعديل الملف الشخصي'),
+                ),
                 const SizedBox(height: 24),
                 _ProfileInfoTile(
                   icon: Icons.email_outlined,
