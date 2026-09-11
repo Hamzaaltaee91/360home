@@ -24,7 +24,7 @@
 - [x] **إضافة migration للفهارس (Indexes)** — إنشاء فهارس على الأعمدة الأكثر استخداماً في الاستعلامات (`city`, `category`, `status`, `buyer_id`, `realtor_id`, `request_id`).
 - [x] **إضافة migration لـ PostGIS** — تفعيل إضافة PostGIS لدعم البحث الجغرافي بالمسافة (radius search).
 - [x] **إضافة migration لجدول `notifications`** — التأكد من وجود الجدول مع حقول `user_id`, `type`, `title`, `message`, `data`, `is_read`, `created_at`.
-- [ ] **إضافة migration لجدول `realtor_verifications`** — لتخزين طلبات توثيق الوسطاء وحالتها.
+- [x] **إضافة migration لجدول `realtor_verifications`** — لتخزين طلبات توثيق الوسطاء وحالتها.
 - [ ] **كتابة seed data** — إنشاء ملف `supabase/seed.sql` ببيانات تجريبية للاختبار (مستخدمين، طلبات، عروض).
 
 ---
