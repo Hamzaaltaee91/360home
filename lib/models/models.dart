@@ -54,6 +54,32 @@ class User {
       'updated_at': updatedAt.toIso8601String(),
     };
   }
+
+  User copyWith({
+    String? id,
+    String? email,
+    String? fullName,
+    String? role,
+    bool? isVerified,
+    String? profilePictureUrl,
+    String? phone,
+    String? bio,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return User(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      fullName: fullName ?? this.fullName,
+      role: role ?? this.role,
+      isVerified: isVerified ?? this.isVerified,
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
+      phone: phone ?? this.phone,
+      bio: bio ?? this.bio,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }
 
 class PropertyRequest {
@@ -163,6 +189,58 @@ class PropertyRequest {
       'updated_at': updatedAt.toIso8601String(),
       'expires_at': expiresAt?.toIso8601String(),
     };
+  }
+
+  PropertyRequest copyWith({
+    String? id,
+    String? buyerId,
+    String? category,
+    String? title,
+    String? description,
+    String? city,
+    String? areaName,
+    double? latitude,
+    double? longitude,
+    double? minPrice,
+    double? maxPrice,
+    String? currency,
+    int? minAreaSqft,
+    int? maxAreaSqft,
+    int? bedrooms,
+    int? bathrooms,
+    bool? furnished,
+    String? status,
+    bool? isUrgent,
+    List<String>? preferredContact,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    DateTime? expiresAt,
+  }) {
+    return PropertyRequest(
+      id: id ?? this.id,
+      buyerId: buyerId ?? this.buyerId,
+      category: category ?? this.category,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      city: city ?? this.city,
+      areaName: areaName ?? this.areaName,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      minPrice: minPrice ?? this.minPrice,
+      maxPrice: maxPrice ?? this.maxPrice,
+      currency: currency ?? this.currency,
+      minAreaSqft: minAreaSqft ?? this.minAreaSqft,
+      maxAreaSqft: maxAreaSqft ?? this.maxAreaSqft,
+      bedrooms: bedrooms ?? this.bedrooms,
+      bathrooms: bathrooms ?? this.bathrooms,
+      furnished: furnished ?? this.furnished,
+      status: status ?? this.status,
+      isUrgent: isUrgent ?? this.isUrgent,
+      preferredContact: preferredContact ?? this.preferredContact,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+    );
   }
 }
 
@@ -276,6 +354,60 @@ class RealtorOffer {
       'expires_at': expiresAt.toIso8601String(),
     };
   }
+
+  RealtorOffer copyWith({
+    String? id,
+    String? realtorId,
+    String? requestId,
+    String? propertyTitle,
+    String? propertyDescription,
+    String? propertyAddress,
+    double? latitude,
+    double? longitude,
+    double? offeredPrice,
+    String? currency,
+    String? leaseType,
+    int? leaseDurationMonths,
+    int? areaSqft,
+    int? bedrooms,
+    int? bathrooms,
+    bool? furnished,
+    List<String>? photoUrls,
+    List<String>? documentUrls,
+    String? status,
+    String? buyerResponse,
+    String? messageToBuyer,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    DateTime? expiresAt,
+  }) {
+    return RealtorOffer(
+      id: id ?? this.id,
+      realtorId: realtorId ?? this.realtorId,
+      requestId: requestId ?? this.requestId,
+      propertyTitle: propertyTitle ?? this.propertyTitle,
+      propertyDescription: propertyDescription ?? this.propertyDescription,
+      propertyAddress: propertyAddress ?? this.propertyAddress,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      offeredPrice: offeredPrice ?? this.offeredPrice,
+      currency: currency ?? this.currency,
+      leaseType: leaseType ?? this.leaseType,
+      leaseDurationMonths: leaseDurationMonths ?? this.leaseDurationMonths,
+      areaSqft: areaSqft ?? this.areaSqft,
+      bedrooms: bedrooms ?? this.bedrooms,
+      bathrooms: bathrooms ?? this.bathrooms,
+      furnished: furnished ?? this.furnished,
+      photoUrls: photoUrls ?? this.photoUrls,
+      documentUrls: documentUrls ?? this.documentUrls,
+      status: status ?? this.status,
+      buyerResponse: buyerResponse ?? this.buyerResponse,
+      messageToBuyer: messageToBuyer ?? this.messageToBuyer,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+    );
+  }
 }
 
 class Subscription {
@@ -339,6 +471,35 @@ class Subscription {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
+  }
+
+  Subscription copyWith({
+    String? id,
+    String? realtorId,
+    String? plan,
+    String? status,
+    DateTime? currentPeriodStart,
+    DateTime? currentPeriodEnd,
+    bool? cancelAtPeriodEnd,
+    String? paymentProvider,
+    String? externalSubscriptionId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Subscription(
+      id: id ?? this.id,
+      realtorId: realtorId ?? this.realtorId,
+      plan: plan ?? this.plan,
+      status: status ?? this.status,
+      currentPeriodStart: currentPeriodStart ?? this.currentPeriodStart,
+      currentPeriodEnd: currentPeriodEnd ?? this.currentPeriodEnd,
+      cancelAtPeriodEnd: cancelAtPeriodEnd ?? this.cancelAtPeriodEnd,
+      paymentProvider: paymentProvider ?? this.paymentProvider,
+      externalSubscriptionId:
+          externalSubscriptionId ?? this.externalSubscriptionId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 }
 
@@ -473,6 +634,32 @@ class PropertyMatch {
       bedrooms: json['bedrooms'] as int?,
       bathrooms: json['bathrooms'] as int?,
       matchScore: json['match_score'] as int? ?? 0,
+    );
+  }
+
+  PropertyMatch copyWith({
+    String? requestId,
+    String? buyerId,
+    String? category,
+    String? title,
+    String? city,
+    double? minPrice,
+    double? maxPrice,
+    int? bedrooms,
+    int? bathrooms,
+    int? matchScore,
+  }) {
+    return PropertyMatch(
+      requestId: requestId ?? this.requestId,
+      buyerId: buyerId ?? this.buyerId,
+      category: category ?? this.category,
+      title: title ?? this.title,
+      city: city ?? this.city,
+      minPrice: minPrice ?? this.minPrice,
+      maxPrice: maxPrice ?? this.maxPrice,
+      bedrooms: bedrooms ?? this.bedrooms,
+      bathrooms: bathrooms ?? this.bathrooms,
+      matchScore: matchScore ?? this.matchScore,
     );
   }
 }
