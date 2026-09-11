@@ -135,7 +135,7 @@
 
 - [x] **Establish State Management Choice** — Select and document Riverpod or Bloc.
 - [x] **Implement `auth_provider.dart`** — Global authentication state.
-- [ ] **Implement `user_provider.dart`** — Current user session and profile data.
+- [x] **Implement `user_provider.dart`** — Current user session and profile data.
 - [ ] **Implement `requests_provider.dart`** — Buyer requests state.
 - [ ] **Implement `offers_provider.dart`** — Realtor offers state.
 - [ ] **Implement `notifications_provider.dart`** — Notification stream state.
