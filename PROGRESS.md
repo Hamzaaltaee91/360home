@@ -1,5 +1,34 @@
 # Progress Log
 
+## Cycle: RLS Privilege Escalation Audit
+
+### Accomplished
+- Added a new additive migration
+  (`supabase/migrations/20260911000000_rls_privilege_escalation_audit.sql`)
+  that hardens RLS policies against privilege escalation:
+  - Users can no longer change their own `role` (blocks self-promotion to
+    `admin`); only admins may modify roles.
+  - Buyers may only update/delete their own property requests.
+  - Realtors may only update/delete their own offers, and only while the
+    parent request is still `open`.
+  - Realtors may only insert/update their own verification row and can never
+    self-approve (`status` must remain `pending` on their writes); only admins
+    may approve/reject.
+  - Direct writes to `subscriptions` are removed (writes go through Edge
+    Functions using the service role).
+  - Users may only mark their own notifications as read.
+  - Photo deletion is restricted to the owner of the parent request/offer.
+- No previously applied migrations were edited.
+- Marked the task as complete in `TODO.md`.
+
+### Blocked / Failing
+- None.
+
+### Next in Queue
+- Section 12 (Security & Optimization) remaining tasks:
+  rate limiting, input sanitization, secure storage, storage bucket rules,
+  audit logging, pagination & lazy loading, and image compression.
+
 ## Cycle: Verification Workflow Integration Test
 
 ### Accomplished

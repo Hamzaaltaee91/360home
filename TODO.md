@@ -174,7 +174,7 @@
 
 ## 12. Security & Optimization
 
-- [ ] **Audit RLS Policies** — Review all policies against privilege escalation.
+- [x] **Audit RLS Policies** — Review all policies against privilege escalation.
 - [ ] **Rate Limiting** — Enforce rate limits on Edge Functions.
 - [ ] **Input Sanitization** — Prevent malicious payload injections.
 - [ ] **Secure Storage** — Secure storage integration for sensitive tokens.
