@@ -110,7 +110,7 @@
 - [x] **Implement `about_screen.dart`** — About page and privacy policy view.
 
 ### Admin Panel
-- [ ] **Implement `admin_dashboard_screen.dart`** — Core metric summaries.
+- [x] **Implement `admin_dashboard_screen.dart`** — Core metric summaries.
 - [ ] **Implement `verify_realtors_screen.dart`** — Review and approve verification requests.
 - [ ] **Implement `manage_users_screen.dart`** — User directory and role moderation.
 
