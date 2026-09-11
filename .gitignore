@@ -54,3 +54,4 @@ service-account.json
 
 # Local overrides
 settings.local.json
+.aider*
