@@ -23,7 +23,7 @@
 - [x] **مراجعة `20260908_004_phase2_rpc_functions.sql`** — التأكد من دوال RPC: `match_offers`, `search_requests`, `get_realtor_stats`, `get_buyer_stats`.
 - [x] **إضافة migration للفهارس (Indexes)** — إنشاء فهارس على الأعمدة الأكثر استخداماً في الاستعلامات (`city`, `category`, `status`, `buyer_id`, `realtor_id`, `request_id`).
 - [x] **إضافة migration لـ PostGIS** — تفعيل إضافة PostGIS لدعم البحث الجغرافي بالمسافة (radius search).
-- [ ] **إضافة migration لجدول `notifications`** — التأكد من وجود الجدول مع حقول `user_id`, `type`, `title`, `message`, `data`, `is_read`, `created_at`.
+- [x] **إضافة migration لجدول `notifications`** — التأكد من وجود الجدول مع حقول `user_id`, `type`, `title`, `message`, `data`, `is_read`, `created_at`.
 - [ ] **إضافة migration لجدول `realtor_verifications`** — لتخزين طلبات توثيق الوسطاء وحالتها.
 - [ ] **كتابة seed data** — إنشاء ملف `supabase/seed.sql` ببيانات تجريبية للاختبار (مستخدمين، طلبات، عروض).
 
