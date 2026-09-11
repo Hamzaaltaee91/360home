@@ -80,6 +80,36 @@ class User {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is User &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          email == other.email &&
+          fullName == other.fullName &&
+          role == other.role &&
+          isVerified == other.isVerified &&
+          profilePictureUrl == other.profilePictureUrl &&
+          phone == other.phone &&
+          bio == other.bio &&
+          createdAt == other.createdAt &&
+          updatedAt == other.updatedAt;
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        email,
+        fullName,
+        role,
+        isVerified,
+        profilePictureUrl,
+        phone,
+        bio,
+        createdAt,
+        updatedAt,
+      );
 }
 
 class PropertyRequest {
@@ -242,6 +272,62 @@ class PropertyRequest {
       expiresAt: expiresAt ?? this.expiresAt,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PropertyRequest &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          buyerId == other.buyerId &&
+          category == other.category &&
+          title == other.title &&
+          description == other.description &&
+          city == other.city &&
+          areaName == other.areaName &&
+          latitude == other.latitude &&
+          longitude == other.longitude &&
+          minPrice == other.minPrice &&
+          maxPrice == other.maxPrice &&
+          currency == other.currency &&
+          minAreaSqft == other.minAreaSqft &&
+          maxAreaSqft == other.maxAreaSqft &&
+          bedrooms == other.bedrooms &&
+          bathrooms == other.bathrooms &&
+          furnished == other.furnished &&
+          status == other.status &&
+          isUrgent == other.isUrgent &&
+          preferredContact == other.preferredContact &&
+          createdAt == other.createdAt &&
+          updatedAt == other.updatedAt &&
+          expiresAt == other.expiresAt;
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        buyerId,
+        category,
+        title,
+        description,
+        city,
+        areaName,
+        latitude,
+        longitude,
+        minPrice,
+        maxPrice,
+        currency,
+        minAreaSqft,
+        maxAreaSqft,
+        bedrooms,
+        bathrooms,
+        furnished,
+        status,
+        isUrgent,
+        preferredContact,
+        createdAt,
+        updatedAt,
+        expiresAt,
+      );
 }
 
 class RealtorOffer {
@@ -408,6 +494,64 @@ class RealtorOffer {
       expiresAt: expiresAt ?? this.expiresAt,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RealtorOffer &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          realtorId == other.realtorId &&
+          requestId == other.requestId &&
+          propertyTitle == other.propertyTitle &&
+          propertyDescription == other.propertyDescription &&
+          propertyAddress == other.propertyAddress &&
+          latitude == other.latitude &&
+          longitude == other.longitude &&
+          offeredPrice == other.offeredPrice &&
+          currency == other.currency &&
+          leaseType == other.leaseType &&
+          leaseDurationMonths == other.leaseDurationMonths &&
+          areaSqft == other.areaSqft &&
+          bedrooms == other.bedrooms &&
+          bathrooms == other.bathrooms &&
+          furnished == other.furnished &&
+          photoUrls == other.photoUrls &&
+          documentUrls == other.documentUrls &&
+          status == other.status &&
+          buyerResponse == other.buyerResponse &&
+          messageToBuyer == other.messageToBuyer &&
+          createdAt == other.createdAt &&
+          updatedAt == other.updatedAt &&
+          expiresAt == other.expiresAt;
+
+  @override
+  int get hashCode => Object.hash(
+        id,
+        realtorId,
+        requestId,
+        propertyTitle,
+        propertyDescription,
+        propertyAddress,
+        latitude,
+        longitude,
+        offeredPrice,
+        currency,
+        leaseType,
+        leaseDurationMonths,
+        areaSqft,
+        bedrooms,
+        bathrooms,
+        furnished,
+        photoUrls,
+        documentUrls,
+        status,
+        buyerResponse,
+        messageToBuyer,
+        createdAt,
+        updatedAt,
+        expiresAt,
+      );
 }
 
 class Subscription {
@@ -662,4 +806,34 @@ class PropertyMatch {
       matchScore: matchScore ?? this.matchScore,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PropertyMatch &&
+          runtimeType == other.runtimeType &&
+          requestId == other.requestId &&
+          buyerId == other.buyerId &&
+          category == other.category &&
+          title == other.title &&
+          city == other.city &&
+          minPrice == other.minPrice &&
+          maxPrice == other.maxPrice &&
+          bedrooms == other.bedrooms &&
+          bathrooms == other.bathrooms &&
+          matchScore == other.matchScore;
+
+  @override
+  int get hashCode => Object.hash(
+        requestId,
+        buyerId,
+        category,
+        title,
+        city,
+        minPrice,
+        maxPrice,
+        bedrooms,
+        bathrooms,
+        matchScore,
+      );
 }
