@@ -9,7 +9,7 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
-interface SearchQuery {
+export interface SearchQuery {
   category?: string;
   city?: string;
   min_price?: number;
@@ -25,6 +25,142 @@ interface SearchQuery {
   offset?: number;
 }
 
+export interface SearchResponse {
+  results: any[];
+  total_count: number;
+  has_more: boolean;
+}
+
+// Minimal structural type for the Supabase query builder so the pure
+// helpers below can be unit-tested without a live client.
+export interface QueryBuilder {
+  eq(column: string, value: unknown): QueryBuilder;
+  ilike(column: string, pattern: string): QueryBuilder;
+  gte(column: string, value: unknown): QueryBuilder;
+  lte(column: string, value: unknown): QueryBuilder;
+  order(column: string, options: { ascending: boolean }): QueryBuilder;
+  range(from: number, to: number): QueryBuilder;
+  rpc(fn: string, args: Record<string, unknown>): QueryBuilder;
+}
+
+export interface SearchFilters {
+  category?: string;
+  city?: string;
+  min_price?: number;
+  max_price?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  latitude?: number;
+  longitude?: number;
+  radius_km: number;
+  sort_by: "recent" | "price_low" | "price_high";
+  status: string;
+  limit: number;
+  offset: number;
+}
+
+export function normalizeSearchQuery(body: SearchQuery): SearchFilters {
+  return {
+    category: body.category,
+    city: body.city,
+    min_price: body.min_price,
+    max_price: body.max_price,
+    bedrooms: body.bedrooms,
+    bathrooms: body.bathrooms,
+    latitude: body.latitude,
+    longitude: body.longitude,
+    radius_km: body.radius_km ?? 10,
+    sort_by: body.sort_by ?? "recent",
+    status: body.status ?? "active",
+    limit: body.limit ?? 20,
+    offset: body.offset ?? 0,
+  };
+}
+
+// Applies the shared filters (category, city, price, rooms) to a query.
+export function applyCommonFilters(
+  query: QueryBuilder,
+  filters: SearchFilters
+): QueryBuilder {
+  let q = query;
+
+  if (filters.category) {
+    q = q.eq("category", filters.category);
+  }
+
+  if (filters.city) {
+    q = q.ilike("city", `%${filters.city}%`);
+  }
+
+  if (filters.min_price !== undefined) {
+    q = q.gte("min_price", filters.min_price);
+  }
+
+  if (filters.max_price !== undefined) {
+    q = q.lte("max_price", filters.max_price);
+  }
+
+  if (filters.bedrooms !== undefined) {
+    q = q.eq("bedrooms", filters.bedrooms);
+  }
+
+  if (filters.bathrooms !== undefined) {
+    q = q.eq("bathrooms", filters.bathrooms);
+  }
+
+  return q;
+}
+
+// Builds the paginated, sorted, geo-aware results query.
+export function buildSearchQuery(
+  query: QueryBuilder,
+  filters: SearchFilters
+): QueryBuilder {
+  let q = applyCommonFilters(query, filters);
+
+  // فلتر جغرافي (إذا توفرت الإحداثيات)
+  if (filters.latitude !== undefined && filters.longitude !== undefined) {
+    q = q.rpc("nearby_requests", {
+      lat: filters.latitude,
+      lng: filters.longitude,
+      radius_m: filters.radius_km * 1000,
+    });
+  }
+
+  // الترتيب
+  if (filters.sort_by === "recent") {
+    q = q.order("created_at", { ascending: false });
+  } else if (filters.sort_by === "price_low") {
+    q = q.order("min_price", { ascending: true });
+  } else if (filters.sort_by === "price_high") {
+    q = q.order("max_price", { ascending: false });
+  }
+
+  // التصفح
+  return q.range(filters.offset, filters.offset + filters.limit - 1);
+}
+
+// Builds the count query (no sorting/pagination/geo).
+export function buildCountQuery(
+  query: QueryBuilder,
+  filters: SearchFilters
+): QueryBuilder {
+  return applyCommonFilters(query, filters);
+}
+
+export function buildSearchResponse(
+  results: any[] | null,
+  totalCount: number | null,
+  filters: SearchFilters
+): SearchResponse {
+  const total = totalCount ?? 0;
+  return {
+    results: results ?? [],
+    total_count: total,
+    has_more: filters.offset + filters.limit < total,
+  };
+}
+
 serve(async (req) => {
   try {
     if (req.method !== "POST") {
@@ -35,77 +171,15 @@ serve(async (req) => {
     }
 
     const body: SearchQuery = await req.json();
-    const {
-      category,
-      city,
-      min_price,
-      max_price,
-      bedrooms,
-      bathrooms,
-      latitude,
-      longitude,
-      radius_km = 10,
-      sort_by = "recent",
-      status = "active",
-      limit = 20,
-      offset = 0,
-    } = body;
+    const filters = normalizeSearchQuery(body);
 
     // ابدأ ببناء الاستعلام
-    let query = supabase
+    const baseQuery = supabase
       .from("property_requests")
       .select("*")
-      .eq("status", status);
+      .eq("status", filters.status);
 
-    // فلاتر أساسية
-    if (category) {
-      query = query.eq("category", category);
-    }
-
-    if (city) {
-      query = query.ilike("city", `%${city}%`);
-    }
-
-    if (min_price !== undefined) {
-      query = query.gte("min_price", min_price);
-    }
-
-    if (max_price !== undefined) {
-      query = query.lte("max_price", max_price);
-    }
-
-    if (bedrooms !== undefined) {
-      query = query.eq("bedrooms", bedrooms);
-    }
-
-    if (bathrooms !== undefined) {
-      query = query.eq("bathrooms", bathrooms);
-    }
-
-    // فلتر جغرافي (إذا توفرت الإحداثيات)
-    if (latitude !== undefined && longitude !== undefined) {
-      // استخدم PostGIS للبحث عن المسافة
-      // SELECT * FROM property_requests
-      // WHERE earth_distance(ll_to_earth(latitude, longitude),
-      //                       ll_to_earth($1, $2)) <= $3 * 1000
-      query = query.rpc("nearby_requests", {
-        lat: latitude,
-        lng: longitude,
-        radius_m: radius_km * 1000,
-      });
-    }
-
-    // الترتيب
-    if (sort_by === "recent") {
-      query = query.order("created_at", { ascending: false });
-    } else if (sort_by === "price_low") {
-      query = query.order("min_price", { ascending: true });
-    } else if (sort_by === "price_high") {
-      query = query.order("max_price", { ascending: false });
-    }
-
-    // التصفح
-    query = query.range(offset, offset + limit - 1);
+    const query = buildSearchQuery(baseQuery, filters);
 
     const { data: results, error } = await query;
 
@@ -114,24 +188,17 @@ serve(async (req) => {
     }
 
     // احصل على إجمالي العدد
-    let countQuery = supabase
+    const countBase = supabase
       .from("property_requests")
       .select("*", { count: "exact" })
-      .eq("status", status);
+      .eq("status", filters.status);
 
-    if (category) countQuery = countQuery.eq("category", category);
-    if (city) countQuery = countQuery.ilike("city", `%${city}%`);
-    if (min_price !== undefined) countQuery = countQuery.gte("min_price", min_price);
-    if (max_price !== undefined) countQuery = countQuery.lte("max_price", max_price);
+    const countQuery = buildCountQuery(countBase, filters);
 
     const { count: totalCount } = await countQuery;
 
     return new Response(
-      JSON.stringify({
-        results: results || [],
-        total_count: totalCount || 0,
-        has_more: (offset + limit) < (totalCount || 0),
-      }),
+      JSON.stringify(buildSearchResponse(results, totalCount, filters)),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
