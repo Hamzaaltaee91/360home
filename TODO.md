@@ -138,7 +138,7 @@
 - [x] **Implement `user_provider.dart`** — Current user session and profile data.
 - [x] **Implement `requests_provider.dart`** — Buyer requests state.
 - [x] **Implement `offers_provider.dart`** — Realtor offers state.
-- [ ] **Implement `notifications_provider.dart`** — Notification stream state.
+- [x] **Implement `notifications_provider.dart`** — Notification stream state.
 
 ---
 
