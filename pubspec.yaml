@@ -35,6 +35,7 @@ dependencies:
   dio: ^5.3.0
   image_picker: ^1.0.4
   geolocator: ^10.1.0
+  url_launcher: ^6.2.0
 
   # Local Storage
   shared_preferences: ^2.2.0

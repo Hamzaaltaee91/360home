@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../services/supabase_service.dart';
 import '../../models/models.dart';
 
@@ -34,6 +35,71 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     final realtorOffer = RealtorOffer.fromJson(offer);
     _realtorFuture = SupabaseService().getUserById(realtorOffer.realtorId);
     return realtorOffer;
+  }
+
+  /// Opens a full-screen, zoomable gallery of the offer's photos starting at
+  /// [initialIndex].
+  void _openPhotoViewer(List<String> photos, int initialIndex) {
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black,
+      builder: (context) => _PhotoViewerDialog(
+        photos: photos,
+        initialIndex: initialIndex,
+      ),
+    );
+  }
+
+  /// Opens the offer's location in the platform's default maps application.
+  Future<void> _openInMaps(RealtorOffer offer) async {
+    final latitude = offer.latitude;
+    final longitude = offer.longitude;
+
+    final Uri uri;
+    if (latitude != null && longitude != null) {
+      uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
+    } else {
+      uri = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(offer.propertyAddress)}',
+      );
+    }
+
+    await _launch(uri, 'تعذّر فتح تطبيق الخرائط');
+  }
+
+  /// Launches a `tel:` URI to call [phone].
+  Future<void> _callRealtor(String phone) async {
+    await _launch(Uri(scheme: 'tel', path: phone), 'تعذّر إجراء المكالمة');
+  }
+
+  /// Launches a WhatsApp chat with [phone].
+  Future<void> _messageRealtorOnWhatsApp(String phone) async {
+    final normalized = phone.replaceAll(RegExp(r'[^\d+]'), '');
+    await _launch(
+      Uri.parse('https://wa.me/$normalized'),
+      'تعذّر فتح واتساب',
+    );
+  }
+
+  /// Launches an email compose intent to [email].
+  Future<void> _emailRealtor(String email) async {
+    await _launch(Uri(scheme: 'mailto', path: email), 'تعذّر فتح البريد');
+  }
+
+  Future<void> _launch(Uri uri, String errorMessage) async {
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) throw Exception('launch failed');
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    }
   }
 
   Future<void> _respondToOffer(String response) async {
@@ -104,21 +170,63 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Property Header with photo
-                Container(
-                  height: 250,
-                  color: Colors.grey.shade200,
-                  child: offer.photoUrls != null && offer.photoUrls!.isNotEmpty
-                      ? Image.network(
-                          offer.photoUrls!.first,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Center(
-                            child: Icon(Icons.image_not_supported),
+                GestureDetector(
+                  onTap: offer.photoUrls != null && offer.photoUrls!.isNotEmpty
+                      ? () => _openPhotoViewer(offer.photoUrls!, 0)
+                      : null,
+                  child: Container(
+                    height: 250,
+                    color: Colors.grey.shade200,
+                    child: offer.photoUrls != null && offer.photoUrls!.isNotEmpty
+                        ? Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.network(
+                                offer.photoUrls!.first,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Center(
+                                  child: Icon(Icons.image_not_supported),
+                                ),
+                              ),
+                              Positioned(
+                                right: 12,
+                                bottom: 12,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.photo_library_outlined,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '${offer.photoUrls!.length}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        : const Center(
+                            child: Icon(Icons.home_outlined, size: 64),
                           ),
-                        )
-                      : const Center(
-                          child: Icon(Icons.home_outlined, size: 64),
-                        ),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 // Additional photos carousel
@@ -132,18 +240,22 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                       itemBuilder: (context, index) {
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              offer.photoUrls![index],
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox(
+                          child: GestureDetector(
+                            onTap: () =>
+                                _openPhotoViewer(offer.photoUrls!, index),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                offer.photoUrls![index],
                                 width: 80,
                                 height: 80,
-                                child: Icon(Icons.image_not_supported),
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const SizedBox(
+                                  width: 80,
+                                  height: 80,
+                                  child: Icon(Icons.image_not_supported),
+                                ),
                               ),
                             ),
                           ),
@@ -286,6 +398,14 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
+                      // Location / Map
+                      Text(
+                        'الموقع',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildLocationCard(offer),
+                      const SizedBox(height: 24),
                       // Description
                       if (offer.propertyDescription != null) ...[
                         Text(
@@ -383,6 +503,51 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                                           ),
                                       ],
                                     ),
+                                    const SizedBox(height: 12),
+                                    const Divider(height: 1),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      children: [
+                                        if (realtor.phone != null) ...[
+                                          Expanded(
+                                            child: OutlinedButton.icon(
+                                              onPressed: () =>
+                                                  _callRealtor(realtor.phone!),
+                                              icon: const Icon(
+                                                Icons.phone,
+                                                size: 18,
+                                              ),
+                                              label: const Text('اتصال'),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: OutlinedButton.icon(
+                                              onPressed: () =>
+                                                  _messageRealtorOnWhatsApp(
+                                                realtor.phone!,
+                                              ),
+                                              icon: const Icon(
+                                                Icons.chat,
+                                                size: 18,
+                                              ),
+                                              label: const Text('واتساب'),
+                                            ),
+                                          ),
+                                        ] else
+                                          Expanded(
+                                            child: OutlinedButton.icon(
+                                              onPressed: () =>
+                                                  _emailRealtor(realtor.email),
+                                              icon: const Icon(
+                                                Icons.email_outlined,
+                                                size: 18,
+                                              ),
+                                              label: const Text('بريد'),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
@@ -440,6 +605,56 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
     );
   }
 
+  Widget _buildLocationCard(RealtorOffer offer) {
+    final hasCoordinates =
+        offer.latitude != null && offer.longitude != null;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.location_on, color: Colors.indigo.shade700),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  offer.propertyAddress,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ],
+          ),
+          if (hasCoordinates) ...[
+            const SizedBox(height: 8),
+            Text(
+              '${offer.latitude!.toStringAsFixed(5)}, '
+              '${offer.longitude!.toStringAsFixed(5)}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade600,
+                  ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _openInMaps(offer),
+              icon: const Icon(Icons.map_outlined, size: 18),
+              label: const Text('فتح في الخرائط'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDetailColumn({
     required IconData icon,
     required String label,
@@ -462,6 +677,103 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Full-screen, zoomable photo gallery shown when a photo is tapped.
+class _PhotoViewerDialog extends StatefulWidget {
+  const _PhotoViewerDialog({
+    required this.photos,
+    required this.initialIndex,
+  });
+
+  final List<String> photos;
+  final int initialIndex;
+
+  @override
+  State<_PhotoViewerDialog> createState() => _PhotoViewerDialogState();
+}
+
+class _PhotoViewerDialogState extends State<_PhotoViewerDialog> {
+  late final PageController _controller;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _controller = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog.fullscreen(
+      backgroundColor: Colors.black,
+      child: Stack(
+        children: [
+          PageView.builder(
+            controller: _controller,
+            itemCount: widget.photos.length,
+            onPageChanged: (index) => setState(() => _currentIndex = index),
+            itemBuilder: (context, index) {
+              return InteractiveViewer(
+                minScale: 1,
+                maxScale: 4,
+                child: Center(
+                  child: Image.network(
+                    widget.photos[index],
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.image_not_supported,
+                      color: Colors.white,
+                      size: 64,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: SafeArea(
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+          if (widget.photos.length > 1)
+            Positioned(
+              bottom: 24,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${_currentIndex + 1} / ${widget.photos.length}',
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
