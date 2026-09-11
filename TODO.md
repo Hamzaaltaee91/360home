@@ -87,7 +87,7 @@
 - [x] **Implement `verify_email_screen.dart`** — Email verification handler screen.
 
 ### Buyer Flow
-- [ ] **Complete `buyer_home_screen.dart`** — Pull-to-refresh, empty states, and notification badge.
+- [x] **Complete `buyer_home_screen.dart`** — Pull-to-refresh, empty states, and notification badge.
 - [ ] **Complete `create_request_screen.dart`** — Image upload, geo-location picker, and field validation.
 - [ ] **Complete `browse_offers_screen.dart`** — Search, sort, and filtering controls.
 - [ ] **Complete `offer_details_screen.dart`** — Photo viewer, map display, and realtor contact action.
