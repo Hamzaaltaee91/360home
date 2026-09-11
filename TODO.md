@@ -26,7 +26,7 @@
 - [x] **PostGIS Migration** — PostGIS extension for geo/radius search.
 - [x] **Notifications Table Migration** — Notification fields, types, and read status.
 - [x] **Realtor Verifications Migration** — Verification requests table.
-- [ ] **Create Seed Data** — Write `supabase/seed.sql` with sample test data (users, requests, offers).
+- [x] **Create Seed Data** — Write `supabase/seed.sql` with sample test data (users, requests, offers).
 
 ---
 
