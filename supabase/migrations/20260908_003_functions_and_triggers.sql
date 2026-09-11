@@ -106,22 +106,22 @@ CREATE TRIGGER update_realtor_offers_updated_at
 
 CREATE OR REPLACE FUNCTION public.get_current_user()
 RETURNS TABLE (
-  id UUID,
-  email TEXT,
-  full_name TEXT,
-  role TEXT,
-  is_verified BOOLEAN
+  user_id UUID,
+  user_email TEXT,
+  user_full_name TEXT,
+  user_role TEXT,
+  user_is_verified BOOLEAN
 ) AS $$
 BEGIN
   RETURN QUERY
   SELECT
-    users.id,
-    users.email,
-    users.full_name,
-    users.role,
-    users.is_verified
-  FROM public.users
-  WHERE auth_id = auth.uid();
+    u.id,
+    u.email,
+    u.full_name,
+    u.role,
+    u.is_verified
+  FROM public.users u
+  WHERE u.auth_id = auth.uid();
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 

@@ -54,11 +54,11 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.get_buyer_offer_stats(p_buyer_id UUID)
 RETURNS TABLE (
-  total_offers INT,
-  accepted_offers INT,
-  rejected_offers INT,
-  pending_offers INT,
-  response_rate DECIMAL
+  stat_total_offers INT,
+  stat_accepted_offers INT,
+  stat_rejected_offers INT,
+  stat_pending_offers INT,
+  stat_response_rate DECIMAL
 ) AS $$
 DECLARE
   v_total_offers INT;
@@ -124,11 +124,11 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.get_realtor_performance(p_realtor_id UUID)
 RETURNS TABLE (
-  total_offers INT,
-  accepted_offers INT,
-  rejection_rate DECIMAL,
-  average_days_to_response DECIMAL,
-  total_interactions INT
+  perf_total_offers INT,
+  perf_accepted_offers INT,
+  perf_rejection_rate DECIMAL,
+  perf_average_days_to_response DECIMAL,
+  perf_total_interactions INT
 ) AS $$
 DECLARE
   v_total INT;
@@ -181,8 +181,8 @@ CREATE OR REPLACE FUNCTION public.bulk_update_offer_responses(
   p_responses JSONB
 )
 RETURNS TABLE (
-  updated_count INT,
-  success BOOLEAN
+  bulk_updated_count INT,
+  bulk_success BOOLEAN
 ) AS $$
 DECLARE
   v_updated INT;
@@ -205,8 +205,8 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.auto_expire_offers()
 RETURNS TABLE (
-  expired_count INT,
-  success BOOLEAN
+  expire_expired_count INT,
+  expire_success BOOLEAN
 ) AS $$
 DECLARE
   v_expired INT;
