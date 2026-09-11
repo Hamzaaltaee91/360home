@@ -111,7 +111,7 @@
 
 ### Admin Panel
 - [x] **Implement `admin_dashboard_screen.dart`** — Core metric summaries.
-- [ ] **Implement `verify_realtors_screen.dart`** — Review and approve verification requests.
+- [x] **Implement `verify_realtors_screen.dart`** — Review and approve verification requests.
 - [ ] **Implement `manage_users_screen.dart`** — User directory and role moderation.
 
 ---

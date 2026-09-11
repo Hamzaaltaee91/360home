@@ -407,6 +407,47 @@ class SupabaseService {
     });
   }
 
+  /// Returns all verification requests with the given [status], newest first.
+  /// Intended for the admin review screen.
+  Future<List<RealtorVerification>> getVerifications({
+    String status = 'pending',
+  }) {
+    return _guard(() async {
+      final response = await _client
+          .from('realtor_verifications')
+          .select()
+          .eq('status', status)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((e) => RealtorVerification.fromJson(e as Map<String, dynamic>))
+          .toList();
+    });
+  }
+
+  /// Approves or rejects a verification request via the `verify-realtor`
+  /// Edge Function. [rejectionReason] is required when rejecting.
+  Future<RealtorVerification> reviewVerification({
+    required String verificationId,
+    required bool approve,
+    String? rejectionReason,
+  }) {
+    return _guard(() async {
+      final response = await _client.functions.invoke(
+        'verify-realtor',
+        body: {
+          'verification_id': verificationId,
+          'action': approve ? 'approve' : 'reject',
+          if (rejectionReason != null) 'rejection_reason': rejectionReason,
+        },
+      );
+
+      return RealtorVerification.fromJson(
+        response['verification'] as Map<String, dynamic>,
+      );
+    });
+  }
+
   // ==================== Search & Matching ====================
 
   Future<List<PropertyMatch>> getMatchingOffers({
