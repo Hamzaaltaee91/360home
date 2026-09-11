@@ -11,6 +11,7 @@ import '../screens/buyer/buyer_home_screen.dart';
 import '../screens/buyer/create_request_screen.dart';
 import '../screens/buyer/browse_offers_screen.dart';
 import '../screens/buyer/offer_details_screen.dart';
+import '../screens/buyer/request_details_screen.dart';
 import '../screens/realtor/realtor_home_screen.dart';
 import '../screens/realtor/browse_requests_screen.dart';
 import '../screens/realtor/create_offer_screen.dart';
@@ -36,6 +37,7 @@ class RouteNames {
   static const String createRequest = '/create-request';
   static const String browseOffers = '/browse-offers';
   static const String offerDetails = '/offer/:offerId';
+  static const String requestDetails = '/request/:requestId';
 
   // Realtor
   static const String realtor = '/realtor';
@@ -52,8 +54,42 @@ class RouteNames {
   /// Builds the concrete path for an offer details route.
   static String offerDetailsPath(String offerId) => '/offer/$offerId';
 
+  /// Builds the concrete path for a request details route.
+  static String requestDetailsPath(String requestId) => '/request/$requestId';
+
   /// Builds the concrete path for a create-offer route.
   static String createOfferPath(String requestId) => '/create-offer/$requestId';
+
+  /// Resolves an incoming deep link (full URL or path) to a valid in-app
+  /// location. Returns `null` when the link cannot be resolved, letting the
+  /// caller fall back to the role home.
+  static String? resolveDeepLink(String? link) {
+    if (link == null || link.isEmpty) return null;
+
+    final uri = Uri.tryParse(link);
+    if (uri == null) return null;
+
+    // Use the path portion so absolute URLs (https://host/offer/123) and
+    // relative paths (/offer/123) resolve identically.
+    final path = uri.path.isEmpty ? link : uri.path;
+    if (path.isEmpty || path == '/') return null;
+
+    // Only allow known, parameterized deep-link targets.
+    final segments = path.split('/').where((s) => s.isNotEmpty).toList();
+    if (segments.length != 2) return null;
+
+    final id = segments[1];
+    switch (segments[0]) {
+      case 'offer':
+        return offerDetailsPath(id);
+      case 'request':
+        return requestDetailsPath(id);
+      case 'create-offer':
+        return createOfferPath(id);
+      default:
+        return null;
+    }
+  }
 
   /// Routes reachable without an authenticated session.
   static const Set<String> publicRoutes = {splash, login, signup};
@@ -104,6 +140,12 @@ final appRoutes = GoRouter(
       return isPublicRoute ? null : RouteNames.login;
     }
 
+    // Resolve deep links to a canonical in-app location.
+    final deepLink = RouteNames.resolveDeepLink(state.uri.toString());
+    if (deepLink != null && deepLink != location) {
+      return deepLink;
+    }
+
     // Authenticated users should not linger on auth/splash screens.
     if (isPublicRoute) {
       return RouteNames.homeForRole(service.currentUserRole);
@@ -114,7 +156,8 @@ final appRoutes = GoRouter(
     final isBuyerRoute = location.startsWith('/buyer') ||
         location == RouteNames.createRequest ||
         location == RouteNames.browseOffers ||
-        location.startsWith('/offer/');
+        location.startsWith('/offer/') ||
+        location.startsWith('/request/');
     final isRealtorRoute = location.startsWith('/realtor') ||
         location == RouteNames.browseRequests ||
         location.startsWith('/create-offer/');
@@ -169,6 +212,13 @@ final appRoutes = GoRouter(
       builder: (context, state) {
         final offerId = state.pathParameters['offerId']!;
         return OfferDetailsScreen(offerId: offerId);
+      },
+    ),
+    GoRoute(
+      path: RouteNames.requestDetails,
+      builder: (context, state) {
+        final requestId = state.pathParameters['requestId']!;
+        return RequestDetailsScreen(requestId: requestId);
       },
     ),
 

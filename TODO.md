@@ -74,7 +74,7 @@
 - [x] **Review `app_routes.dart`** — Verify route definitions (`/splash`, `/login`, `/signup`, `/buyer`, `/realtor`, etc.).
 - [x] **Implement Route Guards** — Redirects based on auth state and role (buyer/realtor/admin).
 - [x] **Add 404 Screen** — Build fallback `NotFoundScreen`.
-- [ ] **Implement Deep Linking** — Support direct URL resolution for requests and offers.
+- [x] **Implement Deep Linking** — Support direct URL resolution for requests and offers.
 
 ---
 
