@@ -162,7 +162,7 @@
 - [x] **Error Handler Tests** — Translate and handle Supabase exceptions.
 
 ### Widget Tests
-- [ ] **Screen Tests** — Widget tests for login, signup, request, and offer screens.
+- [x] **Screen Tests** — Widget tests for login, signup, request, and offer screens.
 - [ ] **Component Tests** — Widget tests for shared components.
 
 ### Integration Tests
