@@ -1,8 +1,11 @@
 // Browse Requests Screen for Realtors
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 import '../../services/supabase_service.dart';
+import '../../services/location_service.dart';
 import '../../models/models.dart';
 
 class BrowseRequestsScreen extends StatefulWidget {
@@ -17,6 +20,20 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
   String _selectedCategory = 'all';
   String _sortBy = 'recent';
 
+  /// Whether the map view is shown instead of the list view.
+  bool _showMap = false;
+
+  /// Radius (in km) used by the "near me" filter. `null` disables it.
+  double? _radiusKm;
+
+  /// The device location captured for the "near me" filter.
+  Coordinates? _userLocation;
+
+  /// Whether a location lookup is currently in progress.
+  bool _isLocating = false;
+
+  final LocationService _locationService = LocationService();
+
   @override
   void initState() {
     super.initState();
@@ -25,6 +42,34 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
 
   void _loadRequests() {
     _requestsFuture = _fetchRequests();
+  }
+
+  /// Prompts for the device location and enables the radius filter.
+  Future<void> _enableNearMeFilter() async {
+    setState(() => _isLocating = true);
+    try {
+      final location = await _locationService.getCurrentLocation();
+      if (!mounted) return;
+      setState(() {
+        _userLocation = location;
+        _radiusKm ??= 10;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذر تحديد الموقع: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isLocating = false);
+    }
+  }
+
+  /// Clears the "near me" filter.
+  void _clearNearMeFilter() {
+    setState(() {
+      _userLocation = null;
+      _radiusKm = null;
+    });
   }
 
   Future<List<PropertyRequest>> _fetchRequests() async {
@@ -52,6 +97,20 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
     if (_selectedCategory != 'all') {
       filtered =
           filtered.where((r) => r.category == _selectedCategory).toList();
+    }
+
+    // Radius filter: only keep requests with coordinates within range.
+    final userLocation = _userLocation;
+    final radiusKm = _radiusKm;
+    if (userLocation != null && radiusKm != null) {
+      filtered = filtered.where((r) {
+        if (r.latitude == null || r.longitude == null) return false;
+        return _locationService.isWithinRadius(
+          center: userLocation,
+          point: Coordinates(r.latitude!, r.longitude!),
+          radiusKm: radiusKm,
+        );
+      }).toList();
     }
 
     // Sort
@@ -82,6 +141,11 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
       appBar: AppBar(
         title: const Text('طلبات المشترين'),
         actions: [
+          IconButton(
+            icon: Icon(_showMap ? Icons.list : Icons.map),
+            tooltip: _showMap ? 'عرض القائمة' : 'عرض الخريطة',
+            onPressed: () => setState(() => _showMap = !_showMap),
+          ),
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () => context.go('/profile'),
@@ -127,6 +191,9 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
                     }
                   },
                 ),
+                const SizedBox(height: 12),
+                // Near-me radius filter
+                _buildNearMeFilter(),
               ],
             ),
           ),
@@ -157,6 +224,10 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
 
                 final allRequests = snapshot.data ?? [];
                 final filteredRequests = _filterRequests(allRequests);
+
+                if (_showMap) {
+                  return _buildMapView(filteredRequests);
+                }
 
                 if (filteredRequests.isEmpty) {
                   return Center(
@@ -217,6 +288,131 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
           if (index == 2) context.go('/profile');
         },
       ),
+    );
+  }
+
+  Widget _buildNearMeFilter() {
+    final isActive = _userLocation != null && _radiusKm != null;
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _isLocating
+                ? null
+                : (isActive ? _clearNearMeFilter : _enableNearMeFilter),
+            icon: _isLocating
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(isActive ? Icons.location_off : Icons.my_location),
+            label: Text(isActive ? 'إلغاء القريب مني' : 'القريب مني'),
+          ),
+        ),
+        if (isActive) ...[
+          const SizedBox(width: 12),
+          Expanded(
+            child: DropdownButton<double>(
+              value: _radiusKm,
+              isExpanded: true,
+              items: const [
+                DropdownMenuItem(value: 5, child: Text('٥ كم')),
+                DropdownMenuItem(value: 10, child: Text('١٠ كم')),
+                DropdownMenuItem(value: 25, child: Text('٢٥ كم')),
+                DropdownMenuItem(value: 50, child: Text('٥٠ كم')),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _radiusKm = value);
+                }
+              },
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMapView(List<PropertyRequest> requests) {
+    final located = requests
+        .where((r) => r.latitude != null && r.longitude != null)
+        .toList();
+
+    if (located.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.map_outlined, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'لا توجد طلبات بموقع محدد',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'جرب تغيير معايير البحث',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
+      );
+    }
+
+    final center = _userLocation != null
+        ? LatLng(_userLocation!.latitude, _userLocation!.longitude)
+        : LatLng(located.first.latitude!, located.first.longitude!);
+
+    return FlutterMap(
+      options: MapOptions(
+        initialCenter: center,
+        initialZoom: 11,
+      ),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.dabberli.app',
+        ),
+        MarkerLayer(
+          markers: [
+            if (_userLocation != null)
+              Marker(
+                point: LatLng(
+                  _userLocation!.latitude,
+                  _userLocation!.longitude,
+                ),
+                width: 40,
+                height: 40,
+                child: const Icon(
+                  Icons.my_location,
+                  color: Colors.blue,
+                  size: 32,
+                ),
+              ),
+            for (final request in located)
+              Marker(
+                point: LatLng(request.latitude!, request.longitude!),
+                width: 48,
+                height: 48,
+                child: GestureDetector(
+                  onTap: () => context.go('/create-offer/${request.id}'),
+                  child: Tooltip(
+                    message: request.title,
+                    child: Icon(
+                      Icons.location_on,
+                      color: request.isUrgent
+                          ? Colors.red.shade700
+                          : Colors.indigo.shade700,
+                      size: 40,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 
