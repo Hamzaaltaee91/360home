@@ -103,7 +103,7 @@
 - [x] **Implement `subscription_screen.dart`** — Tier selection and payment checkout.
 
 ### Profile & Settings
-- [ ] **Complete `profile_screen.dart`** — Replace placeholder with live profile data display.
+- [x] **Complete `profile_screen.dart`** — Replace placeholder with live profile data display.
 - [ ] **Implement `edit_profile_screen.dart`** — Profile edits and avatar upload.
 - [ ] **Implement `settings_screen.dart`** — Language, notifications, and dark mode toggles.
 - [ ] **Implement `notifications_screen.dart`** — Notification list view.
