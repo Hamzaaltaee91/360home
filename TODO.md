@@ -50,7 +50,7 @@
 - [x] **Implement `notification_service.dart`** — Fetch, mark as read, and subscribe to realtime events.
 - [x] **Implement `storage_service.dart`** — Upload/delete images via Supabase Storage.
 - [x] **Implement `location_service.dart`** — Current location capture and distance calculation.
-- [ ] **Implement `payment_service.dart`** — Subscription and payment lifecycle handling.
+- [x] **Implement `payment_service.dart`** — Subscription and payment lifecycle handling.
 - [ ] **Implement `analytics_service.dart`** — Data fetching from analytics Edge Function.
 - [ ] **Implement Global Error Handler** — Create `lib/utils/error_handler.dart` to standardize Supabase errors.
 - [ ] **Implement Validators** — Create `lib/utils/validators.dart` for email, phone, price validation.
