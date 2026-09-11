@@ -19,7 +19,7 @@ create or replace function public.current_user_role()
   language sql
   stable
   security definer
-  set search_path = public
+  set search_path = ''
 as $$
   select role from public.users where id = auth.uid();
 $$;
@@ -29,7 +29,7 @@ create or replace function public.is_admin()
   language sql
   stable
   security definer
-  set search_path = public
+  set search_path = ''
 as $$
   select exists (
     select 1 from public.users
