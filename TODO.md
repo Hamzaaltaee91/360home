@@ -38,7 +38,7 @@
 - [x] **Test `send-notification/index.ts`** — In-app and email notifications.
 - [x] **Test `verify-realtor/index.ts`** — Verification approval/rejection logic.
 - [x] **Create `create-checkout` Function** — Subscription payment handling via Stripe/local gateway.
-- [ ] **Create `webhook-handler` Function** — Process payment gateway webhooks and update subscription status.
+- [x] **Create `webhook-handler` Function** — Process payment gateway webhooks and update subscription status.
 - [ ] **Create `delete-account` Function** — GDPR-compliant user account and data deletion.
 - [ ] **Configure CORS Headers** — Verify CORS headers for Flutter Web requests across all functions.
 
