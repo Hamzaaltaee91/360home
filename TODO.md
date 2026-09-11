@@ -8,7 +8,7 @@
 ## 1. البنية التحتية والإعداد (Infrastructure & Setup)
 
 - [x] **إعداد ملف `.env.local`** — إنشاء ملف البيئة المحلي الفعلي من `.env.example` وتعبئة `SUPABASE_URL` و `SUPABASE_ANON_KEY` لتشغيل التطبيق محلياً.
-- [ ] **التحقق من `pubspec.yaml`** — التأكد من وجود جميع الحزم المطلوبة (`supabase_flutter`, `go_router`, `flutter_dotenv`, `intl`, `image_picker`, `geolocator`) وإضافة أي حزمة ناقصة.
+- [x] **التحقق من `pubspec.yaml`** — التأكد من وجود جميع الحزم المطلوبة (`supabase_flutter`, `go_router`, `flutter_dotenv`, `intl`, `image_picker`, `geolocator`) وإضافة أي حزمة ناقصة.
 - [ ] **إعداد `analysis_options.yaml`** — تفعيل قواعد lint الصارمة (`flutter_lints` + قواعد إضافية) لضمان جودة الكود.
 - [ ] **إعداد CI/CD** — إنشاء `.github/workflows/` لتشغيل `flutter analyze` و `flutter test` تلقائياً عند كل push.
 - [ ] **إعداد بيئة Supabase المحلية** — تشغيل `supabase start` والتحقق من تطبيق جميع الـ migrations بنجاح.
