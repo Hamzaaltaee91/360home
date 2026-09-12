@@ -158,7 +158,10 @@ class _BrowseOffersScreenState extends State<BrowseOffersScreen> {
     String response,
   ) async {
     try {
-      await SupabaseService().respondToOffer(offerId, response);
+      await SupabaseService().respondToOffer(
+        offerId: offerId,
+        response: response,
+      );
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
