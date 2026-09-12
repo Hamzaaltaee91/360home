@@ -104,7 +104,10 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
 
   Future<void> _respondToOffer(String response) async {
     try {
-      await SupabaseService().respondToOffer(widget.offerId, response);
+      await SupabaseService().respondToOffer(
+        offerId: widget.offerId,
+        response: response,
+      );
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -137,7 +140,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
       body: FutureBuilder<RealtorOffer>(
         future: _offerFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.loading) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -391,7 +394,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                             ),
                           if (offer.furnished != null)
                             _buildDetailColumn(
-                              icon: Icons.furniture,
+                              icon: Icons.chair,
                               label: 'الأثاث',
                               value: offer.furnished! ? 'مفروش' : 'غير مفروش',
                             ),
