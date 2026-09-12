@@ -4,6 +4,7 @@
 // supported locales: Arabic (RTL) and English (LTR).
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -12,6 +13,8 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           locale: Locale('ar'),
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: const [Locale('ar'), Locale('en')],
           home: Directionality(
             textDirection: TextDirection.rtl,
             child: Scaffold(body: Text('مرحبا')),
@@ -45,10 +48,10 @@ void main() {
     testWidgets('EdgeInsetsDirectional mirrors under RTL', (tester) async {
       const padding = EdgeInsetsDirectional.only(start: 4);
 
-      expect(padding.resolve(TextDirection.rtl).left, 4);
-      expect(padding.resolve(TextDirection.rtl).right, 0);
-      expect(padding.resolve(TextDirection.ltr).left, 0);
-      expect(padding.resolve(TextDirection.ltr).right, 4);
+      expect(padding.resolve(TextDirection.rtl).left, 0);
+      expect(padding.resolve(TextDirection.rtl).right, 4);
+      expect(padding.resolve(TextDirection.ltr).left, 4);
+      expect(padding.resolve(TextDirection.ltr).right, 0);
     });
   });
 }
