@@ -8,6 +8,13 @@
 
 ## 1. Infrastructure & Setup
 
+- [ ] **Fix Provider name clash** — In lib/providers/auth_provider.dart and lib/providers/notifications_provider.dart, the name Provider is ambiguous between supabase_flutter and flutter_riverpod. Add `hide Provider` to the supabase_flutter import in both files. Do not rename anything else.
+- [ ] **Fix broken constructors in models.dart** — Lines 327 and 550 pass too many positional arguments to Object.hash. Split the argument list so no call exceeds 20 positional arguments. Change nothing else in the file.
+- [ ] **Fix go_router deprecated API** — In lib/routes/app_routes.dart line 321, GoRouterState.location no longer exists. Replace it with state.matchedLocation. Change nothing else.
+- [ ] **Create missing RequestDetailsScreen** — lib/routes/app_routes.dart imports lib/screens/buyer/request_details_screen.dart which does not exist. Create a minimal StatelessWidget named RequestDetailsScreen that takes a requestId String and shows a Scaffold with the id. Follow the style of the other screens in that folder.
+- [ ] **Fix pagination type mismatches** — Several screens assign Future<PaginatedResult<T>> to Future<List<T>>. In lib/screens/buyer/buyer_home_screen.dart and any other screen with the same error, change the variable types to match what the service returns. Do not change the service signatures.
+- [ ] **Remove unused imports** — Delete every import flagged as unused_import by flutter analyze. Remove nothing else.
+
 - [x] **Add price formatting helper** — Create lib/utils/formatters.dart with a single top-level function formatPrice(num value) that returns the value grouped with commas and suffixed with ' IQD'. Pure Dart only, no new packages, no Flutter imports. Add a matching test in test/utils/formatters_test.dart.
 
 - [x] **Move admin Supabase calls to service layer** — In lib/screens/admin/manage_users_screen.dart, move the two direct Supabase calls (list users, update role) into lib/services/supabase_service.dart as listUsers() and updateUserRole(), then use them from the screen. Do not change any RLS policy or SQL.
