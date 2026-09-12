@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تفاصيل الطلب — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <a href="dashboard.html" class="btn">→ رجوع</a>
+    <div id="request-detail"></div>
+    <h2>العروض</h2>
+    <div id="offers-list"></div>
+    <p id="empty-msg" hidden>لا توجد عروض بعد على هذا الطلب.</p>
+  </div>
+
+  <script type="module">
+    import { requireSession } from "./js/auth.js";
+    import { getRequest } from "./js/requests.js";
+    import { listOffersForRequest } from "./js/offers.js";
+
+    await requireSession();
+
+    const requestId = new URLSearchParams(window.location.search).get("id");
+    const request = await getRequest(requestId);
+
+    document.getElementById("request-detail").innerHTML = `
+      <div class="card">
+        <h1>${request.title}</h1>
+        <p>${request.city} — ${request.category}</p>
+        <p>${request.description ?? ""}</p>
+      </div>
+    `;
+
+    const offers = await listOffersForRequest(requestId);
+    const list = document.getElementById("offers-list");
+    if (offers.length === 0) {
+      document.getElementById("empty-msg").hidden = false;
+    }
+    for (const o of offers) {
+      const a = document.createElement("a");
+      a.href = `offer.html?id=${o.id}`;
+      a.style.textDecoration = "none";
+      a.style.color = "inherit";
+      a.innerHTML = `
+        <div class="card">
+          <h3>${o.property_title}</h3>
+          <p>${o.offered_price} ${o.currency}</p>
+        </div>
+      `;
+      list.appendChild(a);
+    }
+  </script>
+</body>
+</html>

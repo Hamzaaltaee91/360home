@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>طلباتي — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h1>طلباتي</h1>
+      <button class="btn" id="signout-btn">تسجيل الخروج</button>
+    </div>
+    <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
+    <div id="requests-list" style="margin-top:1.5rem;"></div>
+    <p id="empty-msg" hidden>لا توجد طلبات بعد.</p>
+  </div>
+
+  <script type="module">
+    import { requireSession, signOut } from "./js/auth.js";
+    import { listMyRequests } from "./js/requests.js";
+
+    await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    const requests = await listMyRequests();
+    const list = document.getElementById("requests-list");
+    if (requests.length === 0) {
+      document.getElementById("empty-msg").hidden = false;
+    }
+    for (const r of requests) {
+      const a = document.createElement("a");
+      a.href = `request.html?id=${r.id}`;
+      a.style.textDecoration = "none";
+      a.style.color = "inherit";
+      a.innerHTML = `
+        <div class="card">
+          <h3>${r.title}</h3>
+          <p>${r.city} — ${r.category}</p>
+        </div>
+      `;
+      list.appendChild(a);
+    }
+  </script>
+</body>
+</html>

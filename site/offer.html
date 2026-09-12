@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تفاصيل العرض — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <a href="#" id="back-link" class="btn">→ رجوع</a>
+    <div id="offer-detail"></div>
+    <div id="response-buttons"></div>
+    <p id="response-status" hidden></p>
+  </div>
+
+  <script type="module">
+    import { requireSession } from "./js/auth.js";
+    import { getOffer, respondToOffer } from "./js/offers.js";
+
+    await requireSession();
+
+    const offerId = new URLSearchParams(window.location.search).get("id");
+    const offer = await getOffer(offerId);
+
+    document.getElementById("back-link").href = `request.html?id=${offer.request_id}`;
+
+    document.getElementById("offer-detail").innerHTML = `
+      <div class="card">
+        <h1>${offer.property_title}</h1>
+        <p>${offer.property_address}</p>
+        <p>${offer.offered_price} ${offer.currency}</p>
+        <p>${offer.property_description ?? ""}</p>
+        <p>${offer.message_to_buyer ?? ""}</p>
+      </div>
+    `;
+
+    const buttons = document.getElementById("response-buttons");
+    const status = document.getElementById("response-status");
+
+    function renderButtons() {
+      buttons.innerHTML = `
+        <button class="btn btn-primary" id="interested-btn">مهتم</button>
+        <button class="btn" id="not-interested-btn">غير مهتم</button>
+      `;
+      document.getElementById("interested-btn").addEventListener("click", () => respond("interested"));
+      document.getElementById("not-interested-btn").addEventListener("click", () => respond("not_interested"));
+    }
+
+    async function respond(response) {
+      await respondToOffer(offerId, response);
+      status.textContent = response === "interested" ? "تم إرسال اهتمامك" : "تم تسجيل عدم الاهتمام";
+      status.hidden = false;
+      buttons.innerHTML = "";
+    }
+
+    renderButtons();
+  </script>
+</body>
+</html>

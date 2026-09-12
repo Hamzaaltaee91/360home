@@ -215,7 +215,7 @@ export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 ```
 Do not create any other file in this task.
 
-- [BLOCKED] **Create site/js/supabase-client.js** — Create a new file `site/js/supabase-client.js` with exactly this content:
+- [x] **Create site/js/supabase-client.js** — Create a new file `site/js/supabase-client.js` with exactly this content:
 ```js
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
@@ -224,7 +224,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 ```
 Requires site/js/config.js to already exist (it does, from a prior task). Do not create any other file in this task.
 
-- [BLOCKED] **Create site/js/auth.js** — Create a new file `site/js/auth.js` with exactly this content:
+- [x] **Create site/js/auth.js** — Create a new file `site/js/auth.js` with exactly this content:
 ```js
 import { supabase } from "./supabase-client.js";
 
@@ -256,7 +256,7 @@ export async function requireSession() {
 ```
 Do not create any other file in this task.
 
-- [BLOCKED] **Create site/js/requests.js** — Create a new file `site/js/requests.js` with exactly this content:
+- [x] **Create site/js/requests.js** — Create a new file `site/js/requests.js` with exactly this content:
 ```js
 import { supabase } from "./supabase-client.js";
 
@@ -330,7 +330,7 @@ export async function respondToOffer(id, response) {
 ```
 Do not create any other file in this task.
 
-- [BLOCKED] **Create site/css/style.css** — Create a new file `site/css/style.css` with exactly this content:
+- [x] **Create site/css/style.css** — Create a new file `site/css/style.css` with exactly this content:
 ```css
 @import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap');
 
@@ -397,7 +397,7 @@ h1, h2, h3 { font-family: var(--font-display); color: var(--color-cardamom); }
 .error-text { color: #b3261e; font-size: 0.9rem; }
 ```
 Do not create any other file in this task.
-- [ ] **Create site/index.html (landing/login/signup page)** — Create a new file `site/index.html` with exactly this content:
+- [x] **Create site/index.html (landing/login/signup page)** — Create a new file `site/index.html` with exactly this content:
 ```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -489,7 +489,7 @@ Do not create any other file in this task.
 ```
 This file depends on site/js/auth.js and site/js/supabase-client.js which already exist from prior tasks. Do not create any other file in this task.
 
-- [ ] **Create site/dashboard.html (buyer dashboard page)** — Create a new file `site/dashboard.html` with exactly this content:
+- [x] **Create site/dashboard.html (buyer dashboard page)** — Create a new file `site/dashboard.html` with exactly this content:
 ```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -541,7 +541,7 @@ This file depends on site/js/auth.js and site/js/supabase-client.js which alread
 ```
 This file depends on site/js/auth.js and site/js/requests.js which already exist from prior tasks. Do not create any other file in this task.
 
-- [ ] **Create site/request-new.html (create-request form page)** — Create a new file `site/request-new.html` with exactly this content:
+- [x] **Create site/request-new.html (create-request form page)** — Create a new file `site/request-new.html` with exactly this content:
 ```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -642,7 +642,7 @@ This file depends on site/js/auth.js and site/js/requests.js which already exist
 ```
 This file depends on site/js/auth.js and site/js/requests.js which already exist from prior tasks. Do not create any other file in this task.
 
-- [ ] **Create site/request.html (request detail + offers list page)** — Create a new file `site/request.html` with exactly this content:
+- [x] **Create site/request.html (request detail + offers list page)** — Create a new file `site/request.html` with exactly this content:
 ```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -703,7 +703,7 @@ This file depends on site/js/auth.js and site/js/requests.js which already exist
 ```
 This file depends on site/js/auth.js, site/js/requests.js, and site/js/offers.js which already exist from prior tasks. Do not create any other file in this task.
 
-- [ ] **Create site/offer.html (offer detail + respond page)** — Create a new file `site/offer.html` with exactly this content:
+- [x] **Create site/offer.html (offer detail + respond page)** — Create a new file `site/offer.html` with exactly this content:
 ```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -767,3 +767,21 @@ This file depends on site/js/auth.js, site/js/requests.js, and site/js/offers.js
 </html>
 ```
 This file depends on site/js/auth.js and site/js/offers.js which already exist from prior tasks. Do not create any other file in this task.
+
+
+## NOTE: web site tasks completed directly by supervisor (2026-09-12)
+
+All `site/*` file-creation tasks above were completed directly by the human
+supervisor (not by aider/deepseek) after diagnosing a real pilot bug:
+`current_task()` in `auto_pilot.sh` reads only the single `- [ ] ` bullet
+line from TODO.md and never passes any content after it (including fenced
+code blocks) to aider. Tasks that needed exact multi-line file content
+(JS/HTML/CSS files) arrived at the model as truncated, content-less
+instructions, causing repeated blocked attempts and one silently
+mislabeled "done" task (`site/js/config.js`, commit `0a22bfc`, which
+actually made an unrelated — but legitimate — Dart refactor instead).
+All 10 `site/` files now exist with the exact content from
+`docs/superpowers/plans/2026-09-12-buyer-web-site.md` and were verified
+(JS syntax check + live browser signup test against the real Supabase
+project). See the corrected lesson in `CONVENTIONS.md` under "دروس
+مستفادة تلقائياً" for the root-cause fix guidance going forward.
