@@ -328,3 +328,11 @@ SANITY FAILED
 SANITY FAILED
   - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
 ```
+
+## BLOCKED: **Fix respondToOffer call in browse_offers_screen.dart** — In lib/screens/buyer/browse_offers_screen.dart line 161, the call `SupabaseService().respondToOffer(offerId, response)` passes positional arguments, but respondToOffer in lib/services/supabase_service.dart requires named parameters `offerId` and `response`. Change the call to `SupabaseService().respondToOffer(offerId: offerId, response: response)`. Do not change the service method. Change nothing else.
+التاريخ: 2026-09-12 17:10:46
+آخر سبب فشل:
+```
+SANITY FAILED
+  - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
+```
