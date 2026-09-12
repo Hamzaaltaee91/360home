@@ -180,5 +180,5 @@
 - [x] **Secure Storage** — Secure storage integration for sensitive tokens.
 - [x] **Storage Bucket Rules** — Validate access rules for property image buckets.
 - [x] **Audit Logging** — Trace sensitive operations (verification, deletion, role modification).
-- [ ] **Pagination & Lazy Loading** — Implement pagination across requests, offers, and notifications.
+- [x] **Pagination & Lazy Loading** — Implement pagination across requests, offers, and notifications.
 - [ ] **Image Compression** — Client-side resize and compression before upload.

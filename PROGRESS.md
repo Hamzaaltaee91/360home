@@ -1,5 +1,33 @@
 # Progress Log
 
+## Cycle: Pagination & Lazy Loading
+
+### Accomplished
+- Added paginated service methods in `lib/services/supabase_service.dart`:
+  - `getActiveRequests({limit, offset})` — pages active property requests
+    for the realtor marketplace, replacing the hard-coded `.limit(50)`.
+  - `getBuyerOffers({limit, offset})` — fetches all offers received across
+    the current buyer's requests in a single query via an inner join on
+    `property_requests`, replacing the previous N+1 fetch-all loop.
+- Converted `lib/screens/realtor/browse_requests_screen.dart` from a
+  one-shot `FutureBuilder` to accumulated paginated state with a
+  `ScrollController`-driven infinite scroll (`_loadRequests` / `_loadMore`,
+  `_hasMore`, `_isLoadingMore`, trailing spinner row).
+- Converted `lib/screens/buyer/browse_offers_screen.dart` the same way,
+  removing the per-request offer fetch loop.
+- Existing pagination in `RealtorOffersNotifier`, `OffersForRequestNotifier`,
+  and `NotificationsNotifier` (`loadMore()` + `_hasMore`) was already in
+  place and is unchanged.
+- No schema changes were required; no migrations were edited.
+- Marked the task as complete in `TODO.md`.
+
+### Blocked / Failing
+- None.
+
+### Next in Queue
+- Section 12 (Security & Optimization) remaining task:
+  image compression.
+
 ## Cycle: Audit Logging
 
 ### Accomplished

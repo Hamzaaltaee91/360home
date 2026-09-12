@@ -16,7 +16,26 @@ class BrowseRequestsScreen extends StatefulWidget {
 }
 
 class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
-  late Future<List<PropertyRequest>> _requestsFuture;
+  final ScrollController _scrollController = ScrollController();
+
+  /// All requests loaded so far, accumulated across pages.
+  final List<PropertyRequest> _requests = [];
+
+  /// Whether the initial page is still loading.
+  bool _isLoading = true;
+
+  /// Whether a subsequent page is currently loading.
+  bool _isLoadingMore = false;
+
+  /// Whether the backend may have more pages.
+  bool _hasMore = true;
+
+  /// Error from the most recent load attempt, if any.
+  Object? _error;
+
+  /// Page size used when fetching requests.
+  static const int _pageSize = 20;
+
   String _selectedCategory = 'all';
   String _sortBy = 'recent';
 
@@ -37,11 +56,75 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _loadRequests();
   }
 
-  void _loadRequests() {
-    _requestsFuture = _fetchRequests();
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// Triggers loading the next page when the user nears the bottom.
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final threshold = _scrollController.position.maxScrollExtent - 300;
+    if (_scrollController.position.pixels >= threshold) {
+      _loadMore();
+    }
+  }
+
+  /// Loads the first page, resetting any accumulated state.
+  Future<void> _loadRequests() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+      _hasMore = true;
+      _requests.clear();
+    });
+
+    try {
+      final page = await SupabaseService().getActiveRequests(limit: _pageSize);
+      if (!mounted) return;
+      setState(() {
+        _requests.addAll(page.items);
+        _hasMore = page.hasMore;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e;
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// Appends the next page of requests, if any remain.
+  Future<void> _loadMore() async {
+    if (_isLoading || _isLoadingMore || !_hasMore) return;
+
+    setState(() => _isLoadingMore = true);
+    try {
+      final page = await SupabaseService().getActiveRequests(
+        limit: _pageSize,
+        offset: _requests.length,
+      );
+      if (!mounted) return;
+      setState(() {
+        _requests.addAll(page.items);
+        _hasMore = page.hasMore;
+        _isLoadingMore = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoadingMore = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذر تحميل المزيد: $e')),
+      );
+    }
   }
 
   /// Prompts for the device location and enables the radius filter.
@@ -70,25 +153,6 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
       _userLocation = null;
       _radiusKm = null;
     });
-  }
-
-  Future<List<PropertyRequest>> _fetchRequests() async {
-    try {
-      // For now, fetch all active requests
-      // In production, this could use the search-requests edge function
-      final response = await SupabaseService().client
-          .from('property_requests')
-          .select()
-          .eq('status', 'active')
-          .order('created_at', ascending: false)
-          .limit(50);
-
-      return (response as List)
-          .map((e) => PropertyRequest.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      rethrow;
-    }
   }
 
   List<PropertyRequest> _filterRequests(List<PropertyRequest> requests) {
@@ -198,73 +262,7 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
             ),
           ),
           // Requests List
-          Expanded(
-            child: FutureBuilder<List<PropertyRequest>>(
-              future: _requestsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.loading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('خطأ: ${snapshot.error}'),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => setState(() => _loadRequests()),
-                          child: const Text('إعادة محاولة'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                final allRequests = snapshot.data ?? [];
-                final filteredRequests = _filterRequests(allRequests);
-
-                if (_showMap) {
-                  return _buildMapView(filteredRequests);
-                }
-
-                if (filteredRequests.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'لا توجد طلبات متاحة',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'جرب تغيير معايير البحث',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredRequests.length,
-                  itemBuilder: (context, index) {
-                    final request = filteredRequests[index];
-                    return _buildRequestCard(context, request);
-                  },
-                );
-              },
-            ),
-          ),
+          Expanded(child: _buildRequestsBody()),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -288,6 +286,75 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
           if (index == 2) context.go('/profile');
         },
       ),
+    );
+  }
+
+  Widget _buildRequestsBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('خطأ: $_error'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadRequests,
+              child: const Text('إعادة محاولة'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final filteredRequests = _filterRequests(_requests);
+
+    if (_showMap) {
+      return _buildMapView(filteredRequests);
+    }
+
+    if (filteredRequests.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'لا توجد طلبات متاحة',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'جرب تغيير معايير البحث',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.all(16),
+      itemCount: filteredRequests.length + (_isLoadingMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index >= filteredRequests.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final request = filteredRequests[index];
+        return _buildRequestCard(context, request);
+      },
     );
   }
 

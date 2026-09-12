@@ -245,6 +245,29 @@ class SupabaseService {
     });
   }
 
+  /// Fetches a page of active property requests (any buyer), newest first.
+  ///
+  /// Used by realtors browsing the request marketplace.
+  Future<PaginatedResult<PropertyRequest>> getActiveRequests({
+    int limit = 20,
+    int offset = 0,
+  }) {
+    return _guard(() async {
+      final response = await _client
+          .from('property_requests')
+          .select()
+          .eq('status', 'active')
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      final items = (response as List)
+          .map((e) => PropertyRequest.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      return PaginatedResult.fromItems(items, offset: offset, limit: limit);
+    });
+  }
+
   /// Fetches a page of the current buyer's property requests, newest first.
   Future<PaginatedResult<PropertyRequest>> getUserRequests({
     int limit = 20,
@@ -321,6 +344,34 @@ class SupabaseService {
           .from('realtor_offers')
           .select()
           .eq('request_id', requestId)
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      final items = (response as List)
+          .map((e) => RealtorOffer.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      return PaginatedResult.fromItems(items, offset: offset, limit: limit);
+    });
+  }
+
+  /// Fetches a page of all offers received across the current buyer's
+  /// requests, newest first.
+  ///
+  /// Uses an inner join on `property_requests` so only offers belonging to
+  /// the buyer's own requests are returned, in a single query.
+  Future<PaginatedResult<RealtorOffer>> getBuyerOffers({
+    int limit = 20,
+    int offset = 0,
+  }) {
+    return _guard(() async {
+      final userId = getCurrentUserId();
+      if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
+
+      final response = await _client
+          .from('realtor_offers')
+          .select('*, property_requests!inner(buyer_id)')
+          .eq('property_requests.buyer_id', userId)
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 

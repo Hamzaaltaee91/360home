@@ -13,7 +13,26 @@ class BrowseOffersScreen extends StatefulWidget {
 }
 
 class _BrowseOffersScreenState extends State<BrowseOffersScreen> {
-  late Future<List<RealtorOffer>> _offersFuture;
+  final ScrollController _scrollController = ScrollController();
+
+  /// All offers loaded so far, accumulated across pages.
+  final List<RealtorOffer> _offers = [];
+
+  /// Whether the initial page is still loading.
+  bool _isLoading = true;
+
+  /// Whether a subsequent page is currently loading.
+  bool _isLoadingMore = false;
+
+  /// Whether the backend may have more pages.
+  bool _hasMore = true;
+
+  /// Error from the most recent load attempt, if any.
+  Object? _error;
+
+  /// Page size used when fetching offers.
+  static const int _pageSize = 20;
+
   String _selectedFilter = 'all'; // 'all', 'pending', 'interested'
   String _sortBy = 'newest'; // 'newest', 'price_asc', 'price_desc'
   final TextEditingController _searchController = TextEditingController();
@@ -22,34 +41,75 @@ class _BrowseOffersScreenState extends State<BrowseOffersScreen> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _loadOffers();
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
-  void _loadOffers() {
-    _offersFuture = _fetchAllOffers();
+  /// Triggers loading the next page when the user nears the bottom.
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final threshold = _scrollController.position.maxScrollExtent - 300;
+    if (_scrollController.position.pixels >= threshold) {
+      _loadMore();
+    }
   }
 
-  Future<List<RealtorOffer>> _fetchAllOffers() async {
+  /// Loads the first page, resetting any accumulated state.
+  Future<void> _loadOffers() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+      _hasMore = true;
+      _offers.clear();
+    });
+
     try {
-      final requests = await SupabaseService().getUserRequests();
-      final List<RealtorOffer> allOffers = [];
-
-      for (final request in requests) {
-        final offers = await SupabaseService().getOffersForRequest(request.id);
-        allOffers.addAll(offers);
-      }
-
-      // Sort by creation date, newest first
-      allOffers.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return allOffers;
+      final page = await SupabaseService().getBuyerOffers(limit: _pageSize);
+      if (!mounted) return;
+      setState(() {
+        _offers.addAll(page.items);
+        _hasMore = page.hasMore;
+        _isLoading = false;
+      });
     } catch (e) {
-      rethrow;
+      if (!mounted) return;
+      setState(() {
+        _error = e;
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// Appends the next page of offers, if any remain.
+  Future<void> _loadMore() async {
+    if (_isLoading || _isLoadingMore || !_hasMore) return;
+
+    setState(() => _isLoadingMore = true);
+    try {
+      final page = await SupabaseService().getBuyerOffers(
+        limit: _pageSize,
+        offset: _offers.length,
+      );
+      if (!mounted) return;
+      setState(() {
+        _offers.addAll(page.items);
+        _hasMore = page.hasMore;
+        _isLoadingMore = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoadingMore = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذر تحميل المزيد: $e')),
+      );
     }
   }
 
@@ -109,7 +169,7 @@ class _BrowseOffersScreenState extends State<BrowseOffersScreen> {
         ),
       );
 
-      setState(() => _loadOffers());
+      await _loadOffers();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -229,77 +289,7 @@ class _BrowseOffersScreenState extends State<BrowseOffersScreen> {
             ),
           ),
           // Offers List
-          Expanded(
-            child: FutureBuilder<List<RealtorOffer>>(
-              future: _offersFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.loading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('خطأ: ${snapshot.error}'),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => setState(() => _loadOffers()),
-                          child: const Text('إعادة محاولة'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                final allOffers = snapshot.data ?? [];
-                final statusFiltered = _selectedFilter == 'all'
-                    ? allOffers
-                    : _filterOffers(allOffers);
-                final filteredOffers =
-                    _sortOffers(_searchOffers(statusFiltered));
-
-                if (filteredOffers.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.mail_outline,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _searchQuery.isNotEmpty
-                              ? 'لا توجد نتائج مطابقة'
-                              : _selectedFilter == 'all'
-                                  ? 'لا توجد عروض بعد'
-                                  : 'لا توجد عروض في هذه الفئة',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'ستظهر هنا العروض التي تتطابق مع طلباتك',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredOffers.length,
-                  itemBuilder: (context, index) {
-                    final offer = filteredOffers[index];
-                    return _buildOfferCard(context, offer);
-                  },
-                );
-              },
-            ),
-          ),
+          Expanded(child: _buildOffersBody()),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -323,6 +313,77 @@ class _BrowseOffersScreenState extends State<BrowseOffersScreen> {
           if (index == 2) context.go('/profile');
         },
       ),
+    );
+  }
+
+  Widget _buildOffersBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('خطأ: $_error'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadOffers,
+              child: const Text('إعادة محاولة'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final statusFiltered =
+        _selectedFilter == 'all' ? _offers : _filterOffers(_offers);
+    final filteredOffers = _sortOffers(_searchOffers(statusFiltered));
+
+    if (filteredOffers.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.mail_outline,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _searchQuery.isNotEmpty
+                  ? 'لا توجد نتائج مطابقة'
+                  : _selectedFilter == 'all'
+                      ? 'لا توجد عروض بعد'
+                      : 'لا توجد عروض في هذه الفئة',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'ستظهر هنا العروض التي تتطابق مع طلباتك',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.all(16),
+      itemCount: filteredOffers.length + (_isLoadingMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index >= filteredOffers.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+        final offer = filteredOffers[index];
+        return _buildOfferCard(context, offer);
+      },
     );
   }
 
