@@ -19,7 +19,7 @@ String sanitizeString(Object? value, {int maxLength = 2000}) {
         '',
       )
       .replaceAll(
-        RegExp(r'\son[a-z]+\s*=\s*("[^"]*"|''[^'']*''|[^\s>]+)',
+        RegExp("\\son[a-z]+\\s*=\\s*(\"[^\"]*\"|'[^']*'|[^\\s>]+)",
             caseSensitive: false),
         '',
       )
