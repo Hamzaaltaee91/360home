@@ -208,3 +208,192 @@
 - [x] **Fix two independent bugs in rtl_alignment_test.dart** — In test/rtl_alignment_test.dart, fix exactly these two unrelated things and nothing else: (1) In the `testWidgets('Arabic locale renders right-to-left', ...)` test, the `MaterialApp` is missing localization configuration, so `Locale('ar')` doesn't actually resolve to RTL and the test finds the wrong (default LTR) `Directionality` widget. Add `localizationsDelegates: GlobalMaterialLocalizations.delegates` and `supportedLocales: const [Locale('ar'), Locale('en')]` as named parameters to that test's `MaterialApp` constructor (you will need to add `import 'package:flutter_localizations/flutter_localizations.dart';` at the top of the file for `GlobalMaterialLocalizations`). (2) In the `testWidgets('EdgeInsetsDirectional mirrors under RTL', ...)` test, the assertions have `.left` and `.right` reversed for `EdgeInsetsDirectional.only(start: 4)`: under RTL, `start` maps to the right edge, not the left. Change the four `expect` lines from `expect(padding.resolve(TextDirection.rtl).left, 4); expect(padding.resolve(TextDirection.rtl).right, 0); expect(padding.resolve(TextDirection.ltr).left, 0); expect(padding.resolve(TextDirection.ltr).right, 4);` to `expect(padding.resolve(TextDirection.rtl).left, 0); expect(padding.resolve(TextDirection.rtl).right, 4); expect(padding.resolve(TextDirection.ltr).left, 4); expect(padding.resolve(TextDirection.ltr).right, 0);`. After both fixes, running `flutter test test/rtl_alignment_test.dart` must have zero failures.
 - [x] **Fix wrong widget finder in map_picker_test.dart** — In test/widgets/map_picker_test.dart, the test `'reports a coordinate when tapped'` does `await tester.tap(find.byType(CustomPaint).first);` but `CustomPaint` is used internally by many Flutter framework widgets, so `.first` does not reliably hit MapPicker's own tappable surface (a `GestureDetector` with `onTapDown` that wraps the `CustomPaint`, defined in lib/widgets/map_picker.dart). Change that line to `await tester.tap(find.byType(GestureDetector).first);` — this targets the map's own gesture area, which is the first `GestureDetector` in the widget tree per lib/widgets/map_picker.dart's layout. Change nothing else in the file. After the fix, running `flutter test test/widgets/map_picker_test.dart` must have zero failures.
 - [x] **Make CI actually gate on analyze and test results** — In .github/workflows/ci.yml, remove the trailing `|| true` from exactly these two lines (they currently mask every analyze/test failure as success, matching the pattern change on both, nothing else): change `run: flutter analyze --no-fatal-infos --no-fatal-warnings || true` to `run: flutter analyze --no-fatal-infos --no-fatal-warnings`, and change `run: flutter test --reporter expanded || true` to `run: flutter test --reporter expanded`. Do not change the `dart format` line or anything else in the file. The project currently has zero analyze errors and zero failing tests, so this change is safe and should not break CI.
+- [ ] **Create site/js/config.js with Supabase constants** — Create a new file `site/js/config.js` (the `site/` directory does not exist yet — create it) with exactly this content:
+```js
+export const SUPABASE_URL = "https://ojnhaqpiufgfxusokazb.supabase.co";
+export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qbmhhcXBpdWZnZnh1c29rYXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5MjI1NzMsImV4cCI6MjEwNDQ5ODU3M30.D9jYEHSYL45bpmo-7RkxdKz19u-qhRIJNoypSClg3tg";
+```
+Do not create any other file in this task.
+
+- [ ] **Create site/js/supabase-client.js** — Create a new file `site/js/supabase-client.js` with exactly this content:
+```js
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+```
+Requires site/js/config.js to already exist (it does, from a prior task). Do not create any other file in this task.
+
+- [ ] **Create site/js/auth.js** — Create a new file `site/js/auth.js` with exactly this content:
+```js
+import { supabase } from "./supabase-client.js";
+
+export async function signUpBuyer(email, password, fullName) {
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { role: "buyer", full_name: fullName } },
+  });
+}
+
+export async function signIn(email, password) {
+  return supabase.auth.signInWithPassword({ email, password });
+}
+
+export async function signOut() {
+  await supabase.auth.signOut();
+  window.location.href = "index.html";
+}
+
+export async function requireSession() {
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) {
+    window.location.href = "index.html";
+    return new Promise(() => {});
+  }
+  return data.session;
+}
+```
+Do not create any other file in this task.
+
+- [ ] **Create site/js/requests.js** — Create a new file `site/js/requests.js` with exactly this content:
+```js
+import { supabase } from "./supabase-client.js";
+
+export async function listMyRequests() {
+  const { data, error } = await supabase
+    .from("property_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function getRequest(id) {
+  const { data, error } = await supabase
+    .from("property_requests")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) throw error;
+  if (!data) throw new Error("not found");
+  return data;
+}
+
+export async function createRequest(fields) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("property_requests")
+    .insert({ ...fields, buyer_id: user.id })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+```
+Do not create any other file in this task.
+
+- [ ] **Create site/js/offers.js** — Create a new file `site/js/offers.js` with exactly this content:
+```js
+import { supabase } from "./supabase-client.js";
+
+export async function listOffersForRequest(requestId) {
+  const { data, error } = await supabase
+    .from("realtor_offers")
+    .select("*")
+    .eq("request_id", requestId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function getOffer(id) {
+  const { data, error } = await supabase
+    .from("realtor_offers")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) throw error;
+  if (!data) throw new Error("not found");
+  return data;
+}
+
+export async function respondToOffer(id, response) {
+  const { error } = await supabase
+    .from("realtor_offers")
+    .update({ buyer_response: response })
+    .eq("id", id);
+  if (error) throw error;
+}
+```
+Do not create any other file in this task.
+
+- [ ] **Create site/css/style.css** — Create a new file `site/css/style.css` with exactly this content:
+```css
+@import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap');
+
+:root {
+  --color-honey: #d99a3f;
+  --color-cardamom: #4a5d3a;
+  --color-bg: #fdf8f0;
+  --color-text: #2e2a24;
+  --color-border: #e3d5b8;
+  --font-display: 'Aref Ruqaa', serif;
+  --font-body: 'IBM Plex Sans Arabic', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-text);
+  direction: rtl;
+}
+
+h1, h2, h3 { font-family: var(--font-display); color: var(--color-cardamom); }
+
+.container { max-width: 720px; margin: 0 auto; padding: 1.5rem; }
+
+.card {
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--color-honey);
+  border-color: var(--color-honey);
+  color: #fff;
+}
+
+.form-field { margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.form-field input, .form-field select, .form-field textarea {
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 1rem;
+}
+
+.error-text { color: #b3261e; font-size: 0.9rem; }
+```
+Do not create any other file in this task.
