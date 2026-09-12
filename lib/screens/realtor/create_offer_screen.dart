@@ -111,7 +111,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     for (var i = 0; i < _photos.length; i++) {
       final photo = _photos[i];
       final fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_$i_${photo.name}';
+          '${DateTime.now().millisecondsSinceEpoch}_${i}_${photo.name}';
       final url = await SupabaseService().uploadPropertyPhoto(
         requestId: widget.requestId,
         fileName: fileName,
@@ -209,7 +209,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       body: FutureBuilder<PropertyRequest>(
         future: _requestFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.loading) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -335,7 +335,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   const SizedBox(height: 16),
                   // Lease Duration (for rent)
                   if (_leaseType == 'rent') ...[
-                    TextField(
+                    TextFormField(
                       decoration: InputDecoration(
                         label: const Text('مدة الإيجار (بالأشهر)'),
                         prefixIcon: const Icon(Icons.calendar_today),
