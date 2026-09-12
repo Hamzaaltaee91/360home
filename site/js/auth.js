@@ -12,6 +12,13 @@ export async function signIn(email, password) {
   return supabase.auth.signInWithPassword({ email, password });
 }
 
+export async function signInWithGoogle() {
+  return supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${window.location.origin}/dashboard.html` },
+  });
+}
+
 export async function signOut() {
   await supabase.auth.signOut();
   window.location.href = "auth.html";

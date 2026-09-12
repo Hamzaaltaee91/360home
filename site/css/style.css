@@ -128,3 +128,18 @@ main.container h2 {
   text-align: center;
   padding-block: 2rem 3rem;
 }
+
+.auth-divider {
+  text-align: center;
+  color: #9a927c;
+  margin: 0.75rem 0;
+}
+
+.btn-google {
+  width: 100%;
+  display: block;
+  text-align: center;
+  border-color: var(--color-border);
+  background: #fff;
+  font-weight: 600;
+}

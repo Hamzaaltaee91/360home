@@ -28,6 +28,8 @@
         <p class="error-text" id="error" hidden></p>
         <button type="submit" class="btn btn-primary" id="submit-btn">دخول</button>
       </form>
+      <p class="auth-divider">أو</p>
+      <button type="button" class="btn btn-google" id="google-btn">المتابعة عبر Google</button>
       <p>
         <a href="#" id="toggle-mode">ليس لديك حساب؟ أنشئ حسابًا جديدًا</a>
       </p>
@@ -35,7 +37,7 @@
   </div>
 
   <script type="module">
-    import { signUpBuyer, signIn } from "./js/auth.js";
+    import { signUpBuyer, signIn, signInWithGoogle } from "./js/auth.js";
     import { supabase } from "./js/supabase-client.js";
 
     let mode = new URLSearchParams(window.location.search).get("mode") === "signup" ? "signup" : "signin";
@@ -65,6 +67,16 @@
       mode = mode === "signin" ? "signup" : "signin";
       applyMode();
       errorEl.hidden = true;
+    });
+
+    document.getElementById("google-btn").addEventListener("click", async () => {
+      errorEl.hidden = true;
+      const { error } = await signInWithGoogle();
+      if (error) {
+        errorEl.textContent = error.message;
+        errorEl.hidden = false;
+      }
+      // على النجاح، Google/Supabase يعيدون توجيه المتصفح تلقائياً — لا حاجة لأي تحويل يدوي هنا.
     });
 
     form.addEventListener("submit", async (e) => {
