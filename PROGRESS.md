@@ -336,3 +336,11 @@ SANITY FAILED
 SANITY FAILED
   - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
 ```
+
+## BLOCKED: **Fix three unrelated bugs in offer_details_screen.dart** — In lib/screens/buyer/offer_details_screen.dart, fix exactly these three things and nothing else: (1) line 107, change `SupabaseService().respondToOffer(widget.offerId, response)` to `SupabaseService().respondToOffer(offerId: widget.offerId, response: response)` because respondToOffer requires named arguments. (2) line 140, `ConnectionState.loading` does not exist; change it to `ConnectionState.waiting`. (3) line 394, `Icons.furniture` does not exist in Flutter's Icons class; change it to `Icons.chair`.
+التاريخ: 2026-09-12 17:11:00
+آخر سبب فشل:
+```
+SANITY FAILED
+  - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
+```
