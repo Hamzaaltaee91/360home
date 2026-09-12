@@ -23,7 +23,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(CustomPaint).first);
+      await tester.tap(find.byType(GestureDetector).first);
       await tester.pump();
 
       expect(selected, isNotNull);
