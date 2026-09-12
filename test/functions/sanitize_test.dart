@@ -44,9 +44,9 @@ String sanitizeUuid(Object? value) {
 
 /// Dart mirror of `sanitizeInt`.
 int? sanitizeInt(Object? value, {int? min, int? max}) {
-  final num = value is num ? value : double.tryParse(value?.toString() ?? '');
-  if (num == null || !num.isFinite) return null;
-  var result = num.truncate();
+  final parsedNum = value is num ? value : double.tryParse(value?.toString() ?? '');
+  if (parsedNum == null || !parsedNum.isFinite) return null;
+  var result = parsedNum.truncate();
   if (min != null && result < min) result = min;
   if (max != null && result > max) result = max;
   return result;
