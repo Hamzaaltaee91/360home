@@ -31,15 +31,21 @@
     }
     for (const r of requests) {
       const a = document.createElement("a");
-      a.href = `request.html?id=${r.id}`;
+      a.href = `request.html?id=${encodeURIComponent(r.id)}`;
       a.style.textDecoration = "none";
       a.style.color = "inherit";
-      a.innerHTML = `
-        <div class="card">
-          <h3>${r.title}</h3>
-          <p>${r.city} — ${r.category}</p>
-        </div>
-      `;
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const h3 = document.createElement("h3");
+      h3.textContent = r.title;
+
+      const p = document.createElement("p");
+      p.textContent = `${r.city} — ${r.category}`;
+
+      card.append(h3, p);
+      a.appendChild(card);
       list.appendChild(a);
     }
   </script>

@@ -25,13 +25,23 @@
     const requestId = new URLSearchParams(window.location.search).get("id");
     const request = await getRequest(requestId);
 
-    document.getElementById("request-detail").innerHTML = `
-      <div class="card">
-        <h1>${request.title}</h1>
-        <p>${request.city} — ${request.category}</p>
-        <p>${request.description ?? ""}</p>
-      </div>
-    `;
+    {
+      const detail = document.getElementById("request-detail");
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const h1 = document.createElement("h1");
+      h1.textContent = request.title;
+
+      const pCity = document.createElement("p");
+      pCity.textContent = `${request.city} — ${request.category}`;
+
+      const pDesc = document.createElement("p");
+      pDesc.textContent = request.description ?? "";
+
+      card.append(h1, pCity, pDesc);
+      detail.appendChild(card);
+    }
 
     const offers = await listOffersForRequest(requestId);
     const list = document.getElementById("offers-list");
@@ -40,15 +50,21 @@
     }
     for (const o of offers) {
       const a = document.createElement("a");
-      a.href = `offer.html?id=${o.id}`;
+      a.href = `offer.html?id=${encodeURIComponent(o.id)}`;
       a.style.textDecoration = "none";
       a.style.color = "inherit";
-      a.innerHTML = `
-        <div class="card">
-          <h3>${o.property_title}</h3>
-          <p>${o.offered_price} ${o.currency}</p>
-        </div>
-      `;
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const h3 = document.createElement("h3");
+      h3.textContent = o.property_title;
+
+      const p = document.createElement("p");
+      p.textContent = `${o.offered_price} ${o.currency}`;
+
+      card.append(h3, p);
+      a.appendChild(card);
       list.appendChild(a);
     }
   </script>

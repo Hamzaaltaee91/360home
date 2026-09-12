@@ -23,17 +23,31 @@
     const offerId = new URLSearchParams(window.location.search).get("id");
     const offer = await getOffer(offerId);
 
-    document.getElementById("back-link").href = `request.html?id=${offer.request_id}`;
+    document.getElementById("back-link").href = `request.html?id=${encodeURIComponent(offer.request_id)}`;
 
-    document.getElementById("offer-detail").innerHTML = `
-      <div class="card">
-        <h1>${offer.property_title}</h1>
-        <p>${offer.property_address}</p>
-        <p>${offer.offered_price} ${offer.currency}</p>
-        <p>${offer.property_description ?? ""}</p>
-        <p>${offer.message_to_buyer ?? ""}</p>
-      </div>
-    `;
+    {
+      const detail = document.getElementById("offer-detail");
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const h1 = document.createElement("h1");
+      h1.textContent = offer.property_title;
+
+      const pAddress = document.createElement("p");
+      pAddress.textContent = offer.property_address;
+
+      const pPrice = document.createElement("p");
+      pPrice.textContent = `${offer.offered_price} ${offer.currency}`;
+
+      const pDesc = document.createElement("p");
+      pDesc.textContent = offer.property_description ?? "";
+
+      const pMessage = document.createElement("p");
+      pMessage.textContent = offer.message_to_buyer ?? "";
+
+      card.append(h1, pAddress, pPrice, pDesc, pMessage);
+      detail.appendChild(card);
+    }
 
     const buttons = document.getElementById("response-buttons");
     const status = document.getElementById("response-status");
