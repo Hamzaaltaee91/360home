@@ -13,7 +13,7 @@ class Validators {
   /// Matches international phone numbers with an optional leading `+`
   /// followed by 7 to 15 digits. Spaces, dashes, and parentheses are allowed.
   static final RegExp _phoneRegExp = RegExp(
-    r'^\+?[0-9][0-9\s\-()]{6,18}[0-9]$',
+    r'^\+?[0-9(][0-9\s\-()]{5,17}[0-9]$',
   );
 
   /// Validates an email address.
