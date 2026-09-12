@@ -271,3 +271,12 @@
 - Section 12 (Security & Optimization) tasks remain outstanding:
   RLS audit, rate limiting, input sanitization, secure storage, storage bucket
   rules, audit logging, pagination, and image compression.
+
+## BLOCKED: **Move admin Supabase calls to service layer** — In lib/screens/admin/manage_users_screen.dart, move the two direct Supabase calls (list users, update role) into lib/services/supabase_service.dart as listUsers() and updateUserRole(), then use them from the screen. Do not change any RLS policy or SQL.
+التاريخ: 2026-09-12 14:12:48
+آخر سبب فشل:
+```
+SANITY FAILED
+  - أمان: استخدام service_role key في الكود — lib/screens/admin/manage_users_screen.dart
+  - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
+```
