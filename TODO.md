@@ -224,7 +224,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 ```
 Requires site/js/config.js to already exist (it does, from a prior task). Do not create any other file in this task.
 
-- [ ] **Create site/js/auth.js** — Create a new file `site/js/auth.js` with exactly this content:
+- [BLOCKED] **Create site/js/auth.js** — Create a new file `site/js/auth.js` with exactly this content:
 ```js
 import { supabase } from "./supabase-client.js";
 
