@@ -1,5 +1,22 @@
 # Progress Log
 
+## Cycle: site/js/offers.js
+
+### Accomplished
+- Created `site/js/offers.js` with the exact content specified in the task:
+  - `listOffersForRequest(requestId)` — lists offers for a request, newest
+    first.
+  - `getOffer(id)` — fetches a single offer, throwing when not found.
+  - `respondToOffer(id, response)` — updates the buyer response on an offer.
+- No other files were created or modified in this task.
+- Marked the task as complete in `TODO.md`.
+
+### Blocked / Failing
+- None.
+
+### Next in Queue
+- `Create site/css/style.css`.
+
 ## Cycle: Image Compression
 
 ### Accomplished

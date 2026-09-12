@@ -295,7 +295,7 @@ export async function createRequest(fields) {
 ```
 Do not create any other file in this task.
 
-- [ ] **Create site/js/offers.js** — Create a new file `site/js/offers.js` with exactly this content:
+- [x] **Create site/js/offers.js** — Create a new file `site/js/offers.js` with exactly this content:
 ```js
 import { supabase } from "./supabase-client.js";
 
