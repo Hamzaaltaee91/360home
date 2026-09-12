@@ -7,81 +7,66 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>دبّرلي</h1>
-    <p>انشر مواصفات العقار الذي تبحث عنه، ودع الوسطاء الموثوقين يرسلون لك عروضهم.</p>
-
-    <div class="card">
-      <h2 id="form-title">تسجيل الدخول</h2>
-      <form id="auth-form">
-        <div class="form-field">
-          <label for="email">البريد الإلكتروني</label>
-          <input type="email" id="email" required>
-        </div>
-        <div class="form-field" id="name-field" hidden>
-          <label for="full-name">الاسم الكامل</label>
-          <input type="text" id="full-name">
-        </div>
-        <div class="form-field">
-          <label for="password">كلمة المرور</label>
-          <input type="password" id="password" required minlength="6">
-        </div>
-        <p class="error-text" id="error" hidden></p>
-        <button type="submit" class="btn btn-primary" id="submit-btn">دخول</button>
-      </form>
-      <p>
-        <a href="#" id="toggle-mode">ليس لديك حساب؟ أنشئ حسابًا جديدًا</a>
+  <header class="hero">
+    <div class="container">
+      <h1>دبّرلي</h1>
+      <p class="hero-tagline">تبحث عن عقار؟ خلّي العقار يوصلك.</p>
+      <p class="hero-sub">
+        انشر مواصفات العقار اللي تدوره — النوع، الميزانية، والمنطقة — ودع
+        الوسطاء والملّاك الموثوقين يرسلون لك عروضهم مباشرة. بلا تصفح آلاف
+        الإعلانات، وبلا وقت ضائع.
       </p>
+      <div class="hero-actions">
+        <a href="auth.html?mode=signup" class="btn btn-primary btn-lg">انشر طلبك الآن</a>
+        <a href="auth.html?mode=signin" class="btn btn-lg">عندي حساب، دخول</a>
+      </div>
     </div>
-  </div>
+  </header>
 
-  <script type="module">
-    import { signUpBuyer, signIn } from "./js/auth.js";
-    import { supabase } from "./js/supabase-client.js";
+  <main class="container">
+    <section>
+      <h2>كيف تشتغل؟</h2>
+      <div class="steps">
+        <div class="card step-card">
+          <div class="step-number">١</div>
+          <h3>انشر طلبك</h3>
+          <p>حدد نوع العقار (سكني، تجاري، أرض)، ميزانيتك، والمنطقة اللي تناسبك.</p>
+        </div>
+        <div class="card step-card">
+          <div class="step-number">٢</div>
+          <h3>تستلم عروضاً حقيقية</h3>
+          <p>وسطاء وملّاك تحقّقنا من هويتهم يرسلون لك عروضاً تطابق طلبك مباشرة.</p>
+        </div>
+        <div class="card step-card">
+          <div class="step-number">٣</div>
+          <h3>اختر الأنسب لك</h3>
+          <p>قارن العروض وتواصل مع من يناسبك، بالوقت والطريقة اللي تفضّلها.</p>
+        </div>
+      </div>
+    </section>
 
-    let mode = "signin";
-    const form = document.getElementById("auth-form");
-    const nameField = document.getElementById("name-field");
-    const formTitle = document.getElementById("form-title");
-    const submitBtn = document.getElementById("submit-btn");
-    const toggle = document.getElementById("toggle-mode");
-    const errorEl = document.getElementById("error");
+    <section>
+      <h2>ليش دبّرلي؟</h2>
+      <div class="steps">
+        <div class="card">
+          <h3>توفير للوقت</h3>
+          <p>ما تحتاج تبحث؛ العروض تجيك أنت، مطابقة لمواصفاتك بالضبط.</p>
+        </div>
+        <div class="card">
+          <h3>وسطاء موثوقون</h3>
+          <p>كل وسيط يمر بعملية تحقق قبل ما يقدر يرسل لك أي عرض.</p>
+        </div>
+        <div class="card">
+          <h3>شفافية كاملة</h3>
+          <p>تشوف كل التفاصيل والسعر بوضوح قبل ما تقرر.</p>
+        </div>
+      </div>
+    </section>
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) window.location.href = "dashboard.html";
-    });
-
-    toggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      mode = mode === "signin" ? "signup" : "signin";
-      nameField.hidden = mode === "signin";
-      formTitle.textContent = mode === "signin" ? "تسجيل الدخول" : "إنشاء حساب";
-      submitBtn.textContent = mode === "signin" ? "دخول" : "إنشاء حساب";
-      toggle.textContent = mode === "signin"
-        ? "ليس لديك حساب؟ أنشئ حسابًا جديدًا"
-        : "لديك حساب بالفعل؟ سجّل الدخول";
-      errorEl.hidden = true;
-    });
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      errorEl.hidden = true;
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      const fullName = document.getElementById("full-name").value;
-
-      const { error } =
-        mode === "signin"
-          ? await signIn(email, password)
-          : await signUpBuyer(email, password, fullName);
-
-      if (error) {
-        errorEl.textContent = error.message;
-        errorEl.hidden = false;
-        return;
-      }
-      window.location.href = "dashboard.html";
-    });
-  </script>
+    <section class="cta-footer">
+      <h2>جاهز تبدأ؟</h2>
+      <a href="auth.html?mode=signup" class="btn btn-primary btn-lg">انشر طلبك الآن مجاناً</a>
+    </section>
+  </main>
 </body>
 </html>

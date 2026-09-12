@@ -14,13 +14,13 @@ export async function signIn(email, password) {
 
 export async function signOut() {
   await supabase.auth.signOut();
-  window.location.href = "index.html";
+  window.location.href = "auth.html";
 }
 
 export async function requireSession() {
   const { data } = await supabase.auth.getSession();
   if (!data.session) {
-    window.location.href = "index.html";
+    window.location.href = "auth.html";
     return new Promise(() => {});
   }
   return data.session;
