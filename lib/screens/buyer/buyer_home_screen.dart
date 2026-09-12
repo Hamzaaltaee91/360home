@@ -66,7 +66,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
       body: FutureBuilder<PaginatedResult<PropertyRequest>>(
         future: _requestsFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.loading) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
