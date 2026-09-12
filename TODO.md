@@ -215,7 +215,7 @@ export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 ```
 Do not create any other file in this task.
 
-- [ ] **Create site/js/supabase-client.js** — Create a new file `site/js/supabase-client.js` with exactly this content:
+- [BLOCKED] **Create site/js/supabase-client.js** — Create a new file `site/js/supabase-client.js` with exactly this content:
 ```js
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
