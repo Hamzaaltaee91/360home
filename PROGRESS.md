@@ -296,3 +296,11 @@ SANITY FAILED
 SANITY FAILED
   - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
 ```
+
+## BLOCKED: **Fix notifications_provider.dart auth check** — In lib/providers/notifications_provider.dart: (1) delete the unused import '../models/pagination.dart'. (2) Replace the call `_service.isAuthenticated()` with `ref.read(authProvider).valueOrNull != null` (authProvider is already imported in this file from 'auth_provider.dart'). Do not change anything else in the file.
+التاريخ: 2026-09-12 17:09:52
+آخر سبب فشل:
+```
+SANITY FAILED
+  - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
+```
