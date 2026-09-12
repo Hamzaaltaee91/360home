@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -35,8 +37,8 @@ class MockRealtimeChannel extends Mock implements RealtimeChannel {}
 /// A mocked [RealtimeClient].
 class MockRealtimeClient extends Mock implements RealtimeClient {}
 
-/// A mocked [StorageClient].
-class MockStorageClient extends Mock implements StorageClient {}
+/// A mocked [SupabaseStorageClient].
+class MockStorageClient extends Mock implements SupabaseStorageClient {}
 
 /// A mocked [StorageFileApi].
 class MockStorageFileApi extends Mock implements StorageFileApi {}
@@ -45,4 +47,25 @@ class MockStorageFileApi extends Mock implements StorageFileApi {}
 void registerServiceFallbacks() {
   registerFallbackValue(<String, dynamic>{});
   registerFallbackValue(Uri.parse('https://example.com'));
+  registerFallbackValue(const FetchOptions());
+}
+
+/// A stand-in for a `PostgrestFilterBuilder`/`PostgrestTransformBuilder`
+/// result that behaves like a real [Future] when awaited.
+///
+/// In postgrest 1.5.x these builders `implements Future<T>` instead of
+/// returning one, so a query chain's terminal call (`.eq(...)`,
+/// `.maybeSingle()`, ...) must return something Future-shaped. Mocktail's
+/// usual `thenAnswer((_) async => value)` produces a `Future<T>`, which
+/// doesn't satisfy that builder return type and fails to compile; this fake
+/// forwards `then` to a real [Future] so `await` works without depending on
+/// mocktail's dynamic dispatch for it.
+class FakeAwaitable<T> extends Fake implements PostgrestFilterBuilder<T> {
+  FakeAwaitable(T value) : _future = Future<T>.value(value);
+
+  final Future<T> _future;
+
+  @override
+  Future<R> then<R>(FutureOr<R> Function(T value) onValue, {Function? onError}) =>
+      _future.then(onValue, onError: onError);
 }

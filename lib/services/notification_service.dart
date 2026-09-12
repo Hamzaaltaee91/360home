@@ -68,12 +68,14 @@ class NotificationService {
 
       final response = await _client
           .from('notifications')
-          .select('id')
+          .select<PostgrestResponse>(
+            'id',
+            const FetchOptions(count: CountOption.exact),
+          )
           .eq('user_id', userId)
-          .eq('is_read', false)
-          .count();
+          .eq('is_read', false);
 
-      return response.count;
+      return response.count ?? 0;
     });
   }
 
@@ -112,26 +114,26 @@ class NotificationService {
   }) {
     final userId = _requireUserId();
 
-    return _client
-        .channel('notifications:$userId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'notifications',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'user_id',
-            value: userId,
-          ),
-          callback: (payload) {
-            try {
-              onNotification(AppNotification.fromJson(payload.newRecord));
-            } catch (error) {
-              onError?.call(error);
-            }
-          },
-        )
-        .subscribe();
+    final channel = _client.channel('notifications:$userId').on(
+      RealtimeListenTypes.postgresChanges,
+      ChannelFilter(
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: 'user_id=eq.$userId',
+      ),
+      (payload, [ref]) {
+        try {
+          final newRecord =
+              Map<String, dynamic>.from((payload as Map)['new'] as Map);
+          onNotification(AppNotification.fromJson(newRecord));
+        } catch (error) {
+          onError?.call(error);
+        }
+      },
+    );
+    channel.subscribe();
+    return channel;
   }
 
   /// Cancels a realtime subscription created by [subscribeToNotifications].

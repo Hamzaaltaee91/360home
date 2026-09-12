@@ -89,9 +89,7 @@ class SupabaseService {
       anonKey: supabaseAnonKey,
       // Persist the auth session in the platform secure store rather than
       // the default (plain) local storage.
-      authOptions: FlutterAuthClientOptions(
-        localStorage: SecureLocalStorage(_secureStorage),
-      ),
+      localStorage: SecureLocalStorage(_secureStorage),
     );
     _client = Supabase.instance.client;
   }
@@ -592,7 +590,8 @@ class SupabaseService {
       );
 
       return RealtorVerification.fromJson(
-        response['verification'] as Map<String, dynamic>,
+        (response.data as Map<String, dynamic>)['verification']
+            as Map<String, dynamic>,
       );
     });
   }
@@ -616,7 +615,7 @@ class SupabaseService {
         },
       );
 
-      final matches = response['matches'] as List;
+      final matches = (response.data as Map<String, dynamic>)['matches'] as List;
       return matches
           .map((e) => PropertyMatch.fromJson(e as Map<String, dynamic>))
           .toList();
@@ -656,7 +655,7 @@ class SupabaseService {
         },
       );
 
-      return response as Map<String, dynamic>;
+      return response.data as Map<String, dynamic>;
     });
   }
 
@@ -675,7 +674,7 @@ class SupabaseService {
         },
       );
 
-      return response as Map<String, dynamic>;
+      return response.data as Map<String, dynamic>;
     });
   }
 
@@ -692,20 +691,8 @@ class SupabaseService {
         },
       );
 
-      return response as Map<String, dynamic>;
+      return response.data as Map<String, dynamic>;
     });
-  }
-
-  // ==================== Notifications ====================
-
-  void subscribeToNotifications(String userId, Function(Map) onNotification) {
-    _client.realtime.subscribe().on(
-      'broadcast',
-      ChannelFilter(event: 'notifications:$userId'),
-      (payload) {
-        onNotification(payload.payload as Map);
-      },
-    );
   }
 
   // ==================== Storage ====================

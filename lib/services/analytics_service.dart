@@ -155,7 +155,7 @@ class AnalyticsService {
         },
       );
 
-      return RealtorStats.fromJson(response as Map<String, dynamic>);
+      return RealtorStats.fromJson(response.data as Map<String, dynamic>);
     });
   }
 
@@ -177,7 +177,7 @@ class AnalyticsService {
         },
       );
 
-      return BuyerStats.fromJson(response as Map<String, dynamic>);
+      return BuyerStats.fromJson(response.data as Map<String, dynamic>);
     });
   }
 
@@ -196,7 +196,7 @@ class AnalyticsService {
         },
       );
 
-      return PlatformStats.fromJson(response as Map<String, dynamic>);
+      return PlatformStats.fromJson(response.data as Map<String, dynamic>);
     });
   }
 }

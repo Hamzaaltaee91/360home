@@ -49,7 +49,8 @@ void main() {
       when(() => client.from('subscriptions')).thenAnswer((_) => query);
       when(() => query.select()).thenAnswer((_) => filter);
       when(() => filter.eq(any(), any())).thenAnswer((_) => filter);
-      when(() => filter.maybeSingle()).thenAnswer((_) async => null);
+      when(() => filter.maybeSingle())
+          .thenAnswer((_) => FakeAwaitable<Map<String, dynamic>?>(null));
 
       expect(await service.getCurrentSubscription(), isNull);
     });
@@ -63,15 +64,17 @@ void main() {
       when(() => client.from('subscriptions')).thenAnswer((_) => query);
       when(() => query.select()).thenAnswer((_) => filter);
       when(() => filter.eq(any(), any())).thenAnswer((_) => filter);
-      when(() => filter.maybeSingle()).thenAnswer((_) async => {
-            'id': 's1',
-            'realtor_id': 'user-1',
-            'plan': 'pro',
-            'status': 'active',
-            'cancel_at_period_end': false,
-            'created_at': '2024-01-01T00:00:00.000Z',
-            'updated_at': '2024-01-01T00:00:00.000Z',
-          });
+      when(() => filter.maybeSingle()).thenAnswer(
+        (_) => FakeAwaitable<Map<String, dynamic>?>({
+          'id': 's1',
+          'user_id': 'user-1',
+          'plan': 'pro',
+          'status': 'active',
+          'cancel_at_period_end': false,
+          'created_at': '2024-01-01T00:00:00.000Z',
+          'updated_at': '2024-01-01T00:00:00.000Z',
+        }),
+      );
 
       final subscription = await service.getCurrentSubscription();
 
@@ -88,7 +91,9 @@ void main() {
       when(() => client.functions).thenReturn(functions);
       when(
         () => functions.invoke('create-checkout', body: any(named: 'body')),
-      ).thenAnswer((_) async => {'url': 'https://pay.example.com/session'});
+      ).thenAnswer((_) async => FunctionResponse(
+            data: {'url': 'https://pay.example.com/session'},
+          ));
 
       final url = await service.createCheckoutSession(
         planId: 'pro',
@@ -106,7 +111,7 @@ void main() {
       when(() => client.functions).thenReturn(functions);
       when(
         () => functions.invoke('create-checkout', body: any(named: 'body')),
-      ).thenAnswer((_) async => <String, dynamic>{});
+      ).thenAnswer((_) async => FunctionResponse(data: <String, dynamic>{}));
 
       expect(
         () => service.createCheckoutSession(
@@ -128,7 +133,8 @@ void main() {
 
       when(() => client.from('subscriptions')).thenAnswer((_) => query);
       when(() => query.update(any())).thenAnswer((_) => filter);
-      when(() => filter.eq(any(), any())).thenAnswer((_) async => null);
+      when(() => filter.eq(any(), any()))
+          .thenAnswer((_) => FakeAwaitable<dynamic>(null));
 
       await service.cancelSubscription();
 
@@ -146,7 +152,8 @@ void main() {
       when(() => client.from('subscriptions')).thenAnswer((_) => query);
       when(() => query.select()).thenAnswer((_) => filter);
       when(() => filter.eq(any(), any())).thenAnswer((_) => filter);
-      when(() => filter.maybeSingle()).thenAnswer((_) async => null);
+      when(() => filter.maybeSingle())
+          .thenAnswer((_) => FakeAwaitable<Map<String, dynamic>?>(null));
 
       expect(await service.hasActiveSubscription(), isFalse);
     });

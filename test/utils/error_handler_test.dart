@@ -108,22 +108,6 @@ void main() {
       );
     });
 
-    test('maps function errors using the details message', () {
-      final error = FunctionException(
-        status: 400,
-        details: {'message': 'رسالة من الدالة'},
-      );
-      expect(SupabaseErrorHandler.handle(error).message, 'رسالة من الدالة');
-    });
-
-    test('falls back to a generic function message', () {
-      final error = FunctionException(status: 500, details: 'oops');
-      expect(
-        SupabaseErrorHandler.handle(error).message,
-        'تعذر إكمال الطلب، يرجى المحاولة مرة أخرى',
-      );
-    });
-
     test('falls back to a generic message for unknown errors', () {
       expect(
         SupabaseErrorHandler.handle(Exception('boom')).message,

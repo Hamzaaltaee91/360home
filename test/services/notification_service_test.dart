@@ -44,18 +44,20 @@ void main() {
       when(() => filter.eq(any(), any())).thenAnswer((_) => filter);
       when(() => filter.order(any(), ascending: any(named: 'ascending')))
           .thenAnswer((_) => ordered);
-      when(() => ordered.range(any(), any())).thenAnswer((_) async => [
-            {
-              'id': 'n1',
-              'user_id': 'user-1',
-              'type': 'offer_received',
-              'title': 'عرض جديد',
-              'body': 'وصلك عرض جديد',
-              'data': {'offer_id': 'o1'},
-              'is_read': false,
-              'created_at': '2024-01-01T00:00:00.000Z',
-            },
-          ]);
+      when(() => ordered.range(any(), any())).thenAnswer(
+        (_) => FakeAwaitable<List<Map<String, dynamic>>>([
+          {
+            'id': 'n1',
+            'user_id': 'user-1',
+            'type': 'offer_received',
+            'title': 'عرض جديد',
+            'body': 'وصلك عرض جديد',
+            'data': {'offer_id': 'o1'},
+            'is_read': false,
+            'created_at': '2024-01-01T00:00:00.000Z',
+          },
+        ]),
+      );
 
       final result = await service.getNotifications();
 
@@ -92,13 +94,16 @@ void main() {
       when(() => supabaseService.getCurrentUserId()).thenReturn('user-1');
 
       final query = MockSupabaseQueryBuilder();
-      final filter = MockPostgrestFilterBuilder<PostgrestResponse<dynamic>>();
+      final filter = MockPostgrestFilterBuilder<PostgrestResponse>();
 
       when(() => client.from('notifications')).thenAnswer((_) => query);
-      when(() => query.select('id')).thenAnswer((_) => filter);
-      when(() => filter.eq(any(), any())).thenAnswer((_) => filter);
-      when(() => filter.count()).thenAnswer(
-        (_) async => PostgrestResponse<dynamic>([], count: 3),
+      when(() => query.select<PostgrestResponse>(any(), any()))
+          .thenAnswer((_) => filter);
+      when(() => filter.eq('user_id', 'user-1')).thenAnswer((_) => filter);
+      when(() => filter.eq('is_read', false)).thenAnswer(
+        (_) => FakeAwaitable<PostgrestResponse>(
+          PostgrestResponse<dynamic>(data: [], status: 200, count: 3),
+        ),
       );
 
       expect(await service.getUnreadCount(), 3);
@@ -112,7 +117,8 @@ void main() {
 
       when(() => client.from('notifications')).thenAnswer((_) => query);
       when(() => query.update(any())).thenAnswer((_) => filter);
-      when(() => filter.eq(any(), any())).thenAnswer((_) async => null);
+      when(() => filter.eq(any(), any()))
+          .thenAnswer((_) => FakeAwaitable<dynamic>(null));
 
       await service.markAsRead('n1');
 

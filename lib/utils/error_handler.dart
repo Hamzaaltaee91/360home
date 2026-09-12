@@ -56,14 +56,6 @@ class SupabaseErrorHandler {
       );
     }
 
-    if (error is FunctionException) {
-      return AppException(
-        _functionMessage(error),
-        code: error.status?.toString(),
-        cause: error,
-      );
-    }
-
     return AppException(
       'حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى',
       cause: error,
@@ -104,13 +96,5 @@ class SupabaseErrorHandler {
             ? error.message
             : 'حدث خطأ في قاعدة البيانات، يرجى المحاولة مرة أخرى';
     }
-  }
-
-  static String _functionMessage(FunctionException error) {
-    final details = error.details;
-    if (details is Map && details['message'] is String) {
-      return details['message'] as String;
-    }
-    return 'تعذر إكمال الطلب، يرجى المحاولة مرة أخرى';
   }
 }

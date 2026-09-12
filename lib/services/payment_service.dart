@@ -110,7 +110,7 @@ class PaymentService {
         },
       );
 
-      final url = (response as Map<String, dynamic>)['url'] as String?;
+      final url = (response.data as Map<String, dynamic>)['url'] as String?;
       if (url == null) {
         throw const AppException('تعذّر إنشاء جلسة الدفع');
       }
