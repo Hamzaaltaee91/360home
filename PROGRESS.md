@@ -304,3 +304,11 @@ SANITY FAILED
 SANITY FAILED
   - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
 ```
+
+## BLOCKED: **Remove unused pagination import in offers_provider.dart** — In lib/providers/offers_provider.dart, delete the unused import '../models/pagination.dart' on line 9. Nothing else in the file uses it. Change nothing else.
+التاريخ: 2026-09-12 17:10:05
+آخر سبب فشل:
+```
+SANITY FAILED
+  - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
+```
