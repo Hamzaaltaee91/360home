@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide Provider;
 
 import '../models/models.dart';
-import '../models/pagination.dart';
 import '../services/notification_service.dart';
 import 'auth_provider.dart';
 
@@ -45,7 +44,7 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
     // Tear down any previous realtime subscription when rebuilding.
     ref.onDispose(_cancelSubscription);
 
-    if (!_service.isAuthenticated()) {
+    if (ref.read(authProvider).valueOrNull == null) {
       _hasMore = false;
       return const [];
     }
