@@ -256,7 +256,7 @@ export async function requireSession() {
 ```
 Do not create any other file in this task.
 
-- [ ] **Create site/js/requests.js** — Create a new file `site/js/requests.js` with exactly this content:
+- [BLOCKED] **Create site/js/requests.js** — Create a new file `site/js/requests.js` with exactly this content:
 ```js
 import { supabase } from "./supabase-client.js";
 
