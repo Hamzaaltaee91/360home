@@ -8,6 +8,8 @@
 
 ## 1. Infrastructure & Setup
 
+- [ ] **Add price formatting helper** — Create lib/utils/formatters.dart with a single top-level function formatPrice(num value) that returns the value grouped with commas and suffixed with ' IQD'. Pure Dart only, no new packages, no Flutter imports. Add a matching test in test/utils/formatters_test.dart.
+
 - [BLOCKED] **Move admin Supabase calls to service layer** — In lib/screens/admin/manage_users_screen.dart, move the two direct Supabase calls (list users, update role) into lib/services/supabase_service.dart as listUsers() and updateUserRole(), then use them from the screen. Do not change any RLS policy or SQL.
 
 
