@@ -330,7 +330,7 @@ export async function respondToOffer(id, response) {
 ```
 Do not create any other file in this task.
 
-- [ ] **Create site/css/style.css** — Create a new file `site/css/style.css` with exactly this content:
+- [BLOCKED] **Create site/css/style.css** — Create a new file `site/css/style.css` with exactly this content:
 ```css
 @import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap');
 

@@ -385,3 +385,10 @@ SANITY FAILED
 SANITY FAILED
   - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
 ```
+
+## BLOCKED: **Create site/css/style.css** — Create a new file `site/css/style.css` with exactly this content:
+التاريخ: 2026-09-12 18:45:50
+آخر سبب فشل:
+```
+التغيير يمس الصلاحيات أو الأمان — يحتاج مراجعة بشرية
+```
