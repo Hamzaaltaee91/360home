@@ -312,3 +312,11 @@ SANITY FAILED
 SANITY FAILED
   - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
 ```
+
+## BLOCKED: **Remove unused geolocator import in create_request_screen.dart** — In lib/screens/buyer/create_request_screen.dart, delete the unused import 'package:geolocator/geolocator.dart' on line 6. Nothing else in the file uses Geolocator. Change nothing else.
+التاريخ: 2026-09-12 17:10:19
+آخر سبب فشل:
+```
+SANITY FAILED
+  - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
+```
