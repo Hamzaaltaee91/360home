@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('ErrorWidget', () {
+  group('AppErrorWidget', () {
     testWidgets('renders a default message when none is provided',
         (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: ErrorWidget())),
+        const MaterialApp(home: Scaffold(body: AppErrorWidget())),
       );
 
       expect(find.text('Something went wrong.'), findsOneWidget);
@@ -17,7 +17,7 @@ void main() {
     testWidgets('renders the provided message', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(body: ErrorWidget(message: 'Network failed')),
+          home: Scaffold(body: AppErrorWidget(message: 'Network failed')),
         ),
       );
 
@@ -27,7 +27,7 @@ void main() {
     testWidgets('does not render a retry button when onRetry is null',
         (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: ErrorWidget())),
+        const MaterialApp(home: Scaffold(body: AppErrorWidget())),
       );
 
       expect(find.byType(FilledButton), findsNothing);
@@ -39,7 +39,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ErrorWidget(onRetry: () => retried = true),
+            body: AppErrorWidget(onRetry: () => retried = true),
           ),
         ),
       );
@@ -54,7 +54,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ErrorWidget(onRetry: () {}, retryLabel: 'Try again'),
+            body: AppErrorWidget(onRetry: () {}, retryLabel: 'Try again'),
           ),
         ),
       );

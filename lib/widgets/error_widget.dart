@@ -7,8 +7,8 @@ import 'package:flutter/material.dart';
 /// available space, making it suitable for whole-screen error states.
 /// Otherwise it sizes itself to its content, which is useful when embedded
 /// inside cards or list items.
-class ErrorWidget extends StatelessWidget {
-  const ErrorWidget({
+class AppErrorWidget extends StatelessWidget {
+  const AppErrorWidget({
     super.key,
     this.message,
     this.icon = Icons.error_outline,
