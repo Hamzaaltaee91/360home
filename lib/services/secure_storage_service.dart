@@ -85,25 +85,17 @@ class SecureStorageService implements SecureStorage {
 /// Adapts a [SecureStorage] to Supabase's [LocalStorage] interface so the
 /// auth session is persisted in the platform secure store.
 class SecureLocalStorage extends LocalStorage {
-  SecureLocalStorage(this._storage);
-
-  final SecureStorage _storage;
-
-  @override
-  Future<void> initialize() async {}
-
-  @override
-  Future<String?> accessToken() => _storage.read(SecureStorageKeys.supabaseSession);
-
-  @override
-  Future<bool> hasAccessToken() async =>
-      (await _storage.read(SecureStorageKeys.supabaseSession)) != null;
-
-  @override
-  Future<void> persistSession(String persistSessionString) =>
-      _storage.write(SecureStorageKeys.supabaseSession, persistSessionString);
-
-  @override
-  Future<void> removePersistedSession() =>
-      _storage.delete(SecureStorageKeys.supabaseSession);
+  SecureLocalStorage(SecureStorage storage)
+      : super(
+          initialize: () async {},
+          accessToken: () => storage.read(SecureStorageKeys.supabaseSession),
+          hasAccessToken: () async =>
+              (await storage.read(SecureStorageKeys.supabaseSession)) != null,
+          persistSession: (persistSessionString) => storage.write(
+            SecureStorageKeys.supabaseSession,
+            persistSessionString,
+          ),
+          removePersistedSession: () =>
+              storage.delete(SecureStorageKeys.supabaseSession),
+        );
 }
