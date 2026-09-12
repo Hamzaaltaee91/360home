@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../services/supabase_service.dart';
 import '../../services/location_service.dart';
 import '../../models/models.dart';
+import '../../utils/image_compressor.dart';
 import '../../utils/validators.dart';
 
 class CreateOfferScreen extends StatefulWidget {
@@ -71,7 +72,10 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       final added = <_PickedPhoto>[];
       for (final file in picked) {
         final bytes = await file.readAsBytes();
-        added.add(_PickedPhoto(name: file.name, bytes: bytes));
+        final compressed = await ImageCompressor.compress(
+          Uint8List.fromList(bytes),
+        );
+        added.add(_PickedPhoto(name: file.name, bytes: compressed));
       }
 
       if (!mounted) return;
@@ -111,7 +115,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       final url = await SupabaseService().uploadPropertyPhoto(
         requestId: widget.requestId,
         fileName: fileName,
-        fileBytes: photo.bytes,
+        fileBytes: Uint8List.fromList(photo.bytes),
       );
       urls.add(url);
     }

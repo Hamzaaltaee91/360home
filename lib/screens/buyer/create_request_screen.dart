@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../services/location_service.dart';
 import '../../services/supabase_service.dart';
+import '../../utils/image_compressor.dart';
 import '../../utils/validators.dart';
 
 class CreateRequestScreen extends StatefulWidget {
@@ -118,10 +119,13 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       for (var i = 0; i < _photos.length; i++) {
         final photo = _photos[i];
         final bytes = await photo.readAsBytes();
+        final compressed = await ImageCompressor.compress(
+          Uint8List.fromList(bytes),
+        );
         await service.uploadPropertyPhoto(
           requestId: request.id,
           fileName: '${DateTime.now().millisecondsSinceEpoch}_$i.jpg',
-          fileBytes: Uint8List.fromList(bytes),
+          fileBytes: compressed,
         );
       }
 

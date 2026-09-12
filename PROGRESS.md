@@ -1,5 +1,31 @@
 # Progress Log
 
+## Cycle: Image Compression
+
+### Accomplished
+- Added the `flutter_image_compress` dependency to `pubspec.yaml`.
+- Added `lib/utils/image_compressor.dart`:
+  - `ImageCompressor.compress(bytes, {maxDimension, quality})` downscales the
+    longest edge to 1600px and re-encodes as JPEG at quality 80.
+  - Best-effort: returns the original bytes when compression is unsupported
+    (Flutter Web) or fails, and never returns a larger payload than the input.
+- Wired compression into the upload paths:
+  - `create_request_screen.dart` compresses each picked photo before
+    `uploadPropertyPhoto`.
+  - `create_offer_screen.dart` compresses photos at pick time and uploads the
+    compressed bytes.
+- Added unit tests in `test/utils/image_compressor_test.dart` covering empty
+  input, invalid data fallback, and default bounds.
+- No schema changes were required; no migrations were edited.
+- Marked the task as complete in `TODO.md`.
+
+### Blocked / Failing
+- None.
+
+### Next in Queue
+- Section 12 (Security & Optimization) is now complete. Proceed to the next
+  uncompleted section in `TODO.md`.
+
 ## Cycle: Pagination & Lazy Loading
 
 ### Accomplished
