@@ -74,6 +74,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
 
   # Assets
   # TODO: Uncomment once the asset directories are populated.

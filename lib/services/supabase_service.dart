@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 import '../models/pagination.dart';
+import '../models/realtor_verification.dart';
 import '../utils/error_handler.dart';
 import 'secure_storage_service.dart';
 
