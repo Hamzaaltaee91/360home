@@ -318,5 +318,5 @@ final appRoutes = GoRouter(
     ),
   ],
   errorBuilder: (context, state) =>
-      NotFoundScreen(location: state.location),
+      NotFoundScreen(location: state.matchedLocation),
 );
