@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/models.dart';
+import '../../services/supabase_service.dart';
 import '../../utils/error_handler.dart';
 
 /// Admin screen for browsing the user directory and moderating roles.
@@ -15,7 +15,7 @@ class ManageUsersScreen extends StatefulWidget {
 }
 
 class _ManageUsersScreenState extends State<ManageUsersScreen> {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseService _service = SupabaseService();
   final TextEditingController _searchController = TextEditingController();
 
   List<AppUser> _users = const [];
@@ -42,23 +42,11 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     });
 
     try {
-      var query = _supabase.from('users').select();
-
-      if (_roleFilter != 'all') {
-        query = query.eq('role', _roleFilter);
-      }
-
       final search = _searchController.text.trim();
-      if (search.isNotEmpty) {
-        query = query.or(
-          'full_name.ilike.%$search%,email.ilike.%$search%',
-        );
-      }
-
-      final data = await query.order('created_at', ascending: false);
-      final users = (data as List)
-          .map((e) => AppUser.fromJson(e as Map<String, dynamic>))
-          .toList();
+      final users = await _service.listUsers(
+        role: _roleFilter == 'all' ? null : _roleFilter,
+        search: search.isEmpty ? null : search,
+      );
 
       if (!mounted) return;
       setState(() {
@@ -98,9 +86,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     if (confirmed != true) return;
 
     try {
-      await _supabase
-          .from('users')
-          .update({'role': newRole}).eq('id', user.id);
+      await _service.updateUserRole(userId: user.id, role: newRole);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

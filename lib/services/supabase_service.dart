@@ -191,6 +191,51 @@ class SupabaseService {
     });
   }
 
+  /// Fetches the user directory for the admin screen.
+  ///
+  /// [role] filters by role when provided (e.g. 'buyer', 'realtor',
+  /// 'admin'). [search] performs a case-insensitive match against the
+  /// user's full name or email. Results are ordered newest first.
+  Future<List<AppUser>> listUsers({
+    String? role,
+    String? search,
+  }) {
+    return _guard(() async {
+      var query = _client.from('users').select();
+
+      if (role != null && role.isNotEmpty) {
+        query = query.eq('role', role);
+      }
+
+      final trimmed = search?.trim() ?? '';
+      if (trimmed.isNotEmpty) {
+        query = query.or(
+          'full_name.ilike.%$trimmed%,email.ilike.%$trimmed%',
+        );
+      }
+
+      final response =
+          await query.order('created_at', ascending: false);
+
+      return (response as List)
+          .map((e) => AppUser.fromJson(e as Map<String, dynamic>))
+          .toList();
+    });
+  }
+
+  /// Updates the role of the user identified by [userId].
+  ///
+  /// The caller is responsible for ensuring the current session is
+  /// authorized (admin) — server-side RLS remains the source of truth.
+  Future<void> updateUserRole({
+    required String userId,
+    required String role,
+  }) {
+    return _guard(
+      () => _client.from('users').update({'role': role}).eq('id', userId),
+    );
+  }
+
   // ==================== Property Requests ====================
 
   Future<PropertyRequest> createPropertyRequest({
