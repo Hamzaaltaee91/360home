@@ -397,3 +397,373 @@ h1, h2, h3 { font-family: var(--font-display); color: var(--color-cardamom); }
 .error-text { color: #b3261e; font-size: 0.9rem; }
 ```
 Do not create any other file in this task.
+- [ ] **Create site/index.html (landing/login/signup page)** — Create a new file `site/index.html` with exactly this content:
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>دبّرلي</h1>
+    <p>انشر مواصفات العقار الذي تبحث عنه، ودع الوسطاء الموثوقين يرسلون لك عروضهم.</p>
+
+    <div class="card">
+      <h2 id="form-title">تسجيل الدخول</h2>
+      <form id="auth-form">
+        <div class="form-field">
+          <label for="email">البريد الإلكتروني</label>
+          <input type="email" id="email" required>
+        </div>
+        <div class="form-field" id="name-field" hidden>
+          <label for="full-name">الاسم الكامل</label>
+          <input type="text" id="full-name">
+        </div>
+        <div class="form-field">
+          <label for="password">كلمة المرور</label>
+          <input type="password" id="password" required minlength="6">
+        </div>
+        <p class="error-text" id="error" hidden></p>
+        <button type="submit" class="btn btn-primary" id="submit-btn">دخول</button>
+      </form>
+      <p>
+        <a href="#" id="toggle-mode">ليس لديك حساب؟ أنشئ حسابًا جديدًا</a>
+      </p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { signUpBuyer, signIn } from "./js/auth.js";
+    import { supabase } from "./js/supabase-client.js";
+
+    let mode = "signin";
+    const form = document.getElementById("auth-form");
+    const nameField = document.getElementById("name-field");
+    const formTitle = document.getElementById("form-title");
+    const submitBtn = document.getElementById("submit-btn");
+    const toggle = document.getElementById("toggle-mode");
+    const errorEl = document.getElementById("error");
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) window.location.href = "dashboard.html";
+    });
+
+    toggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      mode = mode === "signin" ? "signup" : "signin";
+      nameField.hidden = mode === "signin";
+      formTitle.textContent = mode === "signin" ? "تسجيل الدخول" : "إنشاء حساب";
+      submitBtn.textContent = mode === "signin" ? "دخول" : "إنشاء حساب";
+      toggle.textContent = mode === "signin"
+        ? "ليس لديك حساب؟ أنشئ حسابًا جديدًا"
+        : "لديك حساب بالفعل؟ سجّل الدخول";
+      errorEl.hidden = true;
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorEl.hidden = true;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const fullName = document.getElementById("full-name").value;
+
+      const { error } =
+        mode === "signin"
+          ? await signIn(email, password)
+          : await signUpBuyer(email, password, fullName);
+
+      if (error) {
+        errorEl.textContent = error.message;
+        errorEl.hidden = false;
+        return;
+      }
+      window.location.href = "dashboard.html";
+    });
+  </script>
+</body>
+</html>
+```
+This file depends on site/js/auth.js and site/js/supabase-client.js which already exist from prior tasks. Do not create any other file in this task.
+
+- [ ] **Create site/dashboard.html (buyer dashboard page)** — Create a new file `site/dashboard.html` with exactly this content:
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>طلباتي — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h1>طلباتي</h1>
+      <button class="btn" id="signout-btn">تسجيل الخروج</button>
+    </div>
+    <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
+    <div id="requests-list" style="margin-top:1.5rem;"></div>
+    <p id="empty-msg" hidden>لا توجد طلبات بعد.</p>
+  </div>
+
+  <script type="module">
+    import { requireSession, signOut } from "./js/auth.js";
+    import { listMyRequests } from "./js/requests.js";
+
+    await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    const requests = await listMyRequests();
+    const list = document.getElementById("requests-list");
+    if (requests.length === 0) {
+      document.getElementById("empty-msg").hidden = false;
+    }
+    for (const r of requests) {
+      const a = document.createElement("a");
+      a.href = `request.html?id=${r.id}`;
+      a.style.textDecoration = "none";
+      a.style.color = "inherit";
+      a.innerHTML = `
+        <div class="card">
+          <h3>${r.title}</h3>
+          <p>${r.city} — ${r.category}</p>
+        </div>
+      `;
+      list.appendChild(a);
+    }
+  </script>
+</body>
+</html>
+```
+This file depends on site/js/auth.js and site/js/requests.js which already exist from prior tasks. Do not create any other file in this task.
+
+- [ ] **Create site/request-new.html (create-request form page)** — Create a new file `site/request-new.html` with exactly this content:
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>طلب جديد — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>طلب جديد</h1>
+    <form id="request-form" class="card">
+      <div class="form-field">
+        <label for="category">الفئة</label>
+        <select id="category" required>
+          <option value="residential">سكني</option>
+          <option value="commercial">تجاري</option>
+          <option value="land">أرض</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="title">عنوان الطلب</label>
+        <input type="text" id="title" required>
+      </div>
+      <div class="form-field">
+        <label for="description">الوصف</label>
+        <textarea id="description"></textarea>
+      </div>
+      <div class="form-field">
+        <label for="city">المدينة</label>
+        <input type="text" id="city" required>
+      </div>
+      <div class="form-field">
+        <label for="area-name">المنطقة</label>
+        <input type="text" id="area-name">
+      </div>
+      <div class="form-field">
+        <label for="min-price">أقل سعر</label>
+        <input type="number" id="min-price">
+      </div>
+      <div class="form-field">
+        <label for="max-price">أعلى سعر</label>
+        <input type="number" id="max-price">
+      </div>
+      <div class="form-field">
+        <label for="bedrooms">عدد غرف النوم</label>
+        <input type="number" id="bedrooms">
+      </div>
+      <div class="form-field">
+        <label for="bathrooms">عدد الحمامات</label>
+        <input type="number" id="bathrooms">
+      </div>
+      <div class="form-field">
+        <label><input type="checkbox" id="furnished"> مفروش</label>
+      </div>
+      <p class="error-text" id="error" hidden></p>
+      <button type="submit" class="btn btn-primary">إرسال الطلب</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { requireSession } from "./js/auth.js";
+    import { createRequest } from "./js/requests.js";
+
+    await requireSession();
+
+    document.getElementById("request-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById("error");
+      errorEl.hidden = true;
+
+      const val = (id) => document.getElementById(id).value;
+      const num = (id) => (val(id) === "" ? null : Number(val(id)));
+
+      try {
+        await createRequest({
+          category: val("category"),
+          title: val("title"),
+          description: val("description") || null,
+          city: val("city"),
+          area_name: val("area-name") || null,
+          min_price: num("min-price"),
+          max_price: num("max-price"),
+          bedrooms: num("bedrooms"),
+          bathrooms: num("bathrooms"),
+          furnished: document.getElementById("furnished").checked,
+        });
+        window.location.href = "dashboard.html";
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+      }
+    });
+  </script>
+</body>
+</html>
+```
+This file depends on site/js/auth.js and site/js/requests.js which already exist from prior tasks. Do not create any other file in this task.
+
+- [ ] **Create site/request.html (request detail + offers list page)** — Create a new file `site/request.html` with exactly this content:
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تفاصيل الطلب — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <a href="dashboard.html" class="btn">→ رجوع</a>
+    <div id="request-detail"></div>
+    <h2>العروض</h2>
+    <div id="offers-list"></div>
+    <p id="empty-msg" hidden>لا توجد عروض بعد على هذا الطلب.</p>
+  </div>
+
+  <script type="module">
+    import { requireSession } from "./js/auth.js";
+    import { getRequest } from "./js/requests.js";
+    import { listOffersForRequest } from "./js/offers.js";
+
+    await requireSession();
+
+    const requestId = new URLSearchParams(window.location.search).get("id");
+    const request = await getRequest(requestId);
+
+    document.getElementById("request-detail").innerHTML = `
+      <div class="card">
+        <h1>${request.title}</h1>
+        <p>${request.city} — ${request.category}</p>
+        <p>${request.description ?? ""}</p>
+      </div>
+    `;
+
+    const offers = await listOffersForRequest(requestId);
+    const list = document.getElementById("offers-list");
+    if (offers.length === 0) {
+      document.getElementById("empty-msg").hidden = false;
+    }
+    for (const o of offers) {
+      const a = document.createElement("a");
+      a.href = `offer.html?id=${o.id}`;
+      a.style.textDecoration = "none";
+      a.style.color = "inherit";
+      a.innerHTML = `
+        <div class="card">
+          <h3>${o.property_title}</h3>
+          <p>${o.offered_price} ${o.currency}</p>
+        </div>
+      `;
+      list.appendChild(a);
+    }
+  </script>
+</body>
+</html>
+```
+This file depends on site/js/auth.js, site/js/requests.js, and site/js/offers.js which already exist from prior tasks. Do not create any other file in this task.
+
+- [ ] **Create site/offer.html (offer detail + respond page)** — Create a new file `site/offer.html` with exactly this content:
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تفاصيل العرض — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <a href="#" id="back-link" class="btn">→ رجوع</a>
+    <div id="offer-detail"></div>
+    <div id="response-buttons"></div>
+    <p id="response-status" hidden></p>
+  </div>
+
+  <script type="module">
+    import { requireSession } from "./js/auth.js";
+    import { getOffer, respondToOffer } from "./js/offers.js";
+
+    await requireSession();
+
+    const offerId = new URLSearchParams(window.location.search).get("id");
+    const offer = await getOffer(offerId);
+
+    document.getElementById("back-link").href = `request.html?id=${offer.request_id}`;
+
+    document.getElementById("offer-detail").innerHTML = `
+      <div class="card">
+        <h1>${offer.property_title}</h1>
+        <p>${offer.property_address}</p>
+        <p>${offer.offered_price} ${offer.currency}</p>
+        <p>${offer.property_description ?? ""}</p>
+        <p>${offer.message_to_buyer ?? ""}</p>
+      </div>
+    `;
+
+    const buttons = document.getElementById("response-buttons");
+    const status = document.getElementById("response-status");
+
+    function renderButtons() {
+      buttons.innerHTML = `
+        <button class="btn btn-primary" id="interested-btn">مهتم</button>
+        <button class="btn" id="not-interested-btn">غير مهتم</button>
+      `;
+      document.getElementById("interested-btn").addEventListener("click", () => respond("interested"));
+      document.getElementById("not-interested-btn").addEventListener("click", () => respond("not_interested"));
+    }
+
+    async function respond(response) {
+      await respondToOffer(offerId, response);
+      status.textContent = response === "interested" ? "تم إرسال اهتمامك" : "تم تسجيل عدم الاهتمام";
+      status.hidden = false;
+      buttons.innerHTML = "";
+    }
+
+    renderButtons();
+  </script>
+</body>
+</html>
+```
+This file depends on site/js/auth.js and site/js/offers.js which already exist from prior tasks. Do not create any other file in this task.
