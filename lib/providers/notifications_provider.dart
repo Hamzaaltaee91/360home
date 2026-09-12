@@ -9,8 +9,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
+import '../models/pagination.dart';
 import '../services/notification_service.dart';
 import 'auth_provider.dart';
+
+/// Default page size used when fetching notifications.
+const int kNotificationsPageSize = 50;
 
 /// Provides the shared [NotificationService] singleton.
 ///
@@ -28,6 +32,11 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
 
   RealtimeChannel? _channel;
 
+  /// Whether more notifications can be loaded from the backend.
+  bool _hasMore = false;
+
+  bool get hasMore => _hasMore;
+
   @override
   Future<List<Notification>> build() async {
     // Re-fetch whenever the signed-in user changes.
@@ -36,10 +45,31 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
     // Tear down any previous realtime subscription when rebuilding.
     ref.onDispose(_cancelSubscription);
 
-    if (!_service.isAuthenticated()) return const [];
+    if (!_service.isAuthenticated()) {
+      _hasMore = false;
+      return const [];
+    }
 
     _subscribeToRealtime();
-    return _service.getNotifications();
+    final page =
+        await _service.getNotifications(limit: kNotificationsPageSize);
+    _hasMore = page.hasMore;
+    return page.items;
+  }
+
+  /// Loads the next page of notifications and appends it to the current list.
+  Future<void> loadMore() async {
+    if (!_hasMore || state.isLoading) return;
+
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    final page = await _service.getNotifications(
+      limit: kNotificationsPageSize,
+      offset: current.length,
+    );
+    _hasMore = page.hasMore;
+    state = AsyncValue.data([...current, ...page.items]);
   }
 
   /// Subscribes to realtime inserts and prepends new notifications.
@@ -67,7 +97,12 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
   /// Re-fetches notifications from the backend.
   Future<void> refresh() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _service.getNotifications());
+    state = await AsyncValue.guard(() async {
+      final page =
+          await _service.getNotifications(limit: kNotificationsPageSize);
+      _hasMore = page.hasMore;
+      return page.items;
+    });
   }
 
   /// Marks a single notification as read and updates the local list.

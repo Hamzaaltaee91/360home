@@ -117,9 +117,10 @@ void main() {
 
       final result = await service.getNotifications();
 
-      expect(result, hasLength(1));
-      expect(result.first.id, 'n1');
-      expect(result.first.isRead, isFalse);
+      expect(result.items, hasLength(1));
+      expect(result.items.first.id, 'n1');
+      expect(result.items.first.isRead, isFalse);
+      expect(result.hasMore, isFalse);
     });
 
     test('translates PostgrestException into AppException', () async {

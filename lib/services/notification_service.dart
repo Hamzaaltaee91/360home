@@ -3,6 +3,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/models.dart';
+import '../models/pagination.dart';
 import '../utils/error_handler.dart';
 import 'supabase_service.dart';
 
@@ -30,8 +31,8 @@ class NotificationService {
     return userId;
   }
 
-  /// Fetches notifications for the current user, newest first.
-  Future<List<Notification>> getNotifications({
+  /// Fetches a page of notifications for the current user, newest first.
+  Future<PaginatedResult<Notification>> getNotifications({
     bool unreadOnly = false,
     int limit = 50,
     int offset = 0,
@@ -52,9 +53,11 @@ class NotificationService {
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
-      return (response as List)
+      final items = (response as List)
           .map((e) => Notification.fromJson(e as Map<String, dynamic>))
           .toList();
+
+      return PaginatedResult.fromItems(items, offset: offset, limit: limit);
     });
   }
 

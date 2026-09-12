@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
+import '../models/pagination.dart';
 import '../utils/error_handler.dart';
 import 'secure_storage_service.dart';
 
@@ -244,7 +245,11 @@ class SupabaseService {
     });
   }
 
-  Future<List<PropertyRequest>> getUserRequests() {
+  /// Fetches a page of the current buyer's property requests, newest first.
+  Future<PaginatedResult<PropertyRequest>> getUserRequests({
+    int limit = 20,
+    int offset = 0,
+  }) {
     return _guard(() async {
       final userId = getCurrentUserId();
       if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
@@ -253,11 +258,14 @@ class SupabaseService {
           .from('property_requests')
           .select()
           .eq('buyer_id', userId)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
 
-      return (response as List)
+      final items = (response as List)
           .map((e) => PropertyRequest.fromJson(e as Map<String, dynamic>))
           .toList();
+
+      return PaginatedResult.fromItems(items, offset: offset, limit: limit);
     });
   }
 
@@ -302,21 +310,33 @@ class SupabaseService {
 
   // ==================== Realtor Offers ====================
 
-  Future<List<RealtorOffer>> getOffersForRequest(String requestId) {
+  /// Fetches a page of offers received for [requestId], newest first.
+  Future<PaginatedResult<RealtorOffer>> getOffersForRequest(
+    String requestId, {
+    int limit = 20,
+    int offset = 0,
+  }) {
     return _guard(() async {
       final response = await _client
           .from('realtor_offers')
           .select()
           .eq('request_id', requestId)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
 
-      return (response as List)
+      final items = (response as List)
           .map((e) => RealtorOffer.fromJson(e as Map<String, dynamic>))
           .toList();
+
+      return PaginatedResult.fromItems(items, offset: offset, limit: limit);
     });
   }
 
-  Future<List<RealtorOffer>> getRealtorOffers() {
+  /// Fetches a page of the current realtor's submitted offers, newest first.
+  Future<PaginatedResult<RealtorOffer>> getRealtorOffers({
+    int limit = 20,
+    int offset = 0,
+  }) {
     return _guard(() async {
       final userId = getCurrentUserId();
       if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
@@ -325,11 +345,14 @@ class SupabaseService {
           .from('realtor_offers')
           .select()
           .eq('realtor_id', userId)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
 
-      return (response as List)
+      final items = (response as List)
           .map((e) => RealtorOffer.fromJson(e as Map<String, dynamic>))
           .toList();
+
+      return PaginatedResult.fromItems(items, offset: offset, limit: limit);
     });
   }
 
