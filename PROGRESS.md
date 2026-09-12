@@ -320,3 +320,11 @@ SANITY FAILED
 SANITY FAILED
   - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
 ```
+
+## BLOCKED: **Remove unused supabase_flutter import in verification_workflow_test.dart** — In integration_test/verification_workflow_test.dart, delete the unused import 'package:supabase_flutter/supabase_flutter.dart' on line 14. The file only uses dabberli's own SupabaseService class, not any supabase_flutter symbol directly. Change nothing else.
+التاريخ: 2026-09-12 17:10:32
+آخر سبب فشل:
+```
+SANITY FAILED
+  - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
+```
