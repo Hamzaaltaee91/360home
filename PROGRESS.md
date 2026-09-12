@@ -288,3 +288,11 @@ SANITY FAILED
 SANITY FAILED
   - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
 ```
+
+## BLOCKED: **Remove unused imports** — Delete every import flagged as unused_import by flutter analyze. Remove nothing else.
+التاريخ: 2026-09-12 15:29:49
+آخر سبب فشل:
+```
+SANITY FAILED
+  - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
+```
