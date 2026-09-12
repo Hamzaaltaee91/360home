@@ -24,8 +24,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _phoneController = TextEditingController();
   final _bioController = TextEditingController();
 
-  late Future<User> _userFuture;
-  User? _user;
+  late Future<AppUser> _userFuture;
+  AppUser? _user;
 
   Uint8List? _pickedImageBytes;
   String? _pickedImageName;
@@ -45,7 +45,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  Future<User> _loadUser() async {
+  Future<AppUser> _loadUser() async {
     final user = await SupabaseService().getCurrentUser();
     _user = user;
     _fullNameController.text = user.fullName;
@@ -135,7 +135,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('تعديل الملف الشخصي')),
-      body: FutureBuilder<User>(
+      body: FutureBuilder<AppUser>(
         future: _userFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

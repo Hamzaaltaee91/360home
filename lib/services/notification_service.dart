@@ -32,7 +32,7 @@ class NotificationService {
   }
 
   /// Fetches a page of notifications for the current user, newest first.
-  Future<PaginatedResult<Notification>> getNotifications({
+  Future<PaginatedResult<AppNotification>> getNotifications({
     bool unreadOnly = false,
     int limit = 50,
     int offset = 0,
@@ -54,7 +54,7 @@ class NotificationService {
           .range(offset, offset + limit - 1);
 
       final items = (response as List)
-          .map((e) => Notification.fromJson(e as Map<String, dynamic>))
+          .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
           .toList();
 
       return PaginatedResult.fromItems(items, offset: offset, limit: limit);
@@ -107,7 +107,7 @@ class NotificationService {
   ///
   /// Returns the [RealtimeChannel] so callers can unsubscribe when done.
   RealtimeChannel subscribeToNotifications(
-    void Function(Notification notification) onNotification, {
+    void Function(AppNotification notification) onNotification, {
     void Function(Object error)? onError,
   }) {
     final userId = _requireUserId();
@@ -125,7 +125,7 @@ class NotificationService {
           ),
           callback: (payload) {
             try {
-              onNotification(Notification.fromJson(payload.newRecord));
+              onNotification(AppNotification.fromJson(payload.newRecord));
             } catch (error) {
               onError?.call(error);
             }

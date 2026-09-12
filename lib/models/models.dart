@@ -1,6 +1,6 @@
 // Data Models for Dabberli
 
-class User {
+class AppUser {
   final String id;
   final String email;
   final String fullName;
@@ -12,7 +12,7 @@ class User {
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  User({
+  AppUser({
     required this.id,
     required this.email,
     required this.fullName,
@@ -25,8 +25,8 @@ class User {
     required this.updatedAt,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
+  factory AppUser.fromJson(Map<String, dynamic> json) {
+    return AppUser(
       id: json['id'] as String,
       email: json['email'] as String,
       fullName: json['full_name'] as String,
@@ -55,7 +55,7 @@ class User {
     };
   }
 
-  User copyWith({
+  AppUser copyWith({
     String? id,
     String? email,
     String? fullName,
@@ -67,7 +67,7 @@ class User {
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    return User(
+    return AppUser(
       id: id ?? this.id,
       email: email ?? this.email,
       fullName: fullName ?? this.fullName,
@@ -84,7 +84,7 @@ class User {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is User &&
+      other is AppUser &&
           runtimeType == other.runtimeType &&
           id == other.id &&
           email == other.email &&
@@ -647,7 +647,7 @@ class Subscription {
   }
 }
 
-class Notification {
+class AppNotification {
   final String id;
   final String userId;
   final String type; // 'offer_received', 'offer_accepted', 'verification', etc.
@@ -657,7 +657,7 @@ class Notification {
   final bool isRead;
   final DateTime createdAt;
 
-  Notification({
+  AppNotification({
     required this.id,
     required this.userId,
     required this.type,
@@ -668,8 +668,8 @@ class Notification {
     required this.createdAt,
   });
 
-  factory Notification.fromJson(Map<String, dynamic> json) {
-    return Notification(
+  factory AppNotification.fromJson(Map<String, dynamic> json) {
+    return AppNotification(
       id: json['id'] as String,
       userId: json['user_id'] as String,
       type: json['type'] as String,
@@ -694,7 +694,7 @@ class Notification {
     };
   }
 
-  Notification copyWith({
+  AppNotification copyWith({
     String? id,
     String? userId,
     String? type,
@@ -704,7 +704,7 @@ class Notification {
     bool? isRead,
     DateTime? createdAt,
   }) {
-    return Notification(
+    return AppNotification(
       id: id ?? this.id,
       userId: userId ?? this.userId,
       type: type ?? this.type,
@@ -719,7 +719,7 @@ class Notification {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Notification &&
+      other is AppNotification &&
           runtimeType == other.runtimeType &&
           id == other.id &&
           userId == other.userId &&

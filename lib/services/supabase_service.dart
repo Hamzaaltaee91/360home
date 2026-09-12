@@ -145,7 +145,7 @@ class SupabaseService {
 
   // ==================== User Management ====================
 
-  Future<User> getCurrentUser() {
+  Future<AppUser> getCurrentUser() {
     return _guard(() async {
       final userId = getCurrentUserId();
       if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
@@ -156,11 +156,11 @@ class SupabaseService {
           .eq('auth_id', userId)
           .single();
 
-      return User.fromJson(response);
+      return AppUser.fromJson(response);
     });
   }
 
-  Future<User> getUserById(String userId) {
+  Future<AppUser> getUserById(String userId) {
     return _guard(() async {
       final response = await _client
           .from('users')
@@ -168,7 +168,7 @@ class SupabaseService {
           .eq('id', userId)
           .single();
 
-      return User.fromJson(response);
+      return AppUser.fromJson(response);
     });
   }
 

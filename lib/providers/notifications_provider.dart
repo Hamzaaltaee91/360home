@@ -27,7 +27,7 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 });
 
 /// Manages the current user's notifications.
-class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
+class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
   NotificationService get _service => ref.read(notificationServiceProvider);
 
   RealtimeChannel? _channel;
@@ -38,7 +38,7 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
   bool get hasMore => _hasMore;
 
   @override
-  Future<List<Notification>> build() async {
+  Future<List<AppNotification>> build() async {
     // Re-fetch whenever the signed-in user changes.
     ref.watch(authProvider);
 
@@ -149,7 +149,7 @@ class NotificationsNotifier extends AsyncNotifier<List<Notification>> {
 
 /// Provides the current user's notifications.
 final notificationsProvider =
-    AsyncNotifierProvider<NotificationsNotifier, List<Notification>>(
+    AsyncNotifierProvider<NotificationsNotifier, List<AppNotification>>(
   NotificationsNotifier.new,
 );
 

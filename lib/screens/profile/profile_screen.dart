@@ -15,7 +15,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late Future<User> _userFuture;
+  late Future<AppUser> _userFuture;
 
   @override
   void initState() {
@@ -40,7 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('الملف الشخصي')),
-      body: FutureBuilder<User>(
+      body: FutureBuilder<AppUser>(
         future: _userFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -83,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
                   onPressed: () async {
-                    final updated = await Navigator.of(context).push<User>(
+                    final updated = await Navigator.of(context).push<AppUser>(
                       MaterialPageRoute(
                         builder: (_) => const EditProfileScreen(),
                       ),
@@ -160,7 +160,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader({required this.user});
 
-  final User user;
+  final AppUser user;
 
   @override
   Widget build(BuildContext context) {

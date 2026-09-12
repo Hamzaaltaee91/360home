@@ -17,7 +17,7 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   final NotificationService _service = NotificationService();
 
-  late Future<List<Notification>> _notificationsFuture;
+  late Future<List<AppNotification>> _notificationsFuture;
 
   @override
   void initState() {
@@ -31,7 +31,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     });
   }
 
-  Future<void> _markAsRead(Notification notification) async {
+  Future<void> _markAsRead(AppNotification notification) async {
     if (notification.isRead) return;
     try {
       await _service.markAsRead(notification.id);
@@ -73,7 +73,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Notification>>(
+      body: FutureBuilder<List<AppNotification>>(
         future: _notificationsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -102,7 +102,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             );
           }
 
-          final notifications = snapshot.data ?? const <Notification>[];
+          final notifications = snapshot.data ?? const <AppNotification>[];
           if (notifications.isEmpty) {
             return const Center(
               child: Column(
@@ -142,7 +142,7 @@ class _NotificationTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final Notification notification;
+  final AppNotification notification;
   final VoidCallback onTap;
 
   @override

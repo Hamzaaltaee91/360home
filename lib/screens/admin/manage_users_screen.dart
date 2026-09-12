@@ -18,7 +18,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   final SupabaseClient _supabase = Supabase.instance.client;
   final TextEditingController _searchController = TextEditingController();
 
-  List<User> _users = const [];
+  List<AppUser> _users = const [];
   bool _isLoading = true;
   String? _error;
   String _roleFilter = 'all';
@@ -57,7 +57,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
 
       final data = await query.order('created_at', ascending: false);
       final users = (data as List)
-          .map((e) => User.fromJson(e as Map<String, dynamic>))
+          .map((e) => AppUser.fromJson(e as Map<String, dynamic>))
           .toList();
 
       if (!mounted) return;
@@ -74,7 +74,7 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
     }
   }
 
-  Future<void> _changeRole(User user, String newRole) async {
+  Future<void> _changeRole(AppUser user, String newRole) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

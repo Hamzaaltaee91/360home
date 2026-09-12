@@ -17,7 +17,7 @@ class OfferDetailsScreen extends StatefulWidget {
 
 class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
   late Future<RealtorOffer> _offerFuture;
-  late Future<User> _realtorFuture;
+  late Future<AppUser> _realtorFuture;
 
   @override
   void initState() {
@@ -420,7 +420,7 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                         const SizedBox(height: 24),
                       ],
                       // Realtor Info
-                      FutureBuilder<User>(
+                      FutureBuilder<AppUser>(
                         future: _realtorFuture,
                         builder: (context, realtorSnapshot) {
                           if (!realtorSnapshot.hasData) {
