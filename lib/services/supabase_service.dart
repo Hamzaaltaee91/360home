@@ -501,6 +501,18 @@ class SupabaseService {
     });
   }
 
+  Future<RealtorOffer> getOffer(String offerId) {
+    return _guard(() async {
+      final response = await _client
+          .from('realtor_offers')
+          .select()
+          .eq('id', offerId)
+          .single();
+
+      return RealtorOffer.fromJson(response);
+    });
+  }
+
   Future<void> respondToOffer({
     required String offerId,
     required String response, // 'interested', 'not_interested'

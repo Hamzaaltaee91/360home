@@ -26,15 +26,9 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
   }
 
   Future<RealtorOffer> _fetchOffer() async {
-    final offer = await SupabaseService().client
-        .from('realtor_offers')
-        .select()
-        .eq('id', widget.offerId)
-        .single();
-
-    final realtorOffer = RealtorOffer.fromJson(offer);
-    _realtorFuture = SupabaseService().getUserById(realtorOffer.realtorId);
-    return realtorOffer;
+    final offer = await SupabaseService().getOffer(widget.offerId);
+    _realtorFuture = SupabaseService().getUserById(offer.realtorId);
+    return offer;
   }
 
   /// Opens a full-screen, zoomable gallery of the offer's photos starting at
