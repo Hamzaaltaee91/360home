@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../services/supabase_service.dart';
 import '../../services/notification_service.dart';
 import '../../models/models.dart';
+import '../../models/pagination.dart';
 
 class BuyerHomeScreen extends StatefulWidget {
   const BuyerHomeScreen({Key? key}) : super(key: key);
@@ -14,7 +15,7 @@ class BuyerHomeScreen extends StatefulWidget {
 }
 
 class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
-  late Future<List<PropertyRequest>> _requestsFuture;
+  late Future<PaginatedResult<PropertyRequest>> _requestsFuture;
   final NotificationService _notificationService = NotificationService();
   int _unreadCount = 0;
 
@@ -62,7 +63,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<PropertyRequest>>(
+      body: FutureBuilder<PaginatedResult<PropertyRequest>>(
         future: _requestsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.loading) {
@@ -76,7 +77,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
             );
           }
 
-          final requests = snapshot.data ?? [];
+          final requests = snapshot.data?.items ?? [];
 
           if (requests.isEmpty) {
             return RefreshIndicator(

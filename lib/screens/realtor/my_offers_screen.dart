@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../models/models.dart';
+import '../../models/pagination.dart';
 import '../../routes/app_routes.dart';
 import '../../services/supabase_service.dart';
 
@@ -15,7 +16,7 @@ class MyOffersScreen extends StatefulWidget {
 }
 
 class _MyOffersScreenState extends State<MyOffersScreen> {
-  late Future<List<RealtorOffer>> _offersFuture;
+  late Future<PaginatedResult<RealtorOffer>> _offersFuture;
 
   /// Selected status filter. `all` shows every offer.
   String _statusFilter = 'all';
@@ -74,7 +75,7 @@ class _MyOffersScreenState extends State<MyOffersScreen> {
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<RealtorOffer>>(
+            child: FutureBuilder<PaginatedResult<RealtorOffer>>(
               future: _offersFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -97,7 +98,7 @@ class _MyOffersScreenState extends State<MyOffersScreen> {
                   );
                 }
 
-                final offers = _filterOffers(snapshot.data ?? []);
+                final offers = _filterOffers(snapshot.data?.items ?? []);
 
                 if (offers.isEmpty) {
                   return RefreshIndicator(

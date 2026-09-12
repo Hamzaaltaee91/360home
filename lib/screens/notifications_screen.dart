@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/models.dart';
+import '../models/pagination.dart';
 import '../services/notification_service.dart';
 import '../utils/error_handler.dart';
 
@@ -17,7 +18,7 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   final NotificationService _service = NotificationService();
 
-  late Future<List<AppNotification>> _notificationsFuture;
+  late Future<PaginatedResult<AppNotification>> _notificationsFuture;
 
   @override
   void initState() {
@@ -73,7 +74,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<List<AppNotification>>(
+      body: FutureBuilder<PaginatedResult<AppNotification>>(
         future: _notificationsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -102,7 +103,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             );
           }
 
-          final notifications = snapshot.data ?? const <AppNotification>[];
+          final notifications = snapshot.data?.items ?? const <AppNotification>[];
           if (notifications.isEmpty) {
             return const Center(
               child: Column(
