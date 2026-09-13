@@ -81,11 +81,7 @@
         <legend>الميزانية</legend>
         <div class="form-grid">
           <div class="form-field">
-            <label for="min-price">أقل سعر</label>
-            <input type="number" id="min-price">
-          </div>
-          <div class="form-field">
-            <label for="max-price">أعلى سعر</label>
+            <label for="max-price">سقف الميزانية</label>
             <input type="number" id="max-price">
           </div>
         </div>
@@ -197,6 +193,7 @@
 
       const val = (id) => document.getElementById(id).value;
       const num = (id) => (val(id) === "" ? null : Number(val(id)));
+      const budget = num("max-price");
 
       // نحوّل مفاتيح الـselect إلى الأسماء العربية (كما كان السلوك السابق مع النص الحر).
       const gov = iraqLocations[val("city")];
@@ -213,8 +210,9 @@
           description: val("description") || null,
           city: gov ? gov.label : null,
           area_name: areaName,
-          min_price: num("min-price"),
-          max_price: num("max-price"),
+          min_price:
+            budget === null ? null : Math.round(budget * 0.7),
+          max_price: budget,
           bedrooms: num("bedrooms"),
           bathrooms: num("bathrooms"),
           furnished: document.getElementById("furnished").checked,
