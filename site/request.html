@@ -7,20 +7,46 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="container">
-    <a href="dashboard.html" class="btn">→ رجوع</a>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <a href="dashboard.html" class="btn btn-ghost">→ رجوع لطلباتي</a>
+
     <div id="request-detail"></div>
-    <h2>العروض</h2>
-    <div id="offers-list"></div>
-    <p id="empty-msg" hidden>لا توجد عروض بعد على هذا الطلب.</p>
-  </div>
+
+    <div class="page-head">
+      <div>
+        <h1>العروض</h1>
+        <p>العروض اللي وصلت على هذا الطلب.</p>
+      </div>
+    </div>
+
+    <div class="request-list" id="offers-list"></div>
+
+    <div class="empty-state" hidden id="empty-msg">
+      <h3>لا توجد عروض بعد</h3>
+      <p>لسه ما وصل عرض على هذا الطلب. راجعنا بعدين.</p>
+    </div>
+  </main>
 
   <script type="module">
-    import { requireSession } from "./js/auth.js";
+    import { requireSession, signOut } from "./js/auth.js";
     import { getRequest } from "./js/requests.js";
     import { listOffersForRequest } from "./js/offers.js";
 
     await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
 
     const requestId = new URLSearchParams(window.location.search).get("id");
     const request = await getRequest(requestId);
@@ -33,13 +59,23 @@
       const h1 = document.createElement("h1");
       h1.textContent = request.title;
 
-      const pCity = document.createElement("p");
-      pCity.textContent = `${request.city} — ${request.category}`;
+      const tags = document.createElement("ul");
+      tags.className = "request-tags";
+
+      const catTag = document.createElement("li");
+      catTag.className = "tag tag-active";
+      catTag.textContent = request.category;
+
+      const cityTag = document.createElement("li");
+      cityTag.className = "tag";
+      cityTag.textContent = request.city;
+
+      tags.append(catTag, cityTag);
 
       const pDesc = document.createElement("p");
       pDesc.textContent = request.description ?? "";
 
-      card.append(h1, pCity, pDesc);
+      card.append(h1, tags, pDesc);
       detail.appendChild(card);
     }
 
@@ -54,8 +90,8 @@
       a.style.textDecoration = "none";
       a.style.color = "inherit";
 
-      const card = document.createElement("div");
-      card.className = "card";
+      const card = document.createElement("article");
+      card.className = "card request-item";
 
       const h3 = document.createElement("h3");
       h3.textContent = o.property_title;
