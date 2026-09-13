@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الطلبات المتاحة — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="realtor-requests.html">الطلبات المتاحة</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <h1>الطلبات المتاحة</h1>
+        <p>تصفّح طلبات المشترين النشطة وقدّم عرضك.</p>
+      </div>
+    </div>
+
+    <div class="request-list" id="requests-list"></div>
+
+    <div class="empty-state" hidden id="empty-msg">
+      <h3>لا توجد طلبات نشطة حالياً</h3>
+      <p>ارجع لاحقاً — الطلبات الجديدة تظهر هنا فوراً.</p>
+    </div>
+  </main>
+
+  <!-- ===== الفوتر ===== -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="footer-links">
+        <li><a href="realtor-requests.html">الطلبات المتاحة</a></li>
+        <li><a href="contact.html">اتصل بنا</a></li>
+      </ul>
+      <span>© ٢٠٢٦ دبّرلي</span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { requireSession, signOut } from "./js/auth.js";
+    import { listActiveRequestsForRealtor } from "./js/requests.js";
+
+    await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    const requests = await listActiveRequestsForRealtor();
+    const list = document.getElementById("requests-list");
+    if (requests.length === 0) {
+      document.getElementById("empty-msg").hidden = false;
+    }
+    for (const r of requests) {
+      const card = document.createElement("article");
+      card.className = "card request-item";
+
+      const h3 = document.createElement("h3");
+      h3.textContent = r.title;
+
+      const tags = document.createElement("ul");
+      tags.className = "request-tags";
+
+      const catTag = document.createElement("li");
+      catTag.className = "tag tag-active";
+      catTag.textContent = r.category;
+
+      const cityTag = document.createElement("li");
+      cityTag.className = "tag";
+      cityTag.textContent = r.city;
+
+      const purposeTag = document.createElement("li");
+      purposeTag.className = "tag";
+      purposeTag.textContent = r.rent_duration ? "إيجار" : "شراء";
+
+      const budgetTag = document.createElement("li");
+      budgetTag.className = "tag";
+      budgetTag.textContent = r.max_price != null ? `${r.max_price}` : "—";
+
+      tags.append(catTag, cityTag, purposeTag, budgetTag);
+
+      const offerLink = document.createElement("a");
+      offerLink.href = `create-offer.html?request_id=${encodeURIComponent(r.id)}`;
+      offerLink.className = "btn btn-primary";
+      offerLink.textContent = "قدم عرض";
+
+      card.append(h3, tags, offerLink);
+      list.appendChild(card);
+    }
+  </script>
+</body>
+</html>
