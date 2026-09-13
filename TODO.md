@@ -811,3 +811,4 @@ EVERY task in this section touches ONLY the file(s) it names. None of them conce
 - [x] In site/request.html, add rendering for purpose, governorate, area, property_subtype, and rental_period (when not null) to the request detail card, using the same safe DOM-building pattern already used in that file. Touch only site/request.html — nothing under lib/, no other file.
 - [x]  أضف تعليق توضيحي بسيط في أعلى ملف README.md يقول "test comment"
 - [x] - [ ] **Add second top-of-file comment to README.md** — Add a second HTML comment above the existing `<!-- test comment -->` line at the top of README.md, containing the text "test 2". Touch only README.md — nothing under lib/, no other file.
+- [ ] **Add contact-us link to site footer** — Add a `<footer>` section to `site/dashboard.html` with a link to a contact page (mirror the footer pattern already used in `site/index.html`). Touch only site/dashboard.html — nothing under lib/, no other file.
