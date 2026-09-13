@@ -3,70 +3,235 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>دبّرلي</title>
+  <title>دبّرلي — خلّي العقار يوصلك</title>
+  <meta name="description" content="انشر مواصفات العقار اللي تدوره، ودع الوسطاء والملّاك الموثوقين يرسلون لك عروضهم مباشرة. بلا تصفح آلاف الإعلانات.">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="hero">
+
+  <!-- ===== شريط التنقّل ===== -->
+  <nav class="site-nav">
     <div class="container">
-      <h1>دبّرلي</h1>
-      <p class="hero-tagline">تبحث عن عقار؟ خلّي العقار يوصلك.</p>
-      <p class="hero-sub">
-        انشر مواصفات العقار اللي تدوره — النوع، الميزانية، والمنطقة — ودع
-        الوسطاء والملّاك الموثوقين يرسلون لك عروضهم مباشرة. بلا تصفح آلاف
-        الإعلانات، وبلا وقت ضائع.
-      </p>
-      <div class="hero-actions">
-        <a href="auth.html?mode=signup" class="btn btn-primary btn-lg">انشر طلبك الآن</a>
-        <a href="auth.html?mode=signin" class="btn btn-lg">عندي حساب، دخول</a>
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="#how">كيف تشتغل</a></li>
+        <li><a href="#why">ليش دبّرلي</a></li>
+        <li><a href="#faq">أسئلة شائعة</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="auth.html?mode=signin" class="btn btn-ghost">دخول</a>
+        <a href="auth.html?mode=signup" class="btn btn-primary">انشر طلبك</a>
       </div>
+    </div>
+  </nav>
+
+  <!-- ===== الهيرو ===== -->
+  <header class="hero">
+    <div class="container hero-grid">
+
+      <div class="hero-copy">
+        <span class="eyebrow">سوق العقار بالمقلوب</span>
+        <h1>تبحث عن عقار؟<br><span class="accent">خلّي العقار يوصلك.</span></h1>
+        <p class="hero-sub">
+          انشر مواصفات العقار اللي تدوره — النوع، الميزانية، والمنطقة — ودع الوسطاء
+          والملّاك الموثوقين يرسلون لك عروضهم مباشرة. بلا تصفح آلاف الإعلانات، وبلا وقت ضائع.
+        </p>
+        <div class="hero-actions">
+          <a href="auth.html?mode=signup" class="btn btn-primary btn-lg">انشر طلبك الآن</a>
+          <a href="auth.html?mode=signin" class="btn btn-lg">عندي حساب، دخول</a>
+        </div>
+        <ul class="hero-trust">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l7 4v6c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-4z"/><path d="M9 12l2 2 4-4"/></svg>
+            وسطاء وملّاك متحقّق منهم
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            نشر الطلب يأخذ دقيقة
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7"/><path d="M3 8h18v4H3z"/><path d="M12 20V8"/></svg>
+            النشر مجاني
+          </li>
+        </ul>
+      </div>
+
+      <!-- العنصر المميّز: طلب واحد، والعروض تجيك -->
+      <div class="hero-visual">
+        <article class="req-card">
+          <span class="req-eyebrow">طلبك</span>
+          <h3>شقة ٣ غرف للإيجار</h3>
+          <ul class="req-specs">
+            <li><span class="k">المدينة</span><span class="v">بغداد — الجادرية</span></li>
+            <li><span class="k">النوع</span><span class="v">سكني</span></li>
+            <li><span class="k">الميزانية</span><span class="v">حتى ٧٥٠٬٠٠٠ د.ع / شهر</span></li>
+          </ul>
+        </article>
+
+        <div class="offers">
+          <span class="offers-label"><span class="dot"></span> ٣ عروض وصلت</span>
+
+          <div class="offer">
+            <span class="offer-avatar">م</span>
+            <div class="offer-body">
+              <span class="offer-name">
+                مكتب المنصور
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5l2.4 1.7 2.9-.2 1 2.8 2.4 1.7-1 2.8 1 2.8-2.4 1.7-1 2.8-2.9-.2L12 22.5l-2.4-1.7-2.9.2-1-2.8L3.3 16.5l1-2.8-1-2.8 2.4-1.7 1-2.8 2.9.2L12 1.5zm-1 13.2l-2.5-2.5-1.4 1.4L11 17.4l6-6-1.4-1.4-4.6 4.7z"/></svg>
+              </span>
+              <span class="offer-meta">شقة مفروشة — الجادرية</span>
+            </div>
+            <span class="offer-price">٧٠٠٬٠٠٠</span>
+          </div>
+
+          <div class="offer">
+            <span class="offer-avatar">ع</span>
+            <div class="offer-body">
+              <span class="offer-name">
+                عقارات الرافدين
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5l2.4 1.7 2.9-.2 1 2.8 2.4 1.7-1 2.8 1 2.8-2.4 1.7-1 2.8-2.9-.2L12 22.5l-2.4-1.7-2.9.2-1-2.8L3.3 16.5l1-2.8-1-2.8 2.4-1.7 1-2.8 2.9.2L12 1.5zm-1 13.2l-2.5-2.5-1.4 1.4L11 17.4l6-6-1.4-1.4-4.6 4.7z"/></svg>
+              </span>
+              <span class="offer-meta">٣ غرف + مصعد — قرب الجامعة</span>
+            </div>
+            <span class="offer-price">٦٥٠٬٠٠٠</span>
+          </div>
+
+          <div class="offer">
+            <span class="offer-avatar">أ</span>
+            <div class="offer-body">
+              <span class="offer-name">
+                أبو سيف — مالك
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5l2.4 1.7 2.9-.2 1 2.8 2.4 1.7-1 2.8 1 2.8-2.4 1.7-1 2.8-2.9-.2L12 22.5l-2.4-1.7-2.9.2-1-2.8L3.3 16.5l1-2.8-1-2.8 2.4-1.7 1-2.8 2.9.2L12 1.5zm-1 13.2l-2.5-2.5-1.4 1.4L11 17.4l6-6-1.4-1.4-4.6 4.7z"/></svg>
+              </span>
+              <span class="offer-meta">طابق ثاني — بلا وسيط</span>
+            </div>
+            <span class="offer-price">٧٢٥٬٠٠٠</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   </header>
 
-  <main class="container">
-    <section>
-      <h2>كيف تشتغل؟</h2>
-      <div class="steps">
-        <div class="card step-card">
-          <div class="step-number">١</div>
+  <!-- ===== كيف تشتغل ===== -->
+  <section class="section section-muted" id="how">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">ثلاث خطوات</span>
+        <h2>كيف تشتغل؟</h2>
+        <p>من نشر الطلب إلى اختيار العرض المناسب — كل شي يمرّ بثلاث خطوات واضحة.</p>
+      </div>
+
+      <ol class="steps">
+        <li class="step">
+          <span class="step-number">١</span>
           <h3>انشر طلبك</h3>
           <p>حدد نوع العقار (سكني، تجاري، أرض)، ميزانيتك، والمنطقة اللي تناسبك.</p>
-        </div>
-        <div class="card step-card">
-          <div class="step-number">٢</div>
+        </li>
+        <li class="step">
+          <span class="step-number">٢</span>
           <h3>تستلم عروضاً حقيقية</h3>
           <p>وسطاء وملّاك تحقّقنا من هويتهم يرسلون لك عروضاً تطابق طلبك مباشرة.</p>
-        </div>
-        <div class="card step-card">
-          <div class="step-number">٣</div>
+        </li>
+        <li class="step">
+          <span class="step-number">٣</span>
           <h3>اختر الأنسب لك</h3>
           <p>قارن العروض وتواصل مع من يناسبك، بالوقت والطريقة اللي تفضّلها.</p>
-        </div>
-      </div>
-    </section>
+        </li>
+      </ol>
+    </div>
+  </section>
 
-    <section>
-      <h2>ليش دبّرلي؟</h2>
-      <div class="steps">
-        <div class="card">
+  <!-- ===== ليش دبّرلي ===== -->
+  <section class="section" id="why">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">الفرق</span>
+        <h2>ليش دبّرلي؟</h2>
+      </div>
+
+      <div class="grid-3">
+        <article class="card feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+          </div>
           <h3>توفير للوقت</h3>
           <p>ما تحتاج تبحث؛ العروض تجيك أنت، مطابقة لمواصفاتك بالضبط.</p>
-        </div>
-        <div class="card">
+        </article>
+
+        <article class="card feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l7 4v6c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-4z"/><path d="M9 12l2 2 4-4"/></svg>
+          </div>
           <h3>وسطاء موثوقون</h3>
           <p>كل وسيط يمر بعملية تحقق قبل ما يقدر يرسل لك أي عرض.</p>
-        </div>
-        <div class="card">
+        </article>
+
+        <article class="card feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.75"/></svg>
+          </div>
           <h3>شفافية كاملة</h3>
           <p>تشوف كل التفاصيل والسعر بوضوح قبل ما تقرر.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== أسئلة شائعة ===== -->
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">قبل ما تبدأ</span>
+        <h2>أسئلة شائعة</h2>
+      </div>
+
+      <div class="faq-list">
+        <div class="faq-item">
+          <h3>النشر بكم؟</h3>
+          <p>نشر الطلب مجاني. تنشر مواصفاتك وتستلم العروض بلا أي رسوم.</p>
+        </div>
+        <div class="faq-item">
+          <h3>رقمي يظهر للوسطاء؟</h3>
+          <p>لا. الوسيط يشوف مواصفات طلبك فقط، وأنت تقرر مع منو تتواصل.</p>
+        </div>
+        <div class="faq-item">
+          <h3>شنو أنواع العقارات؟</h3>
+          <p>سكني، تجاري، وأراضي — بيع أو إيجار، وبالمدينة والمنطقة اللي تحددها.</p>
+        </div>
+        <div class="faq-item">
+          <h3>منو يشوف طلبي؟</h3>
+          <p>الوسطاء والملّاك اللي تحقّقنا من هويتهم فقط. طلبك ما ينشر للعامة.</p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="cta-footer">
-      <h2>جاهز تبدأ؟</h2>
-      <a href="auth.html?mode=signup" class="btn btn-primary btn-lg">انشر طلبك الآن مجاناً</a>
-    </section>
-  </main>
+  <!-- ===== الدعوة الأخيرة ===== -->
+  <section class="section">
+    <div class="container">
+      <div class="cta-band">
+        <div>
+          <h2>جاهز تبدأ؟</h2>
+          <p>انشر طلبك بدقيقة، وخلّي العروض تجيك.</p>
+        </div>
+        <a href="auth.html?mode=signup" class="btn btn-primary btn-lg">انشر طلبك الآن مجاناً</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== الفوتر ===== -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="footer-links">
+        <li><a href="#how">كيف تشتغل</a></li>
+        <li><a href="#why">ليش دبّرلي</a></li>
+        <li><a href="#faq">أسئلة شائعة</a></li>
+        <li><a href="auth.html?mode=signin">دخول</a></li>
+      </ul>
+      <span>© ٢٠٢٦ دبّرلي</span>
+    </div>
+  </footer>
+
 </body>
 </html>

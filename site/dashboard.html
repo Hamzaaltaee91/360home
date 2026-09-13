@@ -7,15 +7,35 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="container">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h1>طلباتي</h1>
-      <button class="btn" id="signout-btn">تسجيل الخروج</button>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
+      </div>
     </div>
-    <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
-    <div id="requests-list" style="margin-top:1.5rem;"></div>
-    <p id="empty-msg" hidden>لا توجد طلبات بعد.</p>
-  </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <h1>طلباتي</h1>
+        <p>كل طلب نشرته، والعروض اللي وصلته.</p>
+      </div>
+    </div>
+
+    <div class="request-list" id="requests-list"></div>
+
+    <div class="empty-state" hidden id="empty-msg">
+      <h3>لا توجد طلبات بعد</h3>
+      <p>انشر طلبك الأول وخلّي العروض تجيك.</p>
+      <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
+    </div>
+  </main>
 
   <script type="module">
     import { requireSession, signOut } from "./js/auth.js";
@@ -35,16 +55,20 @@
       a.style.textDecoration = "none";
       a.style.color = "inherit";
 
-      const card = document.createElement("div");
-      card.className = "card";
+      const card = document.createElement("article");
+      card.className = "card request-item";
 
       const h3 = document.createElement("h3");
       h3.textContent = r.title;
 
-      const p = document.createElement("p");
-      p.textContent = `${r.city} — ${r.category}`;
+      const tags = document.createElement("ul");
+      tags.className = "request-tags";
+      tags.innerHTML = `
+        <li class="tag tag-active">${r.category}</li>
+        <li class="tag">${r.city}</li>
+      `;
 
-      card.append(h3, p);
+      card.append(h3, tags);
       a.appendChild(card);
       list.appendChild(a);
     }

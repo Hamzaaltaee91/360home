@@ -7,10 +7,30 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
+      </div>
+    </div>
+  </nav>
+
   <div class="container">
-    <h1>طلب جديد</h1>
+    <div class="page-head">
+      <div>
+        <h1>طلب جديد</h1>
+        <p>حدد مواصفاتك وخلّي العروض تجيك.</p>
+      </div>
+    </div>
+
     <form id="request-form" class="card">
-      <div class="form-field">
+      <div class="form-grid">
+        <div class="form-field">
         <label for="category">الفئة</label>
         <select id="category" required>
           <option value="residential">سكني</option>
@@ -22,7 +42,7 @@
         <label for="title">عنوان الطلب</label>
         <input type="text" id="title" required>
       </div>
-      <div class="form-field">
+      <div class="form-field is-full">
         <label for="description">الوصف</label>
         <textarea id="description"></textarea>
       </div>
@@ -50,19 +70,21 @@
         <label for="bathrooms">عدد الحمامات</label>
         <input type="number" id="bathrooms">
       </div>
-      <div class="form-field">
-        <label><input type="checkbox" id="furnished"> مفروش</label>
+        <div class="form-field">
+          <label><input type="checkbox" id="furnished"> مفروش</label>
+        </div>
       </div>
       <p class="error-text" id="error" hidden></p>
-      <button type="submit" class="btn btn-primary">إرسال الطلب</button>
+      <button type="submit" class="btn btn-primary btn-lg">انشر الطلب</button>
     </form>
   </div>
 
   <script type="module">
-    import { requireSession } from "./js/auth.js";
+    import { requireSession, signOut } from "./js/auth.js";
     import { createRequest } from "./js/requests.js";
 
     await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
 
     document.getElementById("request-form").addEventListener("submit", async (e) => {
       e.preventDefault();

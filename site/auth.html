@@ -6,12 +6,11 @@
   <title>تسجيل الدخول — دبّرلي</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-  <div class="container">
-    <a href="index.html" class="auth-back">→ رجوع للرئيسية</a>
+<body class="auth-page">
+  <div class="auth-card">
+    <a href="index.html" class="auth-back">← رجوع للرئيسية</a>
 
-    <div class="card auth-card">
-      <h2 class="auth-heading"><span id="form-title">تسجيل الدخول</span></h2>
+    <h2 class="auth-heading"><span id="form-title"></span></h2>
 
       <button type="button" class="btn btn-google" id="google-btn">
         <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
@@ -39,11 +38,10 @@
           <input type="password" id="password" required minlength="6">
         </div>
         <p class="error-text" id="error" hidden></p>
-        <button type="submit" class="btn btn-primary" id="submit-btn">دخول</button>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="submit-btn">دخول</button>
       </form>
 
       <p class="auth-toggle"><a href="#" id="toggle-mode">ليس لديك حساب؟ أنشئ حسابًا جديدًا</a></p>
-    </div>
   </div>
 
   <script type="module">
