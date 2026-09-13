@@ -401,3 +401,9 @@ SANITY FAILED
 ```
 تجاوز الحد: 12 ملف (الحد 5)
 ```
+
+## BLOCKED: Create site/js/numerals.js exporting one function toWesternDigits(str) that maps Arabic-Indic digits ٠-٩ to Western digits 0-9 and leaves every other character unchanged. Touch only this one new file — nothing under lib/, nothing else under site/.
+التاريخ: 2026-09-13 09:25:53
+آخر سبب فشل:
+```
+```
