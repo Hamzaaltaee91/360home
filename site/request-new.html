@@ -118,11 +118,23 @@
         <div class="form-grid">
           <div class="form-field">
             <label for="bedrooms">عدد غرف النوم</label>
-            <input type="text" inputmode="numeric" id="bedrooms">
+            <select id="bedrooms">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
           </div>
           <div class="form-field">
             <label for="bathrooms">عدد الحمامات</label>
-            <input type="text" inputmode="numeric" id="bathrooms">
+            <select id="bathrooms">
+              <option value="1" selected>1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
           </div>
           <div class="form-field">
             <label><input type="checkbox" id="furnished"> مفروش</label>
@@ -170,8 +182,6 @@
 
     const numericInputs = [
       { id: "max-price", digitsOnly: true },
-      { id: "bedrooms", digitsOnly: false },
-      { id: "bathrooms", digitsOnly: false },
     ];
 
     numericInputs.forEach(({ id, digitsOnly }) => {
