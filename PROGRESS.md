@@ -1,5 +1,24 @@
 # Progress Log
 
+## Cycle: property_subtype Column
+
+### Accomplished
+- Added a new additive migration
+  (`supabase/migrations/20260911000004_property_subtype.sql`) adding the
+  nullable `property_subtype` TEXT column to `public.property_requests`,
+  with the CHECK constraint required by the task
+  (`category <> 'residential' OR property_subtype IN
+  ('apartment', 'house', 'villa', 'duplex')`).
+- No RLS policy, SQL function, role, or previously applied migration was
+  touched.
+- Marked the task as complete in `TODO.md`.
+
+### Blocked / Failing
+- None.
+
+### Next in Queue
+- Next `[ ]` task in `TODO.md` (section 13).
+
 ## Cycle: site/js/offers.js
 
 ### Accomplished
