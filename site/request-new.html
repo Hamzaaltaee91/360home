@@ -106,8 +106,8 @@
         <legend>الميزانية</legend>
         <div class="form-grid">
           <div class="form-field">
-            <label for="max-price">سقف الميزانية</label>
-            <input type="text" inputmode="decimal" id="max-price">
+            <label for="max-price">سقف الميزانية (دينار عراقي — الرقم الكامل)</label>
+            <input type="text" inputmode="numeric" id="max-price" placeholder="500000">
             <span class="error-text" data-error-for="max-price" hidden></span>
           </div>
         </div>
@@ -154,18 +154,29 @@
     document.getElementById("signout-btn").addEventListener("click", signOut);
 
     // تحويل الأرقام العربية-الهندية (٠-٩) إلى غربية (0-9) لحظياً أثناء الكتابة.
-    ["max-price", "bedrooms", "bathrooms"].forEach((id) => {
+    // حقل الميزانية يقبل الأرقام الغربية فقط، بلا فواصل آلاف ولا رموز ولا حروف.
+    function sanitizeNumericInput(input, digitsOnly) {
+      const converted = toWesternDigits(input.value);
+      const sanitized = digitsOnly ? converted.replace(/\D/g, "") : converted;
+      if (sanitized === input.value) {
+        return;
+      }
+      const caret = input.selectionStart;
+      input.value = sanitized;
+      if (caret !== null) {
+        input.setSelectionRange(caret, Math.min(caret, sanitized.length));
+      }
+    }
+
+    const numericInputs = [
+      { id: "max-price", digitsOnly: true },
+      { id: "bedrooms", digitsOnly: false },
+      { id: "bathrooms", digitsOnly: false },
+    ];
+
+    numericInputs.forEach(({ id, digitsOnly }) => {
       const input = document.getElementById(id);
-      input.addEventListener("input", () => {
-        const converted = toWesternDigits(input.value);
-        if (converted !== input.value) {
-          const caret = input.selectionStart;
-          input.value = converted;
-          if (caret !== null) {
-            input.setSelectionRange(caret, caret);
-          }
-        }
-      });
+      input.addEventListener("input", () => sanitizeNumericInput(input, digitsOnly));
     });
 
     const citySelect = document.getElementById("city");
