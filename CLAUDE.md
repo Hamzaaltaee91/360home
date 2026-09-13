@@ -636,3 +636,14 @@ Do NOT send for: routine progress, minor pilot activity, anything already visibl
 
 ### Key files:
 - ~/pilot/README.md, ~/pilot/aider.log, TODO.md at repo root
+
+### Raw task pre-formatting (raw_inbox → inbox.txt)
+
+As part of each `/loop` check, also inspect `~/pilot/state/raw_inbox`. Telegram's `task:` command writes raw, unscoped requests there instead of straight into the queue. For each line found in it:
+
+1. Read the repo to determine the single file the task should touch.
+2. Rewrite the line as one single line, following the exact style already used in TODO.md: a task description ending with "Touch only <file> — nothing under lib/, no other file."
+3. Append that formatted line to `~/pilot/state/inbox.txt` — this is what `auto_pilot.sh` reads and turns into a TODO.md entry.
+4. Clear `raw_inbox` after processing that line.
+5. Send a Telegram confirmation via `~/pilot/scripts/notify.sh` with the final formatted task text.
+6. If a request is too vague to safely scope to one file, do not guess. Send a Telegram message via `~/pilot/scripts/notify.sh` asking for clarification instead, and leave it out of `inbox.txt`.
