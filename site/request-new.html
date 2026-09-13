@@ -41,6 +41,14 @@
             </select>
           </div>
           <div class="form-field">
+            <label for="purpose">الغرض</label>
+            <select id="purpose" required>
+              <option value="" disabled selected>— اختر الغرض —</option>
+              <option value="rent">إيجار</option>
+              <option value="buy">شراء</option>
+            </select>
+          </div>
+          <div class="form-field">
             <label for="title">عنوان الطلب</label>
             <input type="text" id="title" required>
           </div>
@@ -117,6 +125,13 @@
       e.preventDefault();
       const errorEl = document.getElementById("error");
       errorEl.hidden = true;
+
+      if (!document.getElementById("purpose").value) {
+        document.getElementById("error").textContent =
+          "الرجاء اختيار الغرض (إيجار أو شراء).";
+        document.getElementById("error").hidden = false;
+        return;
+      }
 
       const val = (id) => document.getElementById(id).value;
       const num = (id) => (val(id) === "" ? null : Number(val(id)));
