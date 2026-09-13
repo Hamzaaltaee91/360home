@@ -101,7 +101,7 @@
         <div class="form-grid">
           <div class="form-field">
             <label for="max-price">سقف الميزانية</label>
-            <input type="number" id="max-price">
+            <input type="text" inputmode="decimal" id="max-price">
           </div>
         </div>
       </fieldset>
@@ -111,11 +111,11 @@
         <div class="form-grid">
           <div class="form-field">
             <label for="bedrooms">عدد غرف النوم</label>
-            <input type="number" id="bedrooms">
+            <input type="text" inputmode="numeric" id="bedrooms">
           </div>
           <div class="form-field">
             <label for="bathrooms">عدد الحمامات</label>
-            <input type="number" id="bathrooms">
+            <input type="text" inputmode="numeric" id="bathrooms">
           </div>
           <div class="form-field">
             <label><input type="checkbox" id="furnished"> مفروش</label>
@@ -141,9 +141,25 @@
     import { requireSession, signOut } from "./js/auth.js";
     import { createRequest } from "./js/requests.js";
     import iraqLocations from "./js/iraq-locations.js";
+    import { toWesternDigits } from "./js/numerals.js";
 
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    // تحويل الأرقام العربية-الهندية (٠-٩) إلى غربية (0-9) لحظياً أثناء الكتابة.
+    ["max-price", "bedrooms", "bathrooms"].forEach((id) => {
+      const input = document.getElementById(id);
+      input.addEventListener("input", () => {
+        const converted = toWesternDigits(input.value);
+        if (converted !== input.value) {
+          const caret = input.selectionStart;
+          input.value = converted;
+          if (caret !== null) {
+            input.setSelectionRange(caret, caret);
+          }
+        }
+      });
+    });
 
     const citySelect = document.getElementById("city");
     const areaSelect = document.getElementById("area-name");
