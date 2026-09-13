@@ -70,7 +70,30 @@
       cityTag.className = "tag";
       cityTag.textContent = request.city;
 
-      tags.append(catTag, cityTag);
+      const purposeTag = document.createElement("li");
+      purposeTag.className = "tag";
+      purposeTag.textContent = request.purpose;
+
+      const govTag = document.createElement("li");
+      govTag.className = "tag";
+      govTag.textContent = request.governorate;
+
+      const areaTag = document.createElement("li");
+      areaTag.className = "tag";
+      areaTag.textContent = request.area;
+
+      const subtypeTag = document.createElement("li");
+      subtypeTag.className = "tag";
+      subtypeTag.textContent = request.property_subtype;
+
+      tags.append(catTag, cityTag, purposeTag, govTag, areaTag, subtypeTag);
+
+      if (request.rental_period != null) {
+        const rentalTag = document.createElement("li");
+        rentalTag.className = "tag";
+        rentalTag.textContent = request.rental_period;
+        tags.appendChild(rentalTag);
+      }
 
       const pDesc = document.createElement("p");
       pDesc.textContent = request.description ?? "";
