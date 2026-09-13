@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تقديم عرض — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="my-offers.html">عروضي</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <h1>تقديم عرض</h1>
+        <p>قدّم عرضك على طلب العقار.</p>
+      </div>
+    </div>
+
+    <p class="error-text" id="page-error" hidden></p>
+
+    <form id="offer-form" class="card">
+      <fieldset>
+        <legend>تفاصيل العقار</legend>
+        <div class="form-grid">
+          <div class="form-field is-full">
+            <label for="property-title">عنوان العقار</label>
+            <input type="text" id="property-title" required>
+            <span class="error-text" data-error-for="property-title" hidden></span>
+          </div>
+          <div class="form-field is-full">
+            <label for="property-description">وصف العقار</label>
+            <textarea id="property-description"></textarea>
+          </div>
+          <div class="form-field is-full">
+            <label for="property-address">عنوان الموقع</label>
+            <input type="text" id="property-address" required>
+            <span class="error-text" data-error-for="property-address" hidden></span>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>السعر ونوع العرض</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="offered-price">السعر المعروض (دينار عراقي — الرقم الكامل)</label>
+            <input type="text" inputmode="numeric" id="offered-price" required>
+            <span class="error-text" data-error-for="offered-price" hidden></span>
+          </div>
+          <div class="form-field">
+            <label for="lease-type">نوع العرض</label>
+            <select id="lease-type">
+              <option value="rent" selected>إيجار</option>
+              <option value="sale">بيع</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>المواصفات</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="area-sqft">مساحة العقار (قدم مربع)</label>
+            <input type="text" inputmode="numeric" id="area-sqft">
+          </div>
+          <div class="form-field">
+            <label for="bedrooms">عدد الغرف</label>
+            <input type="text" inputmode="numeric" id="bedrooms">
+          </div>
+          <div class="form-field">
+            <label for="bathrooms">عدد الحمامات</label>
+            <input type="text" inputmode="numeric" id="bathrooms">
+          </div>
+          <div class="form-field">
+            <label><input type="checkbox" id="furnished"> مفروش</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>تفاصيل إضافية</legend>
+        <div class="form-grid">
+          <div class="form-field is-full">
+            <label for="message-to-buyer">رسالة للمشتري</label>
+            <textarea id="message-to-buyer"></textarea>
+          </div>
+        </div>
+      </fieldset>
+
+      <p class="error-text" id="form-error" hidden></p>
+      <button type="submit" class="btn btn-primary btn-lg">أرسل العرض</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { requireSession, signOut } from "./js/auth.js";
+    import { createOffer } from "./js/offers.js";
+    import { toWesternDigits } from "./js/numerals.js";
+
+    const pageErrorEl = document.getElementById("page-error");
+    const offerForm = document.getElementById("offer-form");
+
+    const requestId = new URLSearchParams(window.location.search).get("request_id");
+
+    if (!requestId) {
+      pageErrorEl.textContent = "تعذّر تحميل النموذج: رقم الطلب (request_id) مفقود من الرابط.";
+      pageErrorEl.hidden = false;
+      offerForm.hidden = true;
+    } else {
+      await requireSession();
+      document.getElementById("signout-btn").addEventListener("click", signOut);
+
+      // تحويل الأرقام العربية-الهندية (٠-٩) إلى غربية (0-9) لحظياً أثناء الكتابة،
+      // بنفس نمط site/request-new.html (أرقام غربية فقط بلا فواصل آلاف أو رموز).
+      function sanitizeNumericInput(input, digitsOnly) {
+        const converted = toWesternDigits(input.value);
+        const sanitized = digitsOnly ? converted.replace(/\D/g, "") : converted;
+        if (sanitized === input.value) {
+          return;
+        }
+        const caret = input.selectionStart;
+        input.value = sanitized;
+        if (caret !== null) {
+          input.setSelectionRange(caret, Math.min(caret, sanitized.length));
+        }
+      }
+
+      const numericInputs = [
+        { id: "offered-price", digitsOnly: true },
+        { id: "area-sqft", digitsOnly: true },
+        { id: "bedrooms", digitsOnly: true },
+        { id: "bathrooms", digitsOnly: true },
+      ];
+
+      numericInputs.forEach(({ id, digitsOnly }) => {
+        const input = document.getElementById(id);
+        input.addEventListener("input", () => sanitizeNumericInput(input, digitsOnly));
+      });
+
+      const formErrorEl = document.getElementById("form-error");
+
+      function clearFieldErrors() {
+        formErrorEl.hidden = true;
+        formErrorEl.textContent = "";
+        document.querySelectorAll("[data-error-for]").forEach((el) => {
+          el.hidden = true;
+          el.textContent = "";
+        });
+      }
+
+      function showFieldError(fieldId, message) {
+        const el = document.querySelector(`[data-error-for="${fieldId}"]`);
+        if (el) {
+          el.textContent = message;
+          el.hidden = false;
+        }
+      }
+
+      offerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        clearFieldErrors();
+
+        let hasError = false;
+
+        if (!document.getElementById("property-title").value.trim()) {
+          showFieldError("property-title", "الرجاء إدخال عنوان العقار.");
+          hasError = true;
+        }
+
+        if (!document.getElementById("property-address").value.trim()) {
+          showFieldError("property-address", "الرجاء إدخال عنوان الموقع.");
+          hasError = true;
+        }
+
+        if (!document.getElementById("offered-price").value.trim()) {
+          showFieldError("offered-price", "الرجاء إدخال السعر المعروض.");
+          hasError = true;
+        }
+
+        if (hasError) {
+          return;
+        }
+
+        const val = (id) => document.getElementById(id).value;
+        const numOrNull = (id) => (val(id) === "" ? null : Number(val(id)));
+
+        try {
+          await createOffer({
+            request_id: requestId,
+            property_title: val("property-title").trim(),
+            property_description: val("property-description") || null,
+            property_address: val("property-address").trim(),
+            offered_price: Number(val("offered-price")),
+            lease_type: val("lease-type"),
+            area_sqft: numOrNull("area-sqft"),
+            bedrooms: numOrNull("bedrooms"),
+            bathrooms: numOrNull("bathrooms"),
+            furnished: document.getElementById("furnished").checked,
+            message_to_buyer: val("message-to-buyer") || null,
+          });
+          window.location.href = "my-offers.html";
+        } catch (err) {
+          formErrorEl.textContent = err.message;
+          formErrorEl.hidden = false;
+        }
+      });
+    }
+  </script>
+</body>
+</html>
