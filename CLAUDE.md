@@ -647,3 +647,17 @@ As part of each `/loop` check, also inspect `~/pilot/state/raw_inbox`. Telegram'
 4. Clear `raw_inbox` after processing that line.
 5. Send a Telegram confirmation via `~/pilot/scripts/notify.sh` with the final formatted task text.
 6. If a request is too vague to safely scope to one file, do not guess. Send a Telegram message via `~/pilot/scripts/notify.sh` asking for clarification instead, and leave it out of `inbox.txt`.
+
+### Continuous live review during pilot runs
+
+While `auto_pilot.sh` has an active task (not idle), watch `~/pilot/logs/pilot.log` live for: task start, `chore: mark task done`, `chore: block task`, gate-fail entries, and the CI conclusion line (`✓`/`X ... in Ns (ID ...)`).
+
+After each task lands (gates passed, CI green), review the actual commit's diff (`git show <sha>`), not just the fact that its gates passed — the gates catch mechanical failures (size, sanity, security keywords), not semantic ones (wrong scope, wrong file touched, broken UX, hallucinated logic).
+
+If a landed commit is wrong despite green gates/CI:
+1. Pause the pilot via `touch ~/pilot/state/paused` — the same flag `telegram_bot.sh`'s `pause` command sets. Never `tmux kill-session` or any other hard stop.
+2. Fix forward with a new commit (edit the file directly, or edit the relevant TODO.md line to redirect future attempts). Never `git reset --hard` or force-push to undo a landed commit — hard rollback is the pilot's own mechanism for gate failures, not something to invoke on a commit that already passed gates and CI.
+3. Resume by removing the pause flag (`rm ~/pilot/state/paused`).
+4. Send a Telegram summary of what was wrong, what was changed, and that the pilot has resumed.
+
+The hard boundaries above stay in force even under this duty: never touch RLS, roles, secrets, or migrations already live on prod DB. If one of those is what's wrong, pause and ask the user instead of fixing it yourself.
