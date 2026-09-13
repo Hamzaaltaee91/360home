@@ -394,3 +394,10 @@ SANITY FAILED
 ```
 تجاوز الحد: 12 ملف (الحد 5)
 ```
+
+## BLOCKED: Update the property_requests schema section in CLAUDE.md to document the five new columns added by the migrations above, matching their exact names, types, and constraints. Touch only CLAUDE.md — nothing under lib/, nothing under site/, no SQL file.
+التاريخ: 2026-09-13 08:47:52
+آخر سبب فشل:
+```
+تجاوز الحد: 12 ملف (الحد 5)
+```
