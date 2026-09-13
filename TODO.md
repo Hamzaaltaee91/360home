@@ -809,4 +809,4 @@ EVERY task in this section touches ONLY the file(s) it names. None of them conce
 - [x] In site/request-new.html, replace the single generic #error banner with a separate inline error message element under each field that can fail validation. Touch only site/request-new.html — nothing under lib/, no other file.
 - [x] In site/dashboard.html, add tags for المحافظة, الغرض, and سقف الميزانية to the request card rendering loop alongside the existing category/city tags, using the same createElement/textContent pattern already used in that file — do not introduce innerHTML. Touch only site/dashboard.html — nothing under lib/, no other file.
 - [x] In site/request.html, add rendering for purpose, governorate, area, property_subtype, and rental_period (when not null) to the request detail card, using the same safe DOM-building pattern already used in that file. Touch only site/request.html — nothing under lib/, no other file.
-- [ ]  أضف تعليق توضيحي بسيط في أعلى ملف README.md يقول "test comment"
+- [x]  أضف تعليق توضيحي بسيط في أعلى ملف README.md يقول "test comment"
