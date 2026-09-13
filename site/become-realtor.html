@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>توثيق الوسيط — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <h1>توثيق الوسيط</h1>
+        <p>قدّم طلبك لتصبح وسيطاً معتمداً على دبّرلي.</p>
+      </div>
+    </div>
+
+    <div class="card" id="status-view" hidden>
+      <fieldset>
+        <legend>حالة الطلب</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>حالة الطلب</label>
+            <p id="status-value"></p>
+          </div>
+          <div class="form-field is-full" id="rejection-field" hidden>
+            <label>سبب الرفض</label>
+            <p id="rejection-reason"></p>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+
+    <form id="realtor-form" class="card">
+      <fieldset>
+        <legend>بيانات التوثيق</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="company-name">اسم الشركة</label>
+            <input type="text" id="company-name" required>
+            <span class="error-text" data-error-for="company-name" hidden></span>
+          </div>
+          <div class="form-field">
+            <label for="license-number">رقم الرخصة</label>
+            <input type="text" id="license-number" required>
+            <span class="error-text" data-error-for="license-number" hidden></span>
+          </div>
+          <div class="form-field">
+            <label for="license-expiry">تاريخ انتهاء الرخصة</label>
+            <input type="date" id="license-expiry" required>
+            <span class="error-text" data-error-for="license-expiry" hidden></span>
+          </div>
+          <div class="form-field is-full">
+            <label for="document-url">رابط مستند الرخصة</label>
+            <input type="url" id="document-url" required>
+            <span>حالياً الصق رابط مستند الرخصة (الرفع المباشر سيتوفر لاحقاً).</span>
+            <span class="error-text" data-error-for="document-url" hidden></span>
+          </div>
+        </div>
+      </fieldset>
+      <p class="error-text" id="form-error" hidden></p>
+      <button type="submit" class="btn btn-primary btn-lg">إرسال الطلب</button>
+    </form>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="footer-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+        <li><a href="request-new.html">طلب جديد</a></li>
+        <li><a href="contact.html">اتصل بنا</a></li>
+      </ul>
+      <span>© ٢٠٢٦ دبّرلي</span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { requireSession, signOut } from "./js/auth.js";
+    import { getMyVerificationStatus, submitRealtorApplication } from "./js/verification.js";
+
+    await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    const form = document.getElementById("realtor-form");
+    const statusView = document.getElementById("status-view");
+    const statusValue = document.getElementById("status-value");
+    const rejectionField = document.getElementById("rejection-field");
+    const rejectionReason = document.getElementById("rejection-reason");
+    const formErrorEl = document.getElementById("form-error");
+
+    function statusLabel(status) {
+      switch (status) {
+        case "pending":
+          return "قيد المراجعة";
+        case "approved":
+          return "مقبول";
+        case "rejected":
+          return "مرفوض";
+        default:
+          return status || "—";
+      }
+    }
+
+    function renderStatus(row) {
+      statusValue.textContent = statusLabel(row.status);
+      if (row.status === "rejected" && row.rejection_reason) {
+        rejectionReason.textContent = row.rejection_reason;
+        rejectionField.hidden = false;
+      } else {
+        rejectionReason.textContent = "";
+        rejectionField.hidden = true;
+      }
+      form.hidden = true;
+      statusView.hidden = false;
+    }
+
+    async function refreshStatus() {
+      const row = await getMyVerificationStatus();
+      if (row) {
+        renderStatus(row);
+      } else {
+        form.hidden = false;
+        statusView.hidden = true;
+      }
+    }
+
+    function clearFieldErrors() {
+      formErrorEl.hidden = true;
+      formErrorEl.textContent = "";
+      document.querySelectorAll("[data-error-for]").forEach((el) => {
+        el.hidden = true;
+        el.textContent = "";
+      });
+    }
+
+    function showFieldError(fieldId, message) {
+      const el = document.querySelector(`[data-error-for="${fieldId}"]`);
+      if (el) {
+        el.textContent = message;
+        el.hidden = false;
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearFieldErrors();
+
+      const val = (id) => document.getElementById(id).value.trim();
+
+      let hasError = false;
+
+      if (!val("company-name")) {
+        showFieldError("company-name", "الرجاء إدخال اسم الشركة.");
+        hasError = true;
+      }
+      if (!val("license-number")) {
+        showFieldError("license-number", "الرجاء إدخال رقم الرخصة.");
+        hasError = true;
+      }
+      if (!val("license-expiry")) {
+        showFieldError("license-expiry", "الرجاء اختيار تاريخ انتهاء الرخصة.");
+        hasError = true;
+      }
+      if (!val("document-url")) {
+        showFieldError("document-url", "الرجاء إدخال رابط مستند الرخصة.");
+        hasError = true;
+      }
+
+      if (hasError) {
+        return;
+      }
+
+      try {
+        await submitRealtorApplication(
+          val("company-name"),
+          val("license-number"),
+          val("license-expiry"),
+          val("document-url"),
+        );
+        await refreshStatus();
+      } catch (err) {
+        formErrorEl.textContent = err.message;
+        formErrorEl.hidden = false;
+      }
+    });
+
+    await refreshStatus();
+  </script>
+</body>
+</html>
