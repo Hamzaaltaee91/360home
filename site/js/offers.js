@@ -28,3 +28,29 @@ export async function respondToOffer(id, response) {
     .eq("id", id);
   if (error) throw error;
 }
+
+export async function createOffer(fields) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("realtor_offers")
+    .insert({ ...fields, realtor_id: user.id })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function listMyOffers() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("realtor_offers")
+    .select("*")
+    .eq("realtor_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
