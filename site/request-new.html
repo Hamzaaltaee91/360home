@@ -29,51 +29,78 @@
     </div>
 
     <form id="request-form" class="card">
-      <div class="form-grid">
-        <div class="form-field">
-        <label for="category">الفئة</label>
-        <select id="category" required>
-          <option value="residential">سكني</option>
-          <option value="commercial">تجاري</option>
-          <option value="land">أرض</option>
-        </select>
-      </div>
-      <div class="form-field">
-        <label for="title">عنوان الطلب</label>
-        <input type="text" id="title" required>
-      </div>
-      <div class="form-field is-full">
-        <label for="description">الوصف</label>
-        <textarea id="description"></textarea>
-      </div>
-      <div class="form-field">
-        <label for="city">المدينة</label>
-        <input type="text" id="city" required>
-      </div>
-      <div class="form-field">
-        <label for="area-name">المنطقة</label>
-        <input type="text" id="area-name">
-      </div>
-      <div class="form-field">
-        <label for="min-price">أقل سعر</label>
-        <input type="number" id="min-price">
-      </div>
-      <div class="form-field">
-        <label for="max-price">أعلى سعر</label>
-        <input type="number" id="max-price">
-      </div>
-      <div class="form-field">
-        <label for="bedrooms">عدد غرف النوم</label>
-        <input type="number" id="bedrooms">
-      </div>
-      <div class="form-field">
-        <label for="bathrooms">عدد الحمامات</label>
-        <input type="number" id="bathrooms">
-      </div>
-        <div class="form-field">
-          <label><input type="checkbox" id="furnished"> مفروش</label>
+      <fieldset>
+        <legend>الفئة والغرض</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="category">الفئة</label>
+            <select id="category" required>
+              <option value="residential">سكني</option>
+              <option value="commercial">تجاري</option>
+              <option value="land">أرض</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="title">عنوان الطلب</label>
+            <input type="text" id="title" required>
+          </div>
         </div>
-      </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>الموقع</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="city">المدينة</label>
+            <input type="text" id="city" required>
+          </div>
+          <div class="form-field">
+            <label for="area-name">المنطقة</label>
+            <input type="text" id="area-name">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>الميزانية</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="min-price">أقل سعر</label>
+            <input type="number" id="min-price">
+          </div>
+          <div class="form-field">
+            <label for="max-price">أعلى سعر</label>
+            <input type="number" id="max-price">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>المواصفات</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="bedrooms">عدد غرف النوم</label>
+            <input type="number" id="bedrooms">
+          </div>
+          <div class="form-field">
+            <label for="bathrooms">عدد الحمامات</label>
+            <input type="number" id="bathrooms">
+          </div>
+          <div class="form-field">
+            <label><input type="checkbox" id="furnished"> مفروش</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>تفاصيل إضافية</legend>
+        <div class="form-grid">
+          <div class="form-field is-full">
+            <label for="description">الوصف</label>
+            <textarea id="description"></textarea>
+          </div>
+        </div>
+      </fieldset>
       <p class="error-text" id="error" hidden></p>
       <button type="submit" class="btn btn-primary btn-lg">انشر الطلب</button>
     </form>
