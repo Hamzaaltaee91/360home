@@ -39,6 +39,7 @@
               <option value="commercial">تجاري</option>
               <option value="land">أرض</option>
             </select>
+            <span class="error-text" data-error-for="category" hidden></span>
           </div>
           <div class="form-field" id="subtype-field" hidden>
             <label for="property-subtype">نوع العقار</label>
@@ -49,6 +50,7 @@
               <option value="villa">فيلا</option>
               <option value="duplex">دوبلكس</option>
             </select>
+            <span class="error-text" data-error-for="property-subtype" hidden></span>
           </div>
           <div class="form-field">
             <label for="purpose">الغرض</label>
@@ -57,6 +59,7 @@
               <option value="rent">إيجار</option>
               <option value="buy">شراء</option>
             </select>
+            <span class="error-text" data-error-for="purpose" hidden></span>
           </div>
           <div class="form-field" id="rent-duration-field" hidden>
             <label for="rent-duration">مدة الإيجار</label>
@@ -70,6 +73,7 @@
           <div class="form-field">
             <label for="title">عنوان الطلب</label>
             <input type="text" id="title" required>
+            <span class="error-text" data-error-for="title" hidden></span>
           </div>
         </div>
       </fieldset>
@@ -82,12 +86,14 @@
             <select id="city" required>
               <option value="" disabled selected>— اختر المحافظة —</option>
             </select>
+            <span class="error-text" data-error-for="city" hidden></span>
           </div>
           <div class="form-field">
             <label for="area-name">المنطقة</label>
             <select id="area-name">
               <option value="" disabled selected>— اختر المحافظة أولاً —</option>
             </select>
+            <span class="error-text" data-error-for="area-name" hidden></span>
           </div>
           <div class="form-field" id="area-other-field" hidden>
             <label for="area-other">اسم المنطقة</label>
@@ -102,6 +108,7 @@
           <div class="form-field">
             <label for="max-price">سقف الميزانية</label>
             <input type="text" inputmode="decimal" id="max-price">
+            <span class="error-text" data-error-for="max-price" hidden></span>
           </div>
         </div>
       </fieldset>
@@ -132,7 +139,7 @@
           </div>
         </div>
       </fieldset>
-      <p class="error-text" id="error" hidden></p>
+      <p class="error-text" id="form-error" hidden></p>
       <button type="submit" class="btn btn-primary btn-lg">انشر الطلب</button>
     </form>
   </div>
@@ -239,15 +246,52 @@
     updateRentDurationVisibility();
     purposeSelect.addEventListener("change", updateRentDurationVisibility);
 
+    const formErrorEl = document.getElementById("form-error");
+
+    function clearFieldErrors() {
+      formErrorEl.hidden = true;
+      formErrorEl.textContent = "";
+      document.querySelectorAll("[data-error-for]").forEach((el) => {
+        el.hidden = true;
+        el.textContent = "";
+      });
+    }
+
+    function showFieldError(fieldId, message) {
+      const el = document.querySelector(`[data-error-for="${fieldId}"]`);
+      if (el) {
+        el.textContent = message;
+        el.hidden = false;
+      }
+    }
+
     document.getElementById("request-form").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const errorEl = document.getElementById("error");
-      errorEl.hidden = true;
+      clearFieldErrors();
+
+      let hasError = false;
 
       if (!document.getElementById("purpose").value) {
-        document.getElementById("error").textContent =
-          "الرجاء اختيار الغرض (إيجار أو شراء).";
-        document.getElementById("error").hidden = false;
+        showFieldError("purpose", "الرجاء اختيار الغرض (إيجار أو شراء).");
+        hasError = true;
+      }
+
+      if (!document.getElementById("category").value) {
+        showFieldError("category", "الرجاء اختيار الفئة.");
+        hasError = true;
+      }
+
+      if (!document.getElementById("title").value.trim()) {
+        showFieldError("title", "الرجاء إدخال عنوان الطلب.");
+        hasError = true;
+      }
+
+      if (!document.getElementById("city").value) {
+        showFieldError("city", "الرجاء اختيار المحافظة.");
+        hasError = true;
+      }
+
+      if (hasError) {
         return;
       }
 
@@ -285,8 +329,8 @@
         });
         window.location.href = "dashboard.html";
       } catch (err) {
-        errorEl.textContent = err.message;
-        errorEl.hidden = false;
+        formErrorEl.textContent = err.message;
+        formErrorEl.hidden = false;
       }
     });
   </script>
