@@ -306,19 +306,25 @@
         : areaSelect.value
           ? (gov?.areas.find((a) => a.value === areaSelect.value)?.label ?? null)
           : null;
+      const area = areaSelect.value === "other"
+        ? (val("area-other") || null)
+        : (areaSelect.value || null);
 
       try {
         await createRequest({
           category: val("category"),
+          purpose: purposeSelect.value,
           property_subtype: categorySelect.value === "residential"
             ? (val("property-subtype") || null)
             : null,
-          rent_duration: purposeSelect.value === "rent"
+          rental_period: purposeSelect.value === "rent"
             ? val("rent-duration")
             : null,
           title: val("title"),
           description: val("description") || null,
+          governorate: val("city") || null,
           city: gov ? gov.label : null,
+          area,
           area_name: areaName,
           min_price:
             budget === null ? null : Math.round(budget * 0.7),
