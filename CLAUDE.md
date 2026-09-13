@@ -169,6 +169,16 @@ CREATE INDEX idx_property_requests_location ON public.property_requests USING GI
 
 **Purpose**: Central table for all property criteria posted by buyers; supports filtering by category, location, budget, and amenities.
 
+**Additional columns (added September 2026, `supabase/migrations/20260911000004`–`20260911000008`):**
+
+| Column | Type | Constraint | Purpose |
+|---|---|---|---|
+| `purpose` | TEXT | `NOT NULL CHECK (purpose IN ('rent', 'buy'))` | Distinguishes rental requests from purchase requests. |
+| `governorate` | TEXT | `CHECK` against the 18 Iraq governorate slugs (e.g. `baghdad`, `basra`, `nineveh`) | English-slug governorate, separate from the free-text legacy `city` column. |
+| `area` | TEXT | nullable | Selected sub-area within the governorate, or free text when the user picks "أخرى" (other); separate from the legacy `area_name` column. |
+| `property_subtype` | TEXT | `CHECK (category <> 'residential' OR property_subtype IN ('apartment', 'house', 'villa', 'duplex'))` | Residential-only subtype; unconstrained (and typically null) for non-residential categories. |
+| `rental_period` | TEXT | `CHECK (rental_period IN ('daily', 'weekly', 'monthly', 'yearly'))`, nullable | Rental cadence; only meaningful when `purpose = 'rent'` — null for `buy` requests. |
+
 ### 4. Realtor Offers Table (`public.realtor_offers`)
 Realtors submit offers matching buyer requests.
 
