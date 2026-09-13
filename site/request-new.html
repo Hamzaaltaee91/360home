@@ -40,6 +40,16 @@
               <option value="land">أرض</option>
             </select>
           </div>
+          <div class="form-field" id="subtype-field" hidden>
+            <label for="property-subtype">نوع العقار</label>
+            <select id="property-subtype">
+              <option value="" disabled selected>— اختر النوع —</option>
+              <option value="apartment">شقة</option>
+              <option value="house">بيت</option>
+              <option value="villa">فيلا</option>
+              <option value="duplex">دوبلكس</option>
+            </select>
+          </div>
           <div class="form-field">
             <label for="purpose">الغرض</label>
             <select id="purpose" required>
@@ -179,6 +189,21 @@
       }
     });
 
+    const categorySelect = document.getElementById("category");
+    const subtypeField = document.getElementById("subtype-field");
+    const subtypeSelect = document.getElementById("property-subtype");
+
+    function updateSubtypeVisibility() {
+      const isResidential = categorySelect.value === "residential";
+      subtypeField.hidden = !isResidential;
+      if (!isResidential) {
+        subtypeSelect.value = ""; // يُصفَّر إلى null عند عدم كونه سكني
+      }
+    }
+
+    updateSubtypeVisibility();                       // ضبط الحالة الأولية عند التحميل
+    categorySelect.addEventListener("change", updateSubtypeVisibility);
+
     document.getElementById("request-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const errorEl = document.getElementById("error");
@@ -206,6 +231,9 @@
       try {
         await createRequest({
           category: val("category"),
+          property_subtype: categorySelect.value === "residential"
+            ? (val("property-subtype") || null)
+            : null,
           title: val("title"),
           description: val("description") || null,
           city: gov ? gov.label : null,
