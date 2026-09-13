@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مراجعة الوسطاء — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <h1>طلبات الوسطاء</h1>
+        <p>الطلبات المعلّقة بانتظار المراجعة.</p>
+      </div>
+    </div>
+
+    <div class="request-list" id="applications-list"></div>
+
+    <div class="empty-state" hidden id="empty-msg">
+      <h3>لا توجد طلبات معلّقة</h3>
+      <p>كل طلبات الوسطاء تمت مراجعتها.</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="footer-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+        <li><a href="contact.html">اتصل بنا</a></li>
+      </ul>
+      <span>© ٢٠٢٦ دبّرلي</span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { requireSession, signOut } from "./js/auth.js";
+    import {
+      listPendingRealtorApplications,
+      approveRealtorApplication,
+      rejectRealtorApplication,
+    } from "./js/admin.js";
+
+    await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    const list = document.getElementById("applications-list");
+    const emptyMsg = document.getElementById("empty-msg");
+
+    function makeTag(text) {
+      const li = document.createElement("li");
+      li.className = "tag";
+      li.textContent = text;
+      return li;
+    }
+
+    function removeCard(card) {
+      card.remove();
+      if (list.children.length === 0) {
+        emptyMsg.hidden = false;
+      }
+    }
+
+    function renderCard(app) {
+      const card = document.createElement("article");
+      card.className = "card request-item";
+
+      const h3 = document.createElement("h3");
+      h3.textContent = app.full_name ?? "—";
+      card.appendChild(h3);
+
+      const tags = document.createElement("ul");
+      tags.className = "request-tags";
+      tags.appendChild(makeTag(`البريد: ${app.email ?? "—"}`));
+      tags.appendChild(makeTag(`الشركة: ${app.company_name ?? "—"}`));
+      tags.appendChild(makeTag(`رقم الرخصة: ${app.license_number ?? "—"}`));
+      tags.appendChild(makeTag(`تاريخ انتهاء الرخصة: ${app.license_expiry ?? "—"}`));
+      card.appendChild(tags);
+
+      if (app.document_url) {
+        const docLink = document.createElement("a");
+        docLink.className = "btn btn-ghost";
+        docLink.href = app.document_url;
+        docLink.target = "_blank";
+        docLink.rel = "noopener noreferrer";
+        docLink.textContent = "عرض المستند";
+        card.appendChild(docLink);
+      }
+
+      const approveBtn = document.createElement("button");
+      approveBtn.className = "btn btn-primary";
+      approveBtn.textContent = "قبول";
+
+      const rejectBtn = document.createElement("button");
+      rejectBtn.className = "btn btn-ghost";
+      rejectBtn.textContent = "رفض";
+
+      const actions = document.createElement("div");
+      actions.style.display = "flex";
+      actions.style.gap = "8px";
+      actions.style.marginTop = "12px";
+
+      approveBtn.addEventListener("click", async () => {
+        approveBtn.disabled = true;
+        rejectBtn.disabled = true;
+        try {
+          await approveRealtorApplication(app.verification_id);
+          removeCard(card);
+        } catch (err) {
+          console.error(err);
+          approveBtn.disabled = false;
+          rejectBtn.disabled = false;
+        }
+      });
+
+      rejectBtn.addEventListener("click", async () => {
+        const reason = prompt("سبب الرفض:");
+        if (reason === null) {
+          return;
+        }
+        approveBtn.disabled = true;
+        rejectBtn.disabled = true;
+        try {
+          await rejectRealtorApplication(app.verification_id, reason);
+          removeCard(card);
+        } catch (err) {
+          console.error(err);
+          approveBtn.disabled = false;
+          rejectBtn.disabled = false;
+        }
+      });
+
+      actions.appendChild(approveBtn);
+      actions.appendChild(rejectBtn);
+      card.appendChild(actions);
+
+      return card;
+    }
+
+    const applications = await listPendingRealtorApplications();
+    if (!applications || applications.length === 0) {
+      emptyMsg.hidden = false;
+    } else {
+      for (const app of applications) {
+        list.appendChild(renderCard(app));
+      }
+    }
+  </script>
+</body>
+</html>
