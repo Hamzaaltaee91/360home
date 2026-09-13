@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>عروضي — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+        <li><a href="my-offers.html">عروضي</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <h1>عروضي</h1>
+        <p>كل العروض اللي قدّمتها على طلبات المشترين.</p>
+      </div>
+    </div>
+
+    <div class="request-list" id="offers-list"></div>
+
+    <div class="empty-state" hidden id="empty-msg">
+      <h3>لا توجد عروض بعد</h3>
+      <p>تصفّح الطلبات المنشورة وقدّم عرضك الأول.</p>
+      <a href="dashboard.html" class="btn btn-primary">تصفّح الطلبات</a>
+    </div>
+  </main>
+
+  <!-- ===== الفوتر ===== -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="footer-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+        <li><a href="my-offers.html">عروضي</a></li>
+        <li><a href="request-new.html">طلب جديد</a></li>
+        <li><a href="contact.html">اتصل بنا</a></li>
+      </ul>
+      <span>© ٢٠٢٦ دبّرلي</span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { requireSession, signOut } from "./js/auth.js";
+    import { listMyOffers } from "./js/offers.js";
+
+    await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    const offers = await listMyOffers();
+    const list = document.getElementById("offers-list");
+    if (offers.length === 0) {
+      document.getElementById("empty-msg").hidden = false;
+    }
+    for (const o of offers) {
+      const a = document.createElement("a");
+      a.href = `request.html?id=${encodeURIComponent(o.request_id)}`;
+      a.style.textDecoration = "none";
+      a.style.color = "inherit";
+
+      const card = document.createElement("article");
+      card.className = "card request-item";
+
+      const h3 = document.createElement("h3");
+      h3.textContent = o.price != null ? `${o.price}` : "—";
+
+      const tags = document.createElement("ul");
+      tags.className = "request-tags";
+
+      const statusTag = document.createElement("li");
+      statusTag.className = "tag tag-active";
+      statusTag.textContent = o.buyer_response || "قيد الانتظار";
+
+      const noteTag = document.createElement("li");
+      noteTag.className = "tag";
+      noteTag.textContent = o.note || "—";
+
+      tags.append(statusTag, noteTag);
+
+      card.append(h3, tags);
+      a.appendChild(card);
+      list.appendChild(a);
+    }
+  </script>
+</body>
+</html>
