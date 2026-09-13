@@ -66,6 +66,27 @@
     }
     applyMode();
 
+    async function redirectAfterAuth() {
+      let role = null;
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("role")
+          .eq("auth_id", (await supabase.auth.getUser()).data.user.id)
+          .single();
+        if (!error) role = data?.role ?? null;
+      } catch {
+        role = null;
+      }
+      if (role === "realtor") {
+        window.location.href = "realtor-dashboard.html";
+      } else if (role === "admin") {
+        window.location.href = "admin-realtors.html";
+      } else {
+        window.location.href = "dashboard.html";
+      }
+    }
+
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) window.location.href = "dashboard.html";
     });
@@ -104,7 +125,7 @@
         errorEl.hidden = false;
         return;
       }
-      window.location.href = "dashboard.html";
+      await redirectAfterAuth();
     });
   </script>
 </body>
