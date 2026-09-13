@@ -79,7 +79,7 @@
 
       const purposeTag = document.createElement("li");
       purposeTag.className = "tag";
-      purposeTag.textContent = r.rent_duration ? "إيجار" : "شراء";
+      purposeTag.textContent = r.purpose === "rent" ? "إيجار" : "شراء";
 
       const budgetTag = document.createElement("li");
       budgetTag.className = "tag";
