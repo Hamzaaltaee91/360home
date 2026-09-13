@@ -368,3 +368,10 @@ SANITY FAILED
 ```
 تجاوز الحد: 12 ملف (الحد 5)
 ```
+
+## BLOCKED: Add `area` column to `public.property_requests`: TEXT, nullable, holding the selected sub-area within a governorate or free text when the user picks "أخرى"; keep the existing `area_name` column untouched.
+التاريخ: 2026-09-13 08:29:02
+آخر سبب فشل:
+```
+تجاوز الحد: 12 ملف (الحد 5)
+```

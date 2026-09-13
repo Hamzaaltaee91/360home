@@ -791,7 +791,7 @@ Schema tasks below each require a NEW file under supabase/migrations/ — never 
 
 - [x] Add `purpose` column to `public.property_requests`: TEXT NOT NULL CHECK (purpose IN ('rent', 'buy')), no default going forward — but existing rows must be backfilled to 'rent' first in the same migration before the NOT NULL constraint is applied.
 - [BLOCKED] Add `governorate` column to `public.property_requests`: TEXT, storing one of Iraq's 18 governorates as an English slug (e.g. baghdad, basra, nineveh — not Arabic text); keep the existing `city` column untouched for backward compatibility.
-- [ ] Add `area` column to `public.property_requests`: TEXT, nullable, holding the selected sub-area within a governorate or free text when the user picks "أخرى"; keep the existing `area_name` column untouched.
+- [BLOCKED] Add `area` column to `public.property_requests`: TEXT, nullable, holding the selected sub-area within a governorate or free text when the user picks "أخرى"; keep the existing `area_name` column untouched.
 - [ ] Add `property_subtype` column to `public.property_requests`: TEXT, nullable, CHECK (category <> 'residential' OR property_subtype IN ('apartment', 'house', 'villa', 'duplex')).
 - [ ] Add `rental_period` column to `public.property_requests`: TEXT, nullable, CHECK (rental_period IN ('daily', 'weekly', 'monthly', 'yearly')), no DB-level default — a buy request must have this NULL.
 - [ ] Update the property_requests schema section in CLAUDE.md to document the five new columns added by the migrations above, matching their exact names, types, and constraints.
