@@ -72,7 +72,19 @@
       cityTag.className = "tag";
       cityTag.textContent = r.city;
 
-      tags.append(catTag, cityTag);
+      const governorateTag = document.createElement("li");
+      governorateTag.className = "tag";
+      governorateTag.textContent = r.city;
+
+      const purposeTag = document.createElement("li");
+      purposeTag.className = "tag";
+      purposeTag.textContent = r.rent_duration ? "إيجار" : "شراء";
+
+      const budgetTag = document.createElement("li");
+      budgetTag.className = "tag";
+      budgetTag.textContent = r.max_price != null ? `${r.max_price}` : "—";
+
+      tags.append(catTag, cityTag, governorateTag, purposeTag, budgetTag);
 
       card.append(h3, tags);
       a.appendChild(card);
