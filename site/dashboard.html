@@ -63,10 +63,16 @@
 
       const tags = document.createElement("ul");
       tags.className = "request-tags";
-      tags.innerHTML = `
-        <li class="tag tag-active">${r.category}</li>
-        <li class="tag">${r.city}</li>
-      `;
+
+      const catTag = document.createElement("li");
+      catTag.className = "tag tag-active";
+      catTag.textContent = r.category;
+
+      const cityTag = document.createElement("li");
+      cityTag.className = "tag";
+      cityTag.textContent = r.city;
+
+      tags.append(catTag, cityTag);
 
       card.append(h3, tags);
       a.appendChild(card);
