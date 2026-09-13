@@ -361,3 +361,10 @@ SANITY FAILED
 SANITY FAILED
   - خرق طبقات: نداء Supabase مباشر داخل lib/screens/admin/manage_users_screen.dart
 ```
+
+## BLOCKED: Add `governorate` column to `public.property_requests`: TEXT, storing one of Iraq's 18 governorates as an English slug (e.g. baghdad, basra, nineveh — not Arabic text); keep the existing `city` column untouched for backward compatibility.
+التاريخ: 2026-09-13 08:27:36
+آخر سبب فشل:
+```
+تجاوز الحد: 12 ملف (الحد 5)
+```
