@@ -9,6 +9,16 @@ export async function listMyRequests() {
   return data;
 }
 
+export async function listActiveRequestsForRealtor() {
+  const { data, error } = await supabase
+    .from("property_requests")
+    .select("*")
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
 export async function getRequest(id) {
   const { data, error } = await supabase
     .from("property_requests")
