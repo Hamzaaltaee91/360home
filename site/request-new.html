@@ -58,6 +58,15 @@
               <option value="buy">شراء</option>
             </select>
           </div>
+          <div class="form-field" id="rent-duration-field" hidden>
+            <label for="rent-duration">مدة الإيجار</label>
+            <select id="rent-duration">
+              <option value="daily">يومي</option>
+              <option value="weekly">أسبوعي</option>
+              <option value="monthly" selected>شهري</option>
+              <option value="yearly">سنوي</option>
+            </select>
+          </div>
           <div class="form-field">
             <label for="title">عنوان الطلب</label>
             <input type="text" id="title" required>
@@ -204,6 +213,16 @@
     updateSubtypeVisibility();                       // ضبط الحالة الأولية عند التحميل
     categorySelect.addEventListener("change", updateSubtypeVisibility);
 
+    const purposeSelect = document.getElementById("purpose");
+    const rentDurationField = document.getElementById("rent-duration-field");
+
+    function updateRentDurationVisibility() {
+      rentDurationField.hidden = purposeSelect.value !== "rent";
+    }
+
+    updateRentDurationVisibility();
+    purposeSelect.addEventListener("change", updateRentDurationVisibility);
+
     document.getElementById("request-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const errorEl = document.getElementById("error");
@@ -233,6 +252,9 @@
           category: val("category"),
           property_subtype: categorySelect.value === "residential"
             ? (val("property-subtype") || null)
+            : null,
+          rent_duration: purposeSelect.value === "rent"
+            ? val("rent-duration")
             : null,
           title: val("title"),
           description: val("description") || null,
