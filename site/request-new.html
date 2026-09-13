@@ -59,12 +59,20 @@
         <legend>الموقع</legend>
         <div class="form-grid">
           <div class="form-field">
-            <label for="city">المدينة</label>
-            <input type="text" id="city" required>
+            <label for="city">المحافظة</label>
+            <select id="city" required>
+              <option value="" disabled selected>— اختر المحافظة —</option>
+            </select>
           </div>
           <div class="form-field">
             <label for="area-name">المنطقة</label>
-            <input type="text" id="area-name">
+            <select id="area-name">
+              <option value="" disabled selected>— اختر المحافظة أولاً —</option>
+            </select>
+          </div>
+          <div class="form-field" id="area-other-field" hidden>
+            <label for="area-other">اسم المنطقة</label>
+            <input type="text" id="area-other">
           </div>
         </div>
       </fieldset>
@@ -117,9 +125,63 @@
   <script type="module">
     import { requireSession, signOut } from "./js/auth.js";
     import { createRequest } from "./js/requests.js";
+    import iraqLocations from "./js/iraq-locations.js";
 
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    const citySelect = document.getElementById("city");
+    const areaSelect = document.getElementById("area-name");
+    const areaOtherField = document.getElementById("area-other-field");
+    const areaOtherInput = document.getElementById("area-other");
+
+    Object.entries(iraqLocations).forEach(([key, gov]) => {
+      const option = document.createElement("option");
+      option.value = key;            // المفتاح (slug) كقيمة
+      option.textContent = gov.label; // الاسم العربي كنص
+      citySelect.appendChild(option);
+    });
+
+    function populateAreas(govKey) {
+      areaSelect.innerHTML = "";
+      areaOtherField.hidden = true;
+      areaOtherInput.value = "";
+
+      const gov = iraqLocations[govKey];
+      if (!gov) {
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        placeholder.textContent = "— اختر المحافظة أولاً —";
+        areaSelect.appendChild(placeholder);
+        return;
+      }
+
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      placeholder.textContent = "— اختر المنطقة —";
+      areaSelect.appendChild(placeholder);
+
+      gov.areas.forEach((area) => {
+        const option = document.createElement("option");
+        option.value = area.value;     // 'other' واحدة منها
+        option.textContent = area.label;
+        areaSelect.appendChild(option);
+      });
+    }
+
+    citySelect.addEventListener("change", () => populateAreas(citySelect.value));
+
+    areaSelect.addEventListener("change", () => {
+      const isOther = areaSelect.value === "other";
+      areaOtherField.hidden = !isOther;
+      if (!isOther) {
+        areaOtherInput.value = "";
+      }
+    });
 
     document.getElementById("request-form").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -136,13 +198,21 @@
       const val = (id) => document.getElementById(id).value;
       const num = (id) => (val(id) === "" ? null : Number(val(id)));
 
+      // نحوّل مفاتيح الـselect إلى الأسماء العربية (كما كان السلوك السابق مع النص الحر).
+      const gov = iraqLocations[val("city")];
+      const areaName = areaSelect.value === "other"
+        ? (val("area-other") || null)
+        : areaSelect.value
+          ? (gov?.areas.find((a) => a.value === areaSelect.value)?.label ?? null)
+          : null;
+
       try {
         await createRequest({
           category: val("category"),
           title: val("title"),
           description: val("description") || null,
-          city: val("city"),
-          area_name: val("area-name") || null,
+          city: gov ? gov.label : null,
+          area_name: areaName,
           min_price: num("min-price"),
           max_price: num("max-price"),
           bedrooms: num("bedrooms"),
