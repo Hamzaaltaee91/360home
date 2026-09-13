@@ -53,12 +53,20 @@
     const status = document.getElementById("response-status");
 
     function renderButtons() {
-      buttons.innerHTML = `
-        <button class="btn btn-primary" id="interested-btn">مهتم</button>
-        <button class="btn" id="not-interested-btn">غير مهتم</button>
-      `;
-      document.getElementById("interested-btn").addEventListener("click", () => respond("interested"));
-      document.getElementById("not-interested-btn").addEventListener("click", () => respond("not_interested"));
+      buttons.innerHTML = "";
+      const interestedBtn = document.createElement("button");
+      interestedBtn.className = "btn btn-primary";
+      interestedBtn.id = "interested-btn";
+      interestedBtn.textContent = "مهتم";
+      interestedBtn.addEventListener("click", () => respond("interested"));
+
+      const notInterestedBtn = document.createElement("button");
+      notInterestedBtn.className = "btn";
+      notInterestedBtn.id = "not-interested-btn";
+      notInterestedBtn.textContent = "غير مهتم";
+      notInterestedBtn.addEventListener("click", () => respond("not_interested"));
+
+      buttons.append(interestedBtn, notInterestedBtn);
     }
 
     async function respond(response) {
