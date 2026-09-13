@@ -1,5 +1,27 @@
 # Progress Log
 
+## Cycle: site/js/numerals.js
+
+### Accomplished
+- Created `site/js/numerals.js` with the exact content specified in the task:
+  - `toWesternDigits(str)` — maps Arabic-Indic digits (U+0660 .. U+0669) to
+    Western digits 0-9, leaving every other character unchanged.
+  - Implemented with a plain `for` loop over `charCodeAt`, no `Map`, no
+    `RegExp`, no `String.prototype.replace`.
+  - Exported as an ES Module (`export function toWesternDigits(str)`),
+    matching the style of `site/js/offers.js`.
+  - No `import`/`require`, no default export, no `window` assignment, no
+    `try/catch`, no `console.log`, no `TODO`.
+- No other file was created or modified in this task (nothing under `lib/`,
+  nothing else under `site/`, no `pubspec.yaml` change).
+- Marked the task as complete in `TODO.md`.
+
+### Blocked / Failing
+- None.
+
+### Next in Queue
+- Next `[ ]` task in `TODO.md` (section 13).
+
 ## Cycle: property_subtype Column
 
 ### Accomplished
