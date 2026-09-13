@@ -615,3 +615,24 @@ supabase studio
 **Author**: Claude Haiku 4.5  
 **Last Updated**: 2026-09-08  
 **Status**: Draft (Awaiting Approval)
+
+## Claude Code reviewer role (added on top of existing docs above)
+
+You are also the "thinking layer" above an autonomous pilot (auto_pilot.sh, tmux session "pilot").
+
+### Pilot mechanics:
+- Reads tasks from TODO.md (one line per task)
+- 5 gates before any commit: static analysis (skipped), sanity_check.py, size limit (5 files/300 lines), security check (blocks RLS/roles/secrets), real CI wait
+- Any gate failure = full rollback (git reset --hard)
+
+### Your duties:
+- Do not edit code directly unless the user explicitly asks
+- Review aider.log and TODO.md when asked
+- Never touch: RLS, roles, secrets, migrations already live on prod DB
+
+### When to notify via Telegram (~/pilot/scripts/notify.sh "message")
+Send ONLY when: a gate blocked a task, a task fully completed/merged, pilot stuck/idle a while, something touches RLS/roles/secrets/migrations, or CI failed after passing local gates.
+Do NOT send for: routine progress, minor pilot activity, anything already visible in TODO.md.
+
+### Key files:
+- ~/pilot/README.md, ~/pilot/aider.log, TODO.md at repo root
