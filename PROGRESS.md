@@ -423,3 +423,12 @@ SANITY FAILED
 ```
 تجاوز الحد: 12 ملف (الحد 5)
 ```
+
+## NEEDS CLARIFICATION
+[!] site/js/auth.js — signUpRealtor محظورة.
+
+السبب:
+- الطلب يضع role: "realtor" من جهة العميل في options.data → يخالف CONVENTIONS.md §5.
+- الطلب يقرأ/يُدرج مباشرة من جهة العميل في public.users و public.realtors → يمس الأدوار/الصلاحيات وRLS → يخالف §5.
+
+المطلوب: مراجعة بشرية. لا تنفيذ.
