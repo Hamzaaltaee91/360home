@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الوسيط — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="realtor-requests.html">تصفح الطلبات</a></li>
+        <li><a href="my-offers.html">عروضي</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <h1>مرحباً بك في لوحة الوسيط</h1>
+        <p>تصفّح طلبات العملاء المطابقة لك، وتابع العروض التي أرسلتها.</p>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:24px;">
+      <a href="realtor-requests.html" class="btn btn-primary">تصفح الطلبات</a>
+      <a href="my-offers.html" class="btn btn-ghost">عروضي</a>
+    </div>
+  </main>
+
+  <!-- ===== الفوتر ===== -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="footer-links">
+        <li><a href="realtor-requests.html">تصفح الطلبات</a></li>
+        <li><a href="my-offers.html">عروضي</a></li>
+        <li><a href="contact.html">اتصل بنا</a></li>
+      </ul>
+      <span>© ٢٠٢٦ دبّرلي</span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { requireSession, signOut } from "./js/auth.js";
+
+    await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
+  </script>
+</body>
+</html>
