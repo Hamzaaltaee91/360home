@@ -74,20 +74,41 @@
       card.className = "card request-item";
 
       const h3 = document.createElement("h3");
-      h3.textContent = o.price != null ? `${o.price}` : "—";
+      h3.textContent = o.property_title;
 
       const tags = document.createElement("ul");
       tags.className = "request-tags";
 
+      const priceTag = document.createElement("li");
+      priceTag.className = "tag";
+      priceTag.textContent = o.offered_price != null ? `${o.offered_price}` : "—";
+
+      const leaseTag = document.createElement("li");
+      leaseTag.className = "tag";
+      leaseTag.textContent = o.lease_type === "rent" ? "إيجار" : "بيع";
+
+      const statusLabels = {
+        pending: "قيد الانتظار",
+        accepted: "مقبول",
+        rejected: "مرفوض",
+        expired: "منتهي",
+      };
       const statusTag = document.createElement("li");
       statusTag.className = "tag tag-active";
-      statusTag.textContent = o.buyer_response || "قيد الانتظار";
+      statusTag.textContent = statusLabels[o.status] || o.status;
 
-      const noteTag = document.createElement("li");
-      noteTag.className = "tag";
-      noteTag.textContent = o.note || "—";
+      tags.append(priceTag, leaseTag, statusTag);
 
-      tags.append(statusTag, noteTag);
+      if (o.buyer_response) {
+        const responseLabels = {
+          interested: "أبدى المشتري اهتماماً",
+          not_interested: "غير مهتم من المشتري",
+        };
+        const responseTag = document.createElement("li");
+        responseTag.className = "tag";
+        responseTag.textContent = responseLabels[o.buyer_response] || o.buyer_response;
+        tags.append(responseTag);
+      }
 
       card.append(h3, tags);
       a.appendChild(card);
