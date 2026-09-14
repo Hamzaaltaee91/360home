@@ -9,6 +9,7 @@ import '../screens/admin/admin_dashboard_screen.dart';
 import '../screens/admin/manage_users_screen.dart';
 import '../screens/admin/verify_realtors_screen.dart';
 import '../screens/admin/manage_lists_screen.dart';
+import '../screens/admin/manage_locations_screen.dart';
 import '../screens/admin/manage_requests_screen.dart';
 import '../screens/admin/manage_offers_screen.dart';
 import '../screens/admin/realtors_directory_screen.dart';
@@ -82,6 +83,7 @@ class RouteNames {
   static const String adminVerifications = '/admin/verifications';
   static const String adminUsers = '/admin/users';
   static const String adminLists = '/admin/lists';
+  static const String adminLocations = '/admin/locations';
   static const String adminReports = '/admin/reports';
   static const String adminRequests = '/admin/requests';
   static const String adminOffers = '/admin/offers';
@@ -364,6 +366,10 @@ final appRoutes = GoRouter(
     GoRoute(
       path: RouteNames.adminLists,
       builder: (context, state) => const ManageListsScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.adminLocations,
+      builder: (context, state) => const ManageLocationsScreen(),
     ),
     GoRoute(
       path: RouteNames.adminReports,
