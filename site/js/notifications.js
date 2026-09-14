@@ -13,22 +13,23 @@ export async function listMyNotifications() {
   return data;
 }
 
-export async function markNotificationRead(id) {
-  const { error } = await supabase
-    .from("notifications")
-    .update({ read: true })
-    .eq("id", id);
-  if (error) throw error;
-}
-
-export async function markAllNotificationsRead() {
+export async function unreadCount() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const { count, error } = await supabase
+    .from("notifications")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("is_read", false);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function markAsRead(id) {
   const { error } = await supabase
     .from("notifications")
-    .update({ read: true })
-    .eq("user_id", user.id)
-    .eq("read", false);
+    .update({ is_read: true })
+    .eq("id", id);
   if (error) throw error;
 }
