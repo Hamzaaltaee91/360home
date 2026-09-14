@@ -115,7 +115,7 @@
         return true;
       });
 
-      list.innerHTML = "";
+      list.replaceChildren();
 
       for (const r of visible) {
       const card = document.createElement("article");
