@@ -9,6 +9,25 @@ export async function listMyRequests() {
   return data;
 }
 
+export async function updateRequest(id, fields) {
+  const { data, error } = await supabase
+    .from("property_requests")
+    .update(fields)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteRequest(id) {
+  const { error } = await supabase
+    .from("property_requests")
+    .delete()
+    .eq("id", id);
+  if (error) throw error;
+}
+
 export async function listActiveRequestsForRealtor() {
   const { data, error } = await supabase
     .from("property_requests")
