@@ -37,6 +37,13 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   bool _furnished = false;
   bool _isLoading = false;
 
+  /// Currency code selected for the offered price. Populated from the
+  /// `currency` list_options on init; defaults to 'EGP' until loaded.
+  String _selectedCurrency = 'EGP';
+
+  /// Currency options loaded from `list_options` (list_name = 'currency').
+  List<Map<String, dynamic>> _currencyOptions = const [];
+
   final _imagePicker = ImagePicker();
   final _locationService = LocationService();
 
@@ -52,6 +59,24 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   void initState() {
     super.initState();
     _requestFuture = _fetchRequest();
+    _loadCurrencyOptions();
+  }
+
+  Future<void> _loadCurrencyOptions() async {
+    try {
+      final options =
+          await SupabaseService().getListOptions('currency');
+      if (!mounted) return;
+      setState(() {
+        _currencyOptions = options;
+        if (options.isNotEmpty &&
+            !options.any((o) => o['code'] == _selectedCurrency)) {
+          _selectedCurrency = options.first['code'] as String;
+        }
+      });
+    } catch (_) {
+      // Non-fatal: keep the default currency if the list can't be loaded.
+    }
   }
 
   Future<PropertyRequest> _fetchRequest() async {
@@ -155,6 +180,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         longitude: _coordinates?.longitude,
         leaseType: _leaseType,
         leaseDurationMonths: _leaseType == 'rent' ? _durationMonths : null,
+        currency: _selectedCurrency,
         areaSqft: _areaController.text.isNotEmpty
             ? int.parse(_areaController.text)
             : null,
@@ -331,6 +357,27 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Currency
+                  DropdownButtonFormField<String>(
+                    value: _selectedCurrency,
+                    items: _currencyOptions
+                        .map(
+                          (option) => DropdownMenuItem<String>(
+                            value: option['code'] as String,
+                            child: Text(option['label'] as String),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setState(() => _selectedCurrency = value);
+                    },
+                    decoration: const InputDecoration(
+                      label: Text('العملة'),
+                      prefixIcon: Icon(Icons.attach_money),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   // Lease Duration (for rent)
