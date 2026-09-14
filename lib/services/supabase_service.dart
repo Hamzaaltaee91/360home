@@ -682,6 +682,35 @@ class SupabaseService {
     );
   }
 
+  /// Returns realtor rows for the admin table with their linked user
+  /// profile embedded under the `user` key, newest first.
+  ///
+  /// When [searchText] is provided, a case-insensitive match is performed
+  /// against the realtor's company name or license number. Admin
+  /// authorization is enforced server-side by the realtors RLS policy —
+  /// no privilege logic is performed client-side.
+  Future<List<Map<String, dynamic>>> adminListRealtors({String? searchText}) {
+    return _guard(() async {
+      var query = _client.from('realtors').select(
+            '*, user:users!realtors_user_id_fkey'
+            '(full_name, email, phone, is_verified)',
+          );
+
+      final trimmed = searchText?.trim() ?? '';
+      if (trimmed.isNotEmpty) {
+        query = query.or(
+          'company_name.ilike.%$trimmed%,license_number.ilike.%$trimmed%',
+        );
+      }
+
+      final response = await query.order('created_at', ascending: false);
+
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
+
   // ==================== Realtor Verifications ====================
   //
   // All privilege logic (the is_admin() check and the role flip on
