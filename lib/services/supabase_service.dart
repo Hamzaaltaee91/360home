@@ -753,4 +753,47 @@ class SupabaseService {
       return _client.storage.from('dabberli').getPublicUrl(filePath);
     });
   }
+
+  // ==================== Realtor Reviews ====================
+
+  /// Submits a review for the offer identified by [offerId].
+  Future<void> submitReview({
+    required String offerId,
+    required int rating,
+    String? comment,
+  }) {
+    return _guard(
+      () => _client.rpc('submit_realtor_review', params: {
+        'p_offer_id': offerId,
+        'p_rating': rating,
+        'p_comment': comment,
+      }),
+    );
+  }
+
+  /// Returns the reviews written for the realtor identified by [realtorId].
+  Future<List<Map<String, dynamic>>> listRealtorReviews(String realtorId) {
+    return _guard(() async {
+      final response =
+          await _client.rpc('list_realtor_reviews', params: {
+        'p_realtor_id': realtorId,
+      }) as List;
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
+
+  /// Returns the current user's review for [offerId], or `null` when none
+  /// has been submitted yet.
+  Future<Map<String, dynamic>?> getMyReviewForOffer(String offerId) {
+    return _guard(() async {
+      final response =
+          await _client.rpc('get_my_review_for_offer', params: {
+        'p_offer_id': offerId,
+      }) as List;
+      if (response.isEmpty) return null;
+      return (response.first as Map).cast<String, dynamic>();
+    });
+  }
 }
