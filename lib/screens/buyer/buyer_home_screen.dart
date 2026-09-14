@@ -18,12 +18,24 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
   late Future<PaginatedResult<PropertyRequest>> _requestsFuture;
   final NotificationService _notificationService = NotificationService();
   int _unreadCount = 0;
+  int _pendingOffers = 0;
 
   @override
   void initState() {
     super.initState();
     _requestsFuture = SupabaseService().getUserRequests();
     _loadUnreadCount();
+    _loadPendingOffers();
+  }
+
+  Future<void> _loadPendingOffers() async {
+    try {
+      final stats = await SupabaseService().getBuyerStats();
+      if (!mounted) return;
+      setState(() => _pendingOffers = stats['pending_offers'] as int? ?? 0);
+    } catch (_) {
+      // Stats failures should never block the home screen.
+    }
   }
 
   Future<void> _loadUnreadCount() async {
@@ -155,16 +167,20 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
         icon: const Icon(Icons.add),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'الرئيسية',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
+            icon: Badge(
+              isLabelVisible: _pendingOffers > 0,
+              label: Text('$_pendingOffers'),
+              child: const Icon(Icons.search),
+            ),
             label: 'العروض',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'الملف الشخصي',
           ),
