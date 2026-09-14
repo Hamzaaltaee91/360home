@@ -642,6 +642,46 @@ class SupabaseService {
         }).eq('id', offerId));
   }
 
+  /// Returns realtor offers for the admin table, newest first.
+  ///
+  /// When [statusFilter] is provided only offers with that status are
+  /// returned. Each row embeds the realtor's full name and email under the
+  /// `realtor` key. Results are capped at 100 rows. Intended for the admin
+  /// realtor offers screen; admin authorization is enforced server-side by
+  /// the realtor_offers RLS policy.
+  Future<List<Map<String, dynamic>>> adminListRealtorOffers({
+    String? statusFilter,
+  }) {
+    return _guard(() async {
+      var query = _client.from('realtor_offers').select(
+            '*, realtor:users!realtor_offers_realtor_id_fkey(full_name, email)',
+          );
+
+      if (statusFilter != null && statusFilter.isNotEmpty) {
+        query = query.eq('status', statusFilter);
+      }
+
+      final response = await query
+          .order('created_at', ascending: false)
+          .limit(100);
+
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
+
+  /// Deletes the realtor offer identified by [offerId].
+  ///
+  /// Intended for the admin realtor offers screen; admin authorization is
+  /// enforced server-side by the realtor_offers RLS policy — no privilege
+  /// logic is performed client-side.
+  Future<void> adminDeleteRealtorOffer(String offerId) {
+    return _guard(
+      () => _client.from('realtor_offers').delete().eq('id', offerId),
+    );
+  }
+
   // ==================== Realtor Verifications ====================
   //
   // All privilege logic (the is_admin() check and the role flip on
