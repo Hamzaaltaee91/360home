@@ -65,16 +65,16 @@
       document.getElementById("empty-msg").hidden = false;
     }
     for (const o of offers) {
-      const a = document.createElement("a");
-      a.href = `request.html?id=${encodeURIComponent(o.request_id)}`;
-      a.style.textDecoration = "none";
-      a.style.color = "inherit";
-
       const card = document.createElement("article");
       card.className = "card request-item";
 
       const h3 = document.createElement("h3");
-      h3.textContent = o.property_title;
+      const titleLink = document.createElement("a");
+      titleLink.href = `request.html?id=${encodeURIComponent(o.request_id)}`;
+      titleLink.style.textDecoration = "none";
+      titleLink.style.color = "inherit";
+      titleLink.textContent = o.property_title;
+      h3.appendChild(titleLink);
 
       const tags = document.createElement("ul");
       tags.className = "request-tags";
@@ -111,8 +111,14 @@
       }
 
       card.append(h3, tags);
-      a.appendChild(card);
-      list.appendChild(a);
+
+      const messagesLink = document.createElement("a");
+      messagesLink.className = "btn btn-ghost";
+      messagesLink.href = `messages.html?offer_id=${encodeURIComponent(o.id)}`;
+      messagesLink.textContent = "الرسائل";
+
+      card.appendChild(messagesLink);
+      list.appendChild(card);
     }
   </script>
 </body>
