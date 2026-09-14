@@ -87,3 +87,90 @@ jobs:
           git add ios android
           git commit -m "chore: scaffold ios/android platform folders (com.dabberli.app)"
           git push origin HEAD:${{ github.ref_name }}
+
+  scaffold-web:
+    name: Scaffold web platform
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Fail if web platform already exists
+        run: |
+          if [ -d web ]; then
+            echo "web/ already exists — refusing to overwrite. Delete it first if you intend to re-scaffold." >&2
+            exit 1
+          fi
+
+      - name: Create web platform folder
+        run: flutter create --platforms=web .
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Commit and push web platform folder
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add web
+          git commit -m "chore: scaffold web platform folder"
+          git push origin HEAD:${{ github.ref_name }}
+
+  deploy-web:
+    name: Deploy web build to GitHub Pages
+    if: github.ref_name == 'claude/dabberli-architecture-phase1-tx1zoi' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Skip if web platform not scaffolded yet
+        id: check_web
+        run: |
+          if [ ! -d web ]; then
+            echo "web/ does not exist yet — skipping deploy." >&2
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Flutter
+        if: steps.check_web.outputs.skip == 'false'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Create .env.local for the web build
+        if: steps.check_web.outputs.skip == 'false'
+        run: |
+          echo "SUPABASE_URL=https://ojnhaqpiufgfxusokazb.supabase.co" > .env.local
+          echo "SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qbmhhcXBpdWZnZnh1c29rYXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5MjI1NzMsImV4cCI6MjEwNDQ5ODU3M30.D9jYEHSYL45bpmo-7RkxdKz19u-qhRIJNoypSClg3tg" >> .env.local
+
+      - name: Install dependencies
+        if: steps.check_web.outputs.skip == 'false'
+        run: flutter pub get
+
+      - name: Build web release
+        if: steps.check_web.outputs.skip == 'false'
+        run: flutter build web --release --base-href /360home/
+
+      - name: Deploy to gh-pages branch
+        if: steps.check_web.outputs.skip == 'false'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/web
