@@ -24,6 +24,7 @@ import '../screens/realtor/browse_requests_screen.dart';
 import '../screens/realtor/create_offer_screen.dart';
 import '../screens/realtor/my_offers_screen.dart';
 import '../screens/realtor/subscription_screen.dart';
+import '../screens/realtor/verification_screen.dart';
 import '../screens/about_screen.dart';
 import '../screens/notifications_screen.dart';
 import '../screens/profile/profile_screen.dart';
@@ -62,6 +63,7 @@ class RouteNames {
   static const String createOffer = '/create-offer/:requestId';
   static const String myOffers = '/my-offers';
   static const String subscription = '/subscription';
+  static const String verification = '/verification';
 
   // Profile
   static const String profile = '/profile';
@@ -311,6 +313,10 @@ final appRoutes = GoRouter(
     GoRoute(
       path: RouteNames.subscription,
       builder: (context, state) => const SubscriptionScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.verification,
+      builder: (context, state) => const VerificationScreen(),
     ),
 
     // Profile
