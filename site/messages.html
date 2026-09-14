@@ -28,7 +28,13 @@
         <h1>المحادثة</h1>
         <p>راسل الطرف الآخر بخصوص هذا العرض.</p>
       </div>
+      <div id="safety-actions" style="display:none;gap:8px;">
+        <button id="report-btn" type="button" class="btn btn-ghost">الإبلاغ عن المستخدم</button>
+        <button id="block-btn" type="button" class="btn btn-ghost">حظر المستخدم</button>
+      </div>
     </div>
+
+    <p id="safety-status" role="status" hidden style="margin-top:12px;"></p>
 
     <div class="card">
       <div id="messages-list"></div>
@@ -69,6 +75,7 @@
   <script type="module">
     import { requireSession, signOut } from "./js/auth.js";
     import { listMessages, markMessagesRead, sendMessage } from "./js/messages.js";
+    import { reportContent, blockUser } from "./js/safety.js";
     import { supabase } from "./js/supabase-client.js";
 
     await requireSession();
@@ -84,6 +91,11 @@
     const emptyMsg = document.getElementById("empty-msg");
     const input = document.getElementById("message-input");
     const sendBtn = document.getElementById("send-btn");
+    const safetyActions = document.getElementById("safety-actions");
+    const reportBtn = document.getElementById("report-btn");
+    const blockBtn = document.getElementById("block-btn");
+    const safetyStatus = document.getElementById("safety-status");
+    let otherUserId = null;
 
     const { data: userData } = await supabase.auth.getUser();
     const currentUserId = userData?.user?.id ?? null;
@@ -128,12 +140,30 @@
       window.scrollTo(0, document.body.scrollHeight);
     }
 
+    function resolveOtherUserId(message) {
+      if (!message || currentUserId == null) return null;
+      if (message.sender_id && message.sender_id !== currentUserId) {
+        return message.sender_id;
+      }
+      if (message.recipient_id && message.recipient_id !== currentUserId) {
+        return message.recipient_id;
+      }
+      return null;
+    }
+
     try {
       const messages = await listMessages(offerId);
       if (!messages || messages.length === 0) {
         emptyMsg.hidden = false;
       } else {
-        for (const m of messages) list.appendChild(renderBubble(m));
+        for (const m of messages) {
+          list.appendChild(renderBubble(m));
+          if (!otherUserId) {
+            const candidate = resolveOtherUserId(m);
+            if (candidate) otherUserId = candidate;
+          }
+        }
+        if (otherUserId) safetyActions.style.display = "flex";
       }
     } catch (err) {
       console.error(err);
@@ -144,6 +174,39 @@
     } catch (err) {
       console.error(err);
     }
+
+    reportBtn.addEventListener("click", async () => {
+      if (!otherUserId) return;
+      const reason = window.prompt("اذكر سبب الإبلاغ:");
+      if (!reason || !reason.trim()) return;
+      reportBtn.disabled = true;
+      try {
+        await reportContent(otherUserId, null, reason, null);
+        safetyStatus.hidden = false;
+        safetyStatus.textContent = "تم إرسال الإبلاغ، شكراً لك.";
+      } catch (err) {
+        console.error(err);
+        safetyStatus.hidden = false;
+        safetyStatus.textContent = "تعذّر إرسال الإبلاغ، حاول مرة أخرى.";
+      } finally {
+        reportBtn.disabled = false;
+      }
+    });
+
+    blockBtn.addEventListener("click", async () => {
+      if (!otherUserId) return;
+      if (!window.confirm("هل تريد حظر هذا المستخدم؟")) return;
+      blockBtn.disabled = true;
+      try {
+        await blockUser(otherUserId);
+        window.location.href = "dashboard.html";
+      } catch (err) {
+        console.error(err);
+        blockBtn.disabled = false;
+        safetyStatus.hidden = false;
+        safetyStatus.textContent = "تعذّر حظر المستخدم، حاول مرة أخرى.";
+      }
+    });
 
     async function onSend() {
       const body = input.value.trim();
