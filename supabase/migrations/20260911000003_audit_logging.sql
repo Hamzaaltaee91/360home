@@ -56,9 +56,19 @@ begin
 end;
 $$;
 
--- Resolves the acting user's id from the request JWT claims. Returns null
--- when there is no authenticated request (e.g. service-role or trigger
--- context). `request.jwt.claims` is a JSON string set by PostgREST.
+-- Resolves the acting user's public.users.id from the request JWT claims.
+-- Returns null when there is no authenticated request (e.g. service-role or
+-- trigger context). `request.jwt.claims` is a JSON string set by PostgREST.
+--
+-- FIX (applied before this migration was ever deployed): the JWT `sub`
+-- claim is the auth.users id (same value as auth.uid()), not
+-- public.users.id — but audit_logs.actor_id references public.users(id).
+-- Passing the raw sub straight into write_audit_log() would violate that
+-- foreign key on every real call and abort the triggering transaction
+-- (breaking admin_set_user_role, realtor application approval, etc., the
+-- moment their AFTER UPDATE triggers fired). Added the same auth_id
+-- lookup used everywhere else (see current_user_id() in
+-- 20260908000002_rls_policies.sql).
 create or replace function public.current_actor_id()
 returns uuid
 language plpgsql
@@ -67,12 +77,17 @@ set search_path = public, pg_temp
 as $$
 declare
   v_claims text;
+  v_auth_id uuid;
 begin
   v_claims := current_setting('request.jwt.claims', true);
   if v_claims is null or v_claims = '' then
     return null;
   end if;
-  return nullif(v_claims::jsonb ->> 'sub', '')::uuid;
+  v_auth_id := nullif(v_claims::jsonb ->> 'sub', '')::uuid;
+  if v_auth_id is null then
+    return null;
+  end if;
+  return (select id from public.users where auth_id = v_auth_id);
 exception
   when others then
     return null;
