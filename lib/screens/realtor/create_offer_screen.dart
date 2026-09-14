@@ -38,8 +38,8 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   bool _isLoading = false;
 
   /// Currency code selected for the offered price. Populated from the
-  /// `currency` list_options on init; defaults to 'EGP' until loaded.
-  String _selectedCurrency = 'EGP';
+  /// `currency` list_options on init; defaults to 'IQD' until loaded.
+  String _selectedCurrency = 'IQD';
 
   /// Currency options loaded from `list_options` (list_name = 'currency').
   List<Map<String, dynamic>> _currencyOptions = const [];
@@ -362,14 +362,18 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   // Currency
                   DropdownButtonFormField<String>(
                     value: _selectedCurrency,
-                    items: _currencyOptions
-                        .map(
-                          (option) => DropdownMenuItem<String>(
-                            value: option['code'] as String,
-                            child: Text(option['label'] as String),
-                          ),
-                        )
-                        .toList(),
+                    items: _currencyOptions.isEmpty
+                        ? const [
+                            DropdownMenuItem(value: 'IQD', child: Text('IQD')),
+                          ]
+                        : _currencyOptions
+                            .map(
+                              (option) => DropdownMenuItem<String>(
+                                value: option['code'] as String,
+                                child: Text(option['label'] as String),
+                              ),
+                            )
+                            .toList(),
                     onChanged: (value) {
                       if (value == null) return;
                       setState(() => _selectedCurrency = value);
