@@ -1015,6 +1015,50 @@ class SupabaseService {
     });
   }
 
+  /// Creates or updates a list option (admin only).
+  ///
+  /// The composite `(list_name, code)` is the conflict target, so
+  /// re-submitting an existing option updates it in place instead of
+  /// inserting a duplicate.
+  ///
+  /// Admin authorization is enforced server-side by the list_options RLS
+  /// policy — no privilege logic is performed client-side.
+  Future<void> adminUpsertListOption({
+    required String listName,
+    required String code,
+    required String label,
+    int sortOrder = 0,
+    bool active = true,
+  }) {
+    return _guard(
+      () => _client.from('list_options').upsert(
+            {
+              'list_name': listName,
+              'code': code,
+              'label': label,
+              'sort_order': sortOrder,
+              'active': active,
+            },
+            onConflict: 'list_name,code',
+          ),
+    );
+  }
+
+  /// Deletes the list option identified by [listName] and [code]
+  /// (admin only).
+  ///
+  /// Admin authorization is enforced server-side by the list_options RLS
+  /// policy — no privilege logic is performed client-side.
+  Future<void> adminDeleteListOption(String listName, String code) {
+    return _guard(
+      () => _client
+          .from('list_options')
+          .delete()
+          .eq('list_name', listName)
+          .eq('code', code),
+    );
+  }
+
   /// Returns all active governorates, ordered by sort_order.
   Future<List<Map<String, dynamic>>> getGovernorates() {
     return _guard(() async {
