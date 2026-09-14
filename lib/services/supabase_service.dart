@@ -224,14 +224,19 @@ class SupabaseService {
 
   /// Updates the role of the user identified by [userId].
   ///
-  /// The caller is responsible for ensuring the current session is
-  /// authorized (admin) — server-side RLS remains the source of truth.
+  /// Changes a user's role via the `admin_set_user_role` RPC. All
+  /// authorization and validation (admin-only, valid role, no self-change)
+  /// happens server-side in that SECURITY DEFINER function — see
+  /// supabase/migrations/20260914000001_admin_set_user_role.sql.
   Future<void> updateUserRole({
     required String userId,
     required String role,
   }) {
     return _guard(
-      () => _client.from('users').update({'role': role}).eq('id', userId),
+      () => _client.rpc('admin_set_user_role', params: {
+        'p_user_id': userId,
+        'p_role': role,
+      }),
     );
   }
 
