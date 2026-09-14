@@ -181,13 +181,18 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
             label: 'العروض',
           ),
           const BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'الدردشات',
+          ),
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'الملف الشخصي',
           ),
         ],
         onTap: (index) {
           if (index == 1) context.go('/browse-offers');
-          if (index == 2) context.go('/profile');
+          if (index == 2) context.go('/chats');
+          if (index == 3) context.go('/profile');
         },
       ),
     );
