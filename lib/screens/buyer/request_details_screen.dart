@@ -1,6 +1,7 @@
 // Request Details Screen for Buyers
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class RequestDetailsScreen extends StatelessWidget {
   const RequestDetailsScreen({Key? key, required this.requestId})
@@ -13,6 +14,13 @@ class RequestDetailsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('تفاصيل الطلب'),
+        actions: [
+          IconButton(
+            tooltip: 'تعديل الطلب',
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => context.push('/edit-request/$requestId'),
+          ),
+        ],
       ),
       body: Center(
         child: Text(
