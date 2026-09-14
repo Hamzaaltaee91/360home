@@ -19,16 +19,71 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
   late Future<RealtorOffer> _offerFuture;
   late Future<AppUser> _realtorFuture;
 
+  final TextEditingController _commentController = TextEditingController();
+  int _rating = 0;
+  bool _submittingReview = false;
+
   @override
   void initState() {
     super.initState();
     _offerFuture = _fetchOffer();
+    _loadMyReview();
+  }
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
   }
 
   Future<RealtorOffer> _fetchOffer() async {
     final offer = await SupabaseService().getOffer(widget.offerId);
     _realtorFuture = SupabaseService().getUserById(offer.realtorId);
     return offer;
+  }
+
+  Future<void> _loadMyReview() async {
+    try {
+      final review =
+          await SupabaseService().getMyReviewForOffer(widget.offerId);
+      if (!mounted || review == null) return;
+      setState(() {
+        _rating = (review['rating'] as num?)?.toInt() ?? 0;
+      });
+      _commentController.text = (review['comment'] as String?) ?? '';
+    } catch (_) {
+      // لا شيء: قسم التقييم يظهر فارغاً فقط
+    }
+  }
+
+  Future<void> _submitReview() async {
+    if (_rating < 1 || _rating > 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى اختيار تقييم من 1 إلى 5')),
+      );
+      return;
+    }
+    setState(() => _submittingReview = true);
+    try {
+      final trimmed = _commentController.text.trim();
+      await SupabaseService().submitReview(
+        offerId: widget.offerId,
+        rating: _rating,
+        comment: trimmed.isEmpty ? null : trimmed,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم إرسال التقييم بنجاح')),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submittingReview = false);
+    }
   }
 
   /// Opens a full-screen, zoomable gallery of the offer's photos starting at
@@ -590,6 +645,10 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                             ),
                           ),
                         ),
+                      if (offer.status == 'accepted') ...[
+                        const SizedBox(height: 24),
+                        _buildReviewSection(),
+                      ],
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -599,6 +658,51 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildReviewSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('تقييمك', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 12),
+        Row(
+          children: List.generate(5, (index) {
+            final value = index + 1;
+            return IconButton(
+              onPressed: () => setState(() => _rating = value),
+              icon: Icon(
+                value <= _rating ? Icons.star : Icons.star_border,
+                color: Colors.amber,
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _commentController,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            labelText: 'تعليقك (اختياري)',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _submittingReview ? null : _submitReview,
+            child: _submittingReview
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('إرسال التقييم'),
+          ),
+        ),
+      ],
     );
   }
 
