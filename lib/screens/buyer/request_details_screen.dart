@@ -219,9 +219,12 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
   }
 
   String _locationLabel(PropertyRequest request) {
-    final governorateLabel = request.governorate != null
-        ? iraqLocations[request.governorate]?['label'] as String?
-        : null;
+    String? governorateLabel;
+    final governorate = request.governorate;
+    if (governorate != null) {
+      final entry = iraqLocations[governorate];
+      governorateLabel = entry?['label'] as String?;
+    }
     final parts = [
       if (governorateLabel != null) governorateLabel else request.city,
       if (request.area != null && request.area!.isNotEmpty) request.area,
