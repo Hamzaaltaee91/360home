@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>البلاغات المفتوحة — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <h1>البلاغات المفتوحة</h1>
+        <p>البلاغات المعلّقة بانتظار المراجعة.</p>
+      </div>
+    </div>
+
+    <div class="request-list" id="reports-list"></div>
+
+    <div class="empty-state" hidden id="empty-msg">
+      <h3>لا توجد بلاغات مفتوحة</h3>
+      <p>كل البلاغات تمت مراجعتها.</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="footer-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+        <li><a href="contact.html">اتصل بنا</a></li>
+      </ul>
+      <span>© ٢٠٢٦ دبّرلي</span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { requireSession, signOut } from "./js/auth.js";
+    import { listOpenReports, resolveReport } from "./js/safety.js";
+
+    await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    const list = document.getElementById("reports-list");
+    const emptyMsg = document.getElementById("empty-msg");
+
+    function makeTag(text) {
+      const li = document.createElement("li");
+      li.className = "tag";
+      li.textContent = text;
+      return li;
+    }
+
+    function removeCard(card) {
+      card.remove();
+      if (list.children.length === 0) {
+        emptyMsg.hidden = false;
+      }
+    }
+
+    function renderCard(report) {
+      const card = document.createElement("article");
+      card.className = "card request-item";
+
+      const h3 = document.createElement("h3");
+      h3.textContent = report.reporter_name ?? "—";
+      card.appendChild(h3);
+
+      const tags = document.createElement("ul");
+      tags.className = "request-tags";
+      tags.appendChild(makeTag(`المُبلِّغ: ${report.reporter_name ?? "—"}`));
+      tags.appendChild(makeTag(`المُبلَّغ عنه: ${report.reported_user_name ?? "—"}`));
+      tags.appendChild(makeTag(`السبب: ${report.reason ?? "—"}`));
+      tags.appendChild(makeTag(`التاريخ: ${report.created_at ?? "—"}`));
+      card.appendChild(tags);
+
+      if (report.message_body) {
+        const messageBody = document.createElement("p");
+        messageBody.textContent = report.message_body;
+        card.appendChild(messageBody);
+      }
+
+      if (report.details) {
+        const details = document.createElement("p");
+        details.textContent = report.details;
+        card.appendChild(details);
+      }
+
+      const reviewedBtn = document.createElement("button");
+      reviewedBtn.className = "btn btn-primary";
+      reviewedBtn.textContent = "تمت المراجعة";
+
+      const dismissBtn = document.createElement("button");
+      dismissBtn.className = "btn btn-ghost";
+      dismissBtn.textContent = "رفض البلاغ";
+
+      const actions = document.createElement("div");
+      actions.style.display = "flex";
+      actions.style.gap = "8px";
+      actions.style.marginTop = "12px";
+
+      reviewedBtn.addEventListener("click", async () => {
+        reviewedBtn.disabled = true;
+        dismissBtn.disabled = true;
+        try {
+          await resolveReport(report.report_id, "reviewed");
+          removeCard(card);
+        } catch (err) {
+          console.error(err);
+          reviewedBtn.disabled = false;
+          dismissBtn.disabled = false;
+        }
+      });
+
+      dismissBtn.addEventListener("click", async () => {
+        reviewedBtn.disabled = true;
+        dismissBtn.disabled = true;
+        try {
+          await resolveReport(report.report_id, "dismissed");
+          removeCard(card);
+        } catch (err) {
+          console.error(err);
+          reviewedBtn.disabled = false;
+          dismissBtn.disabled = false;
+        }
+      });
+
+      actions.appendChild(reviewedBtn);
+      actions.appendChild(dismissBtn);
+      card.appendChild(actions);
+
+      return card;
+    }
+
+    const reports = await listOpenReports();
+    if (!reports || reports.length === 0) {
+      emptyMsg.hidden = false;
+    } else {
+      for (const report of reports) {
+        list.appendChild(renderCard(report));
+      }
+    }
+  </script>
+</body>
+</html>
