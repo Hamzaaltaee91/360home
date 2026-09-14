@@ -5,12 +5,14 @@ export async function submitRealtorApplication(
   licenseNumber,
   licenseExpiry,
   documentUrl,
+  whatsappPhone,
 ) {
   const { error } = await supabase.rpc("submit_realtor_application", {
     p_company_name: companyName,
     p_license_number: licenseNumber,
     p_license_expiry: licenseExpiry,
     p_document_url: documentUrl,
+    p_whatsapp_phone: whatsappPhone,
   });
   if (error) throw error;
 }

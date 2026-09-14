@@ -59,6 +59,11 @@
             <span class="error-text" data-error-for="license-number" hidden></span>
           </div>
           <div class="form-field">
+            <label for="whatsapp-phone">رقم واتساب</label>
+            <input type="tel" id="whatsapp-phone" required>
+            <span class="error-text" data-error-for="whatsapp-phone" hidden></span>
+          </div>
+          <div class="form-field">
             <label for="license-expiry">تاريخ انتهاء الرخصة</label>
             <input type="date" id="license-expiry" required>
             <span class="error-text" data-error-for="license-expiry" hidden></span>
@@ -175,6 +180,10 @@
         showFieldError("license-number", "الرجاء إدخال رقم الرخصة.");
         hasError = true;
       }
+      if (!val("whatsapp-phone")) {
+        showFieldError("whatsapp-phone", "الرجاء إدخال رقم واتساب.");
+        hasError = true;
+      }
       if (!val("license-expiry")) {
         showFieldError("license-expiry", "الرجاء اختيار تاريخ انتهاء الرخصة.");
         hasError = true;
@@ -198,6 +207,7 @@
           val("license-number"),
           val("license-expiry"),
           documentUrl,
+          val("whatsapp-phone"),
         );
         await refreshStatus();
       } catch (err) {
