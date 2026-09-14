@@ -71,6 +71,12 @@
 
       card.append(h1, pAddress, pPrice, pDesc, pMessage);
       detail.appendChild(card);
+
+      const messagesLink = document.createElement("a");
+      messagesLink.className = "btn";
+      messagesLink.textContent = "الرسائل";
+      messagesLink.href = `messages.html?offer_id=${encodeURIComponent(offerId)}`;
+      detail.appendChild(messagesLink);
     }
 
     const buttons = document.getElementById("response-buttons");
