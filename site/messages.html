@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المحادثة — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+        <li><a href="notifications.html" id="notifications-link">الإشعارات</a></li>
+        <li><a href="become-realtor.html">سجل كوسيط</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <a href="dashboard.html" class="btn btn-primary">طلباتي</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <h1>المحادثة</h1>
+        <p>راسل الطرف الآخر بخصوص هذا العرض.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="messages-list"></div>
+    </div>
+
+    <div class="empty-state" hidden id="empty-msg">
+      <h3>لا توجد رسائل بعد</h3>
+      <p>ابدأ المحادثة بإرسال أول رسالة.</p>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input
+          id="message-input"
+          type="text"
+          placeholder="اكتب رسالتك…"
+          autocomplete="off"
+          style="flex:1;padding:10px 12px;border:1px solid #ced4da;border-radius:8px;font:inherit;"
+        >
+        <button id="send-btn" type="button" class="btn btn-primary">إرسال</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== الفوتر ===== -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="footer-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+        <li><a href="request-new.html">طلب جديد</a></li>
+        <li><a href="contact.html">اتصل بنا</a></li>
+      </ul>
+      <span>© ٢٠٢٦ دبّرلي</span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { requireSession, signOut } from "./js/auth.js";
+    import { listMessages, markMessagesRead, sendMessage } from "./js/messages.js";
+    import { supabase } from "./js/supabase-client.js";
+
+    await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    const offerId = new URLSearchParams(window.location.search).get("offer_id");
+    if (!offerId) {
+      window.location.href = "dashboard.html";
+      throw new Error("missing offer_id");
+    }
+
+    const list = document.getElementById("messages-list");
+    const emptyMsg = document.getElementById("empty-msg");
+    const input = document.getElementById("message-input");
+    const sendBtn = document.getElementById("send-btn");
+
+    const { data: userData } = await supabase.auth.getUser();
+    const currentUserId = userData?.user?.id ?? null;
+
+    function timeLabel(createdAt) {
+      const d = new Date(createdAt);
+      if (isNaN(d.getTime())) return "";
+      return d.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function renderBubble(message) {
+      const mine =
+        currentUserId != null && message.sender_id === currentUserId;
+
+      const bubble = document.createElement("div");
+      bubble.style.maxWidth = "75%";
+      bubble.style.padding = "8px 12px";
+      bubble.style.marginBottom = "8px";
+      bubble.style.borderRadius = "12px";
+      bubble.style.wordBreak = "break-word";
+      bubble.style.background = mine ? "#0d6efd" : "#f1f3f5";
+      bubble.style.color = mine ? "#ffffff" : "#212529";
+      bubble.style.marginInlineStart = mine ? "auto" : "0";
+      bubble.style.marginInlineEnd = mine ? "0" : "auto";
+
+      const body = document.createElement("div");
+      body.textContent = message.body ?? "";
+
+      const time = document.createElement("div");
+      time.textContent = timeLabel(message.created_at);
+      time.style.fontSize = "0.75rem";
+      time.style.marginTop = "4px";
+      time.style.opacity = "0.75";
+
+      bubble.append(body, time);
+      return bubble;
+    }
+
+    function appendBubble(message) {
+      list.appendChild(renderBubble(message));
+      emptyMsg.hidden = true;
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    try {
+      const messages = await listMessages(offerId);
+      if (!messages || messages.length === 0) {
+        emptyMsg.hidden = false;
+      } else {
+        for (const m of messages) list.appendChild(renderBubble(m));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
+    try {
+      await markMessagesRead(offerId);
+    } catch (err) {
+      console.error(err);
+    }
+
+    async function onSend() {
+      const body = input.value.trim();
+      if (!body) return;
+      sendBtn.disabled = true;
+      try {
+        await sendMessage(offerId, body);
+        input.value = "";
+        appendBubble({
+          sender_id: currentUserId,
+          body,
+          created_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    sendBtn.addEventListener("click", onSend);
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        onSend();
+      }
+    });
+  </script>
+</body>
+</html>
