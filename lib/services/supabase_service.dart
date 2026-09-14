@@ -1170,6 +1170,28 @@ class SupabaseService {
     });
   }
 
+  // ==================== Audit Logs ====================
+
+  /// Returns audit log rows for the admin table, newest first.
+  ///
+  /// Each row embeds the acting user's full name under the `actor` key.
+  /// Results are capped at [limit] rows. Intended for the admin audit log
+  /// screen; admin authorization is enforced server-side by the audit_logs
+  /// RLS policy — no privilege logic is performed client-side.
+  Future<List<Map<String, dynamic>>> adminGetAuditLogs({int limit = 100}) {
+    return _guard(() async {
+      final response = await _client
+          .from('audit_logs')
+          .select('*, actor:users!audit_logs_actor_id_fkey(full_name)')
+          .order('created_at', ascending: false)
+          .limit(limit);
+
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
+
   // ==================== Reference Data ====================
 
   /// Returns the active options of the list identified by [listName],
