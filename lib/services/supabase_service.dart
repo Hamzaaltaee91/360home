@@ -996,6 +996,55 @@ class SupabaseService {
     });
   }
 
+  /// Returns moderation reports, newest first.
+  ///
+  /// When [status] is provided (e.g. 'open', 'reviewed', 'dismissed') only
+  /// reports with that status are returned. Each row embeds the reporter's
+  /// and reported user's full name under the `reporter` and `reported` keys.
+  /// Intended for the admin moderation screen; admin authorization is
+  /// enforced server-side by the reports RLS policy.
+  Future<List<Map<String, dynamic>>> adminListReports({String? status}) {
+    return _guard(() async {
+      var query = _client.from('reports').select(
+            '*, reporter:users!reports_reporter_id_fkey(full_name), '
+            'reported:users!reports_reported_user_id_fkey(full_name)',
+          );
+
+      if (status != null && status.isNotEmpty) {
+        query = query.eq('status', status);
+      }
+
+      final response = await query.order('created_at', ascending: false);
+
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
+
+  /// Resolves the report identified by [reportId] by setting its [status]
+  /// ('reviewed' or 'dismissed'), stamping the review time and the acting
+  /// user id.
+  ///
+  /// Intended for the admin moderation screen; admin authorization is
+  /// enforced server-side by the reports RLS policy — no privilege logic
+  /// is performed client-side.
+  Future<void> adminResolveReport({
+    required String reportId,
+    required String status,
+  }) {
+    return _guard(() async {
+      final userId = getCurrentUserId();
+      if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
+
+      await _client.from('reports').update({
+        'status': status,
+        'reviewed_at': DateTime.now().toIso8601String(),
+        'reviewed_by': userId,
+      }).eq('id', reportId);
+    });
+  }
+
   // ==================== Reference Data ====================
 
   /// Returns the active options of the list identified by [listName],
