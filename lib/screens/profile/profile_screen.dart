@@ -173,6 +173,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
                 const SizedBox(height: 24),
+                if (user.role == 'buyer') ...[
+                  ListTile(
+                    leading: const Icon(Icons.work_outline),
+                    title: const Text('سجّل كوسيط'),
+                    trailing: const Icon(Icons.chevron_left),
+                    onTap: () => context.push('/verification'),
+                  ),
+                  const Divider(height: 1),
+                ],
                 ElevatedButton.icon(
                   onPressed: _signOut,
                   icon: const Icon(Icons.logout),
