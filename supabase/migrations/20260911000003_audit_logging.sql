@@ -216,4 +216,11 @@ $$;
 -- pseudo-role that all roles inherit from; revoking from it removes the
 -- default execute grant. The `security definer` triggers call the helper
 -- internally, so no explicit grant is needed.
+--
+-- FIX: REVOKE ... FROM PUBLIC alone does not block PostgREST's `anon` and
+-- `authenticated` roles — Supabase grants EXECUTE to those directly, not
+-- through PUBLIC — so any signed-in (or anonymous) caller could invoke
+-- this over /rest/v1/rpc/write_audit_log and forge arbitrary audit log
+-- entries. Revoke from those roles explicitly too.
 revoke all on function public.write_audit_log(uuid, text, text, uuid, jsonb) from PUBLIC;
+revoke all on function public.write_audit_log(uuid, text, text, uuid, jsonb) from anon, authenticated;
