@@ -220,13 +220,18 @@ class _RealtorHomeScreenState extends State<RealtorHomeScreen> {
             label: 'الطلبات',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'الدردشات',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'الملف الشخصي',
           ),
         ],
         onTap: (index) {
           if (index == 1) context.go('/browse-requests');
-          if (index == 2) context.go('/profile');
+          if (index == 2) context.go('/chats');
+          if (index == 3) context.go('/profile');
         },
       ),
     );
