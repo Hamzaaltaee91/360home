@@ -54,3 +54,26 @@ export async function listMyOffers() {
   if (error) throw error;
   return data;
 }
+
+export async function uploadOfferPhotos(offerId, files) {
+  const photoUrls = [];
+  for (const file of files) {
+    const filePath = `offer-photos/${offerId}/${file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from("dabberli")
+      .upload(filePath, file);
+    if (uploadError) throw uploadError;
+    const { data: publicUrlData } = supabase.storage
+      .from("dabberli")
+      .getPublicUrl(filePath);
+    photoUrls.push(publicUrlData.publicUrl);
+  }
+
+  const { error: updateError } = await supabase
+    .from("realtor_offers")
+    .update({ photo_urls: photoUrls })
+    .eq("id", offerId);
+  if (updateError) throw updateError;
+
+  return photoUrls;
+}
