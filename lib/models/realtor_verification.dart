@@ -2,59 +2,58 @@
 
 class RealtorVerification {
   final String id;
-  final String userId;
+  final String? realtorId;
   final String status; // 'pending', 'approved', 'rejected'
+  final String? fullName;
+  final String? email;
+  final String? companyName;
   final String? licenseNumber;
+  final DateTime? licenseExpiry;
   final String? documentUrl;
   final String? rejectionReason;
-  final String? verifiedBy;
   final DateTime? reviewedAt;
   final DateTime createdAt;
-  final DateTime updatedAt;
 
   RealtorVerification({
     required this.id,
-    required this.userId,
+    this.realtorId,
     required this.status,
+    this.fullName,
+    this.email,
+    this.companyName,
     this.licenseNumber,
+    this.licenseExpiry,
     this.documentUrl,
     this.rejectionReason,
-    this.verifiedBy,
     this.reviewedAt,
     required this.createdAt,
-    required this.updatedAt,
   });
 
+  /// Parses rows from both `list_pending_realtor_applications` (always
+  /// pending; no `verification_status` column) and
+  /// `get_my_verification_status` (has `verification_status`, no
+  /// company_name/license_expiry/full_name/email).
   factory RealtorVerification.fromJson(Map<String, dynamic> json) {
     return RealtorVerification(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      status: json['status'] as String,
+      id: (json['verification_id'] ?? json['id']) as String,
+      realtorId: json['realtor_id'] as String?,
+      status:
+          (json['verification_status'] ?? json['status'] ?? 'pending')
+              as String,
+      fullName: json['full_name'] as String?,
+      email: json['email'] as String?,
+      companyName: json['company_name'] as String?,
       licenseNumber: json['license_number'] as String?,
+      licenseExpiry: json['license_expiry'] != null
+          ? DateTime.parse(json['license_expiry'] as String)
+          : null,
       documentUrl: json['document_url'] as String?,
       rejectionReason: json['rejection_reason'] as String?,
-      verifiedBy: json['verified_by'] as String?,
       reviewedAt: json['reviewed_at'] != null
           ? DateTime.parse(json['reviewed_at'] as String)
           : null,
       createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'user_id': userId,
-      'status': status,
-      'license_number': licenseNumber,
-      'document_url': documentUrl,
-      'rejection_reason': rejectionReason,
-      'verified_by': verifiedBy,
-      'reviewed_at': reviewedAt?.toIso8601String(),
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-    };
   }
 
   /// Whether the verification has been approved.
@@ -63,59 +62,39 @@ class RealtorVerification {
   /// Whether the verification is still awaiting review.
   bool get isPending => status == 'pending';
 
-  RealtorVerification copyWith({
-    String? id,
-    String? userId,
-    String? status,
-    String? licenseNumber,
-    String? documentUrl,
-    String? rejectionReason,
-    String? verifiedBy,
-    DateTime? reviewedAt,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return RealtorVerification(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
-      status: status ?? this.status,
-      licenseNumber: licenseNumber ?? this.licenseNumber,
-      documentUrl: documentUrl ?? this.documentUrl,
-      rejectionReason: rejectionReason ?? this.rejectionReason,
-      verifiedBy: verifiedBy ?? this.verifiedBy,
-      reviewedAt: reviewedAt ?? this.reviewedAt,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
-
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is RealtorVerification &&
           runtimeType == other.runtimeType &&
           id == other.id &&
-          userId == other.userId &&
+          realtorId == other.realtorId &&
           status == other.status &&
+          fullName == other.fullName &&
+          email == other.email &&
+          companyName == other.companyName &&
           licenseNumber == other.licenseNumber &&
+          licenseExpiry == other.licenseExpiry &&
           documentUrl == other.documentUrl &&
           rejectionReason == other.rejectionReason &&
-          verifiedBy == other.verifiedBy &&
           reviewedAt == other.reviewedAt &&
-          createdAt == other.createdAt &&
-          updatedAt == other.updatedAt;
+          createdAt == other.createdAt;
 
   @override
   int get hashCode => Object.hash(
         id,
-        userId,
+        realtorId,
         status,
-        licenseNumber,
-        documentUrl,
-        rejectionReason,
-        verifiedBy,
+        fullName,
+        email,
+        Object.hash(
+          companyName,
+          licenseNumber,
+          licenseExpiry,
+          documentUrl,
+          rejectionReason,
+        ),
         reviewedAt,
         createdAt,
-        updatedAt,
       );
 }

@@ -234,7 +234,7 @@ class _VerificationCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    verification.licenseNumber ?? 'رقم رخصة غير متوفر',
+                    verification.fullName ?? 'اسم غير متوفر',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -242,6 +242,24 @@ class _VerificationCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (verification.email != null) ...[
+              const SizedBox(height: 4),
+              Text(verification.email!, style: theme.textTheme.bodySmall),
+            ],
+            const SizedBox(height: 8),
+            Text(
+              verification.companyName ?? 'اسم الشركة غير متوفر',
+              style: theme.textTheme.bodyMedium,
+            ),
+            Text(
+              'رقم الرخصة: ${verification.licenseNumber ?? '—'}',
+              style: theme.textTheme.bodySmall,
+            ),
+            if (verification.licenseExpiry != null)
+              Text(
+                'انتهاء الرخصة: ${_formatDate(verification.licenseExpiry!)}',
+                style: theme.textTheme.bodySmall,
+              ),
             const SizedBox(height: 8),
             Text(
               'تاريخ الطلب: ${_formatDate(verification.createdAt)}',

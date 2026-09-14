@@ -17,11 +17,13 @@ class VerificationScreen extends StatefulWidget {
 class _VerificationScreenState extends State<VerificationScreen> {
   final SupabaseService _supabase = SupabaseService();
   final _formKey = GlobalKey<FormState>();
+  final _companyNameController = TextEditingController();
   final _licenseController = TextEditingController();
   final _documentUrlController = TextEditingController();
 
   late Future<RealtorVerification?> _verificationFuture;
   bool _submitting = false;
+  DateTime? _licenseExpiry;
 
   @override
   void initState() {
@@ -31,6 +33,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   @override
   void dispose() {
+    _companyNameController.dispose();
     _licenseController.dispose();
     _documentUrlController.dispose();
     super.dispose();
@@ -40,13 +43,33 @@ class _VerificationScreenState extends State<VerificationScreen> {
     setState(() => _verificationFuture = _supabase.getMyVerification());
   }
 
+  Future<void> _pickLicenseExpiry() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _licenseExpiry ?? DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
+    );
+    if (picked != null) {
+      setState(() => _licenseExpiry = picked);
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_licenseExpiry == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('الرجاء اختيار تاريخ انتهاء الرخصة')),
+      );
+      return;
+    }
 
     setState(() => _submitting = true);
     try {
       await _supabase.submitVerification(
+        companyName: _companyNameController.text.trim(),
         licenseNumber: _licenseController.text.trim(),
+        licenseExpiry: _licenseExpiry!,
         documentUrl: _documentUrlController.text.trim(),
       );
       if (!mounted) return;
@@ -197,10 +220,20 @@ class _VerificationScreenState extends State<VerificationScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'يرجى إدخال رقم الترخيص ورابط مستند التوثيق.',
+              'يرجى إدخال بيانات الشركة والترخيص ورابط مستند التوثيق.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey[600],
                   ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _companyNameController,
+              decoration: const InputDecoration(
+                labelText: 'اسم الشركة',
+                border: OutlineInputBorder(),
+              ),
+              validator: (value) =>
+                  Validators.required(value, field: 'اسم الشركة'),
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -211,6 +244,21 @@ class _VerificationScreenState extends State<VerificationScreen> {
               ),
               validator: (value) =>
                   Validators.required(value, field: 'رقم الترخيص'),
+            ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: _pickLicenseExpiry,
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'تاريخ انتهاء الرخصة',
+                  border: OutlineInputBorder(),
+                ),
+                child: Text(
+                  _licenseExpiry == null
+                      ? '— اختر التاريخ —'
+                      : '${_licenseExpiry!.year}-${_licenseExpiry!.month.toString().padLeft(2, '0')}-${_licenseExpiry!.day.toString().padLeft(2, '0')}',
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             TextFormField(

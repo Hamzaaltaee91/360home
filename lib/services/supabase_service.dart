@@ -543,88 +543,76 @@ class SupabaseService {
   }
 
   // ==================== Realtor Verifications ====================
+  //
+  // All privilege logic (the is_admin() check and the role flip on
+  // approval) lives server-side in these SECURITY DEFINER RPCs, defined in
+  // supabase/migrations/20260911000009_realtor_application_approval.sql
+  // and 20260908000008_realtor_verifications.sql. No client code here ever
+  // reads or writes a role, or touches the realtor_verifications table
+  // directly.
 
-  /// Returns the current user's verification request, or `null` if none
-  /// has been submitted yet.
+  /// Returns the current user's latest verification request, or `null` if
+  /// none has been submitted yet.
   Future<RealtorVerification?> getMyVerification() {
     return _guard(() async {
-      final userId = getCurrentUserId();
-      if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
-
-      final response = await _client
-          .from('realtor_verifications')
-          .select()
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      if (response == null) return null;
-      return RealtorVerification.fromJson(response);
+      final response =
+          await _client.rpc('get_my_verification_status') as List;
+      if (response.isEmpty) return null;
+      return RealtorVerification.fromJson(
+        response.first as Map<String, dynamic>,
+      );
     });
   }
 
-  /// Submits a new verification request for the current user.
-  Future<RealtorVerification> submitVerification({
+  /// Submits a new realtor application for the current user.
+  Future<void> submitVerification({
+    required String companyName,
     required String licenseNumber,
+    required DateTime licenseExpiry,
     required String documentUrl,
   }) {
     return _guard(() async {
-      final userId = getCurrentUserId();
-      if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
-
-      final response = await _client
-          .from('realtor_verifications')
-          .insert({
-            'user_id': userId,
-            'status': 'pending',
-            'license_number': licenseNumber,
-            'document_url': documentUrl,
-          })
-          .select()
-          .single();
-
-      return RealtorVerification.fromJson(response);
+      await _client.rpc('submit_realtor_application', params: {
+        'p_company_name': companyName,
+        'p_license_number': licenseNumber,
+        'p_license_expiry': licenseExpiry.toIso8601String().split('T').first,
+        'p_document_url': documentUrl,
+      });
     });
   }
 
-  /// Returns all verification requests with the given [status], newest first.
+  /// Returns all pending realtor applications, oldest first.
   /// Intended for the admin review screen.
   Future<List<RealtorVerification>> getVerifications({
     String status = 'pending',
   }) {
     return _guard(() async {
-      final response = await _client
-          .from('realtor_verifications')
-          .select()
-          .eq('status', status)
-          .order('created_at', ascending: false);
-
-      return (response as List)
+      final response =
+          await _client.rpc('list_pending_realtor_applications') as List;
+      return response
           .map((e) => RealtorVerification.fromJson(e as Map<String, dynamic>))
           .toList();
     });
   }
 
-  /// Approves or rejects a verification request via the `verify-realtor`
-  /// Edge Function. [rejectionReason] is required when rejecting.
-  Future<RealtorVerification> reviewVerification({
+  /// Approves or rejects a realtor application. [rejectionReason] is
+  /// required when rejecting.
+  Future<void> reviewVerification({
     required String verificationId,
     required bool approve,
     String? rejectionReason,
   }) {
     return _guard(() async {
-      final response = await _client.functions.invoke(
-        'verify-realtor',
-        body: {
-          'verification_id': verificationId,
-          'action': approve ? 'approve' : 'reject',
-          if (rejectionReason != null) 'rejection_reason': rejectionReason,
-        },
-      );
-
-      return RealtorVerification.fromJson(
-        (response.data as Map<String, dynamic>)['verification']
-            as Map<String, dynamic>,
-      );
+      if (approve) {
+        await _client.rpc('approve_realtor_application', params: {
+          'p_verification_id': verificationId,
+        });
+      } else {
+        await _client.rpc('reject_realtor_application', params: {
+          'p_verification_id': verificationId,
+          'p_reason': rejectionReason,
+        });
+      }
     });
   }
 
