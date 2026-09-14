@@ -432,3 +432,10 @@ SANITY FAILED
 - الطلب يقرأ/يُدرج مباشرة من جهة العميل في public.users و public.realtors → يمس الأدوار/الصلاحيات وRLS → يخالف §5.
 
 المطلوب: مراجعة بشرية. لا تنفيذ.
+
+## BLOCKED: Create site/edit-request.html, a page for a signed-in buyer to edit one of their own property requests. Guard with requireSession from site/js/auth.js, reuse the same nav/page-head/form-field markup and css/style.css classes already used in site/request-new.html, including the same فئة/عنوان/وصف/المحافظة+المنطقة cascading dropdowns from site/js/iraq-locations.js/نوع العقار/مدة الإيجار/الحد الأدنى والأقصى للسعر/غرف/حمامات fields and the same Arabic-numeral conversion pattern for numeric inputs. Read id from the URL query string; on load call getRequest(id) from site/js/requests.js and prefill every field with the returned values. On submit, call updateRequest(id, fields) from site/js/requests.js with the edited values, then redirect to request.html?id=<id>. Touch only this one new file — nothing under lib/, no other file.
+التاريخ: 2026-09-14 08:14:40
+آخر سبب فشل:
+```
+تجاوز الحد: 303 سطر مضاف (الحد 300)
+```
