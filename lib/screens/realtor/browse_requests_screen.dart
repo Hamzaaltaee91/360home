@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import '../../services/supabase_service.dart';
 import '../../services/location_service.dart';
 import '../../models/models.dart';
+import '../../utils/iraq_locations.dart';
 
 class BrowseRequestsScreen extends StatefulWidget {
   const BrowseRequestsScreen({Key? key}) : super(key: key);
@@ -37,6 +38,8 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
   static const int _pageSize = 20;
 
   String _selectedCategory = 'all';
+  String _selectedPurpose = 'all';
+  String _selectedGovernorate = 'all';
   String _sortBy = 'recent';
 
   /// Whether the map view is shown instead of the list view.
@@ -163,6 +166,17 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
           filtered.where((r) => r.category == _selectedCategory).toList();
     }
 
+    if (_selectedPurpose != 'all') {
+      filtered =
+          filtered.where((r) => r.purpose == _selectedPurpose).toList();
+    }
+
+    if (_selectedGovernorate != 'all') {
+      filtered = filtered
+          .where((r) => r.governorate == _selectedGovernorate)
+          .toList();
+    }
+
     // Radius filter: only keep requests with coordinates within range.
     final userLocation = _userLocation;
     final radiusKm = _radiusKm;
@@ -237,6 +251,52 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
                       _buildCategoryChip('أراضي', 'land'),
                     ],
                   ),
+                ),
+                const SizedBox(height: 12),
+                // Purpose + governorate filters
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButton<String>(
+                        value: _selectedPurpose,
+                        isExpanded: true,
+                        items: const [
+                          DropdownMenuItem(value: 'all', child: Text('الغرض: الكل')),
+                          DropdownMenuItem(value: 'buy', child: Text('شراء')),
+                          DropdownMenuItem(value: 'rent', child: Text('إيجار')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _selectedPurpose = value);
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButton<String>(
+                        value: _selectedGovernorate,
+                        isExpanded: true,
+                        items: [
+                          const DropdownMenuItem(
+                            value: 'all',
+                            child: Text('المحافظة: الكل'),
+                          ),
+                          ...iraqLocations.entries.map(
+                            (e) => DropdownMenuItem(
+                              value: e.key,
+                              child: Text(e.value['label'] as String),
+                            ),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _selectedGovernorate = value);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 // Sort dropdown
@@ -532,6 +592,29 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
                           request.city,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
+                        if (request.purpose != null ||
+                            request.governorate != null) ...[
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 6,
+                            children: [
+                              if (request.purpose != null)
+                                _buildSpecChip(
+                                  icon: Icons.sell,
+                                  label: request.purpose == 'rent'
+                                      ? 'إيجار'
+                                      : 'شراء',
+                                ),
+                              if (request.governorate != null)
+                                _buildSpecChip(
+                                  icon: Icons.map,
+                                  label: iraqLocations[request.governorate]
+                                          ?['label'] as String? ??
+                                      request.governorate!,
+                                ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
