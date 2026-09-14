@@ -1152,22 +1152,21 @@ class SupabaseService {
   /// user id.
   ///
   /// Intended for the admin moderation screen; admin authorization is
-  /// enforced server-side by the reports RLS policy — no privilege logic
-  /// is performed client-side.
+  /// The `reports` table has no UPDATE RLS policy (only an admin-only
+  /// SELECT policy), so this calls the existing `resolve_report` RPC
+  /// (SECURITY DEFINER, checks is_admin() internally) instead of updating
+  /// the table directly — a direct update would be silently denied by RLS
+  /// for every caller, admins included.
   Future<void> adminResolveReport({
     required String reportId,
     required String status,
   }) {
-    return _guard(() async {
-      final userId = getCurrentUserId();
-      if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
-
-      await _client.from('reports').update({
-        'status': status,
-        'reviewed_at': DateTime.now().toIso8601String(),
-        'reviewed_by': userId,
-      }).eq('id', reportId);
-    });
+    return _guard(
+      () => _client.rpc('resolve_report', params: {
+        'p_report_id': reportId,
+        'p_status': status,
+      }),
+    );
   }
 
   // ==================== Audit Logs ====================
