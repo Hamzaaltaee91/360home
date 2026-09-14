@@ -36,6 +36,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _confirmDeleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('حذف الحساب'),
+        content: const Text(
+          'سيتم حذف حسابك وجميع بياناتك نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
+            child: const Text('حذف نهائياً'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await SupabaseService().deleteAccount();
+      if (mounted) {
+        context.go('/login');
+      }
+    } catch (error) {
+      if (mounted) {
+        final message = error is AppException
+            ? error.message
+            : 'حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,6 +177,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: _signOut,
                   icon: const Icon(Icons.logout),
                   label: const Text('تسجيل الخروج'),
+                ),
+                const SizedBox(height: 12),
+                TextButton.icon(
+                  onPressed: _confirmDeleteAccount,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                  icon: const Icon(Icons.delete_forever_outlined),
+                  label: const Text('حذف الحساب'),
                 ),
               ],
             ),
