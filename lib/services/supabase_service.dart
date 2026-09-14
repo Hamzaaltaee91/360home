@@ -858,21 +858,23 @@ class SupabaseService {
 
   // ==================== Moderation ====================
 
-  /// Reports the content identified by [entityType] and [entityId] for
-  /// moderator review. [reason] is a short free-text explanation.
+  /// Reports a user and/or one of their messages for moderator review.
+  /// [reason] is a short free-text explanation; [details] is optional.
   ///
   /// All authorization and validation happens server-side in the
   /// `report_content` RPC.
   Future<void> reportContent({
-    required String entityType,
-    required String entityId,
+    String? reportedUserId,
+    String? messageId,
     required String reason,
+    String? details,
   }) {
     return _guard(
       () => _client.rpc('report_content', params: {
-        'p_entity_type': entityType,
-        'p_entity_id': entityId,
+        'p_reported_user_id': reportedUserId,
+        'p_message_id': messageId,
         'p_reason': reason,
+        'p_details': details,
       }),
     );
   }
