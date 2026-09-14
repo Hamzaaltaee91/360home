@@ -134,6 +134,17 @@ class SupabaseService {
     });
   }
 
+  /// Permanently deletes the current user's account.
+  ///
+  /// All authorization and data-deletion logic lives server-side in the
+  /// `delete-account` Edge Function; this only invokes it with the
+  /// caller's session token. No privilege logic is performed client-side.
+  Future<void> deleteAccount() {
+    return _guard(() async {
+      await _client.functions.invoke('delete-account');
+    });
+  }
+
   String? getCurrentUserId() {
     return _client.auth.currentUser?.id;
   }
