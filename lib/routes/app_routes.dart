@@ -15,6 +15,7 @@ import '../screens/buyer/edit_request_screen.dart';
 import '../screens/buyer/browse_offers_screen.dart';
 import '../screens/buyer/offer_details_screen.dart';
 import '../screens/buyer/request_details_screen.dart';
+import '../screens/messages_screen.dart';
 import '../screens/realtor/realtor_home_screen.dart';
 import '../screens/realtor/browse_requests_screen.dart';
 import '../screens/realtor/create_offer_screen.dart';
@@ -48,6 +49,7 @@ class RouteNames {
   static const String editRequest = '/edit-request/:requestId';
   static const String browseOffers = '/browse-offers';
   static const String offerDetails = '/offer/:offerId';
+  static const String messages = '/messages/:offerId';
   static const String requestDetails = '/request/:requestId';
 
   // Realtor
@@ -260,6 +262,13 @@ final appRoutes = GoRouter(
       builder: (context, state) {
         final offerId = state.pathParameters['offerId']!;
         return OfferDetailsScreen(offerId: offerId);
+      },
+    ),
+    GoRoute(
+      path: RouteNames.messages,
+      builder: (context, state) {
+        final offerId = state.pathParameters['offerId']!;
+        return MessagesScreen(offerId: offerId);
       },
     ),
     GoRoute(
