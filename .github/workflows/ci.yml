@@ -174,3 +174,15 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: build/web
+
+      - name: Build web release for the droplet's /admin/ path
+        if: steps.check_web.outputs.skip == 'false'
+        run: flutter build web --release --base-href /admin/ --output build/web-admin
+
+      - name: Upload droplet admin build artifact
+        if: steps.check_web.outputs.skip == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-admin-build
+          path: build/web-admin
+          retention-days: 7

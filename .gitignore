@@ -18,6 +18,10 @@
 # Flutter
 build/
 .dart_tool/
+
+# Flutter web build served locally by nginx at /admin/ (not tracked —
+# rebuilt/redeployed from CI, not part of the source repo)
+site/admin/
 .packages
 *.iml
 pubspec.lock
