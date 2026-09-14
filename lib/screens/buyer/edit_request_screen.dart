@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../models/models.dart';
 import '../../services/supabase_service.dart';
+import '../../utils/iraq_locations.dart';
 import '../../utils/validators.dart';
 
 class EditRequestScreen extends StatefulWidget {
@@ -25,11 +26,18 @@ class _EditRequestScreenState extends State<EditRequestScreen> {
   final _maxPriceController = TextEditingController();
   final _bedroomsController = TextEditingController();
   final _bathroomsController = TextEditingController();
+  final _areaOtherController = TextEditingController();
 
   bool _isLoading = true;
   bool _isSaving = false;
   String? _loadError;
   String _status = 'active';
+  String _category = 'residential';
+  String _selectedPurpose = 'buy';
+  String? _selectedGovernorate;
+  String? _selectedArea;
+  String? _selectedPropertySubtype;
+  String? _selectedRentalPeriod;
 
   @override
   void initState() {
@@ -45,6 +53,7 @@ class _EditRequestScreenState extends State<EditRequestScreen> {
     _maxPriceController.dispose();
     _bedroomsController.dispose();
     _bathroomsController.dispose();
+    _areaOtherController.dispose();
     super.dispose();
   }
 
@@ -77,6 +86,37 @@ class _EditRequestScreenState extends State<EditRequestScreen> {
     _bedroomsController.text = request.bedrooms?.toString() ?? '';
     _bathroomsController.text = request.bathrooms?.toString() ?? '';
     _status = request.status;
+    _category = request.category;
+    _selectedPurpose = request.purpose ?? 'buy';
+    _selectedGovernorate = request.governorate;
+    _selectedPropertySubtype = request.propertySubtype;
+    _selectedRentalPeriod = request.rentalPeriod;
+
+    final areas = _areaOptionsFor(request.governorate);
+    final knownValues = areas.map((a) => a['value'] as String).toSet();
+    if (request.area != null && knownValues.contains(request.area)) {
+      _selectedArea = request.area;
+    } else if (request.area != null) {
+      _selectedArea = 'other';
+      _areaOtherController.text = request.area!;
+    }
+  }
+
+  List<Map> _areaOptionsFor(String? governorate) {
+    if (governorate == null || iraqLocations[governorate] == null) {
+      return const <Map>[];
+    }
+    return (iraqLocations[governorate]!['areas'] as List).cast<Map>();
+  }
+
+  List<Map> get _areaOptions => _areaOptionsFor(_selectedGovernorate);
+
+  void _onGovernorateChanged(String? value) {
+    setState(() {
+      _selectedGovernorate = value;
+      _selectedArea = null;
+      _areaOtherController.clear();
+    });
   }
 
   Future<void> _handleSave() async {
@@ -106,6 +146,15 @@ class _EditRequestScreenState extends State<EditRequestScreen> {
         bathrooms: _bathroomsController.text.trim().isNotEmpty
             ? int.parse(_bathroomsController.text.trim())
             : null,
+        purpose: _selectedPurpose,
+        governorate: _selectedGovernorate,
+        area: _selectedArea == 'other'
+            ? _areaOtherController.text.trim()
+            : _selectedArea,
+        propertySubtype:
+            _category == 'residential' ? _selectedPropertySubtype : null,
+        rentalPeriod:
+            _selectedPurpose == 'rent' ? _selectedRentalPeriod : null,
       );
 
       if (!mounted) return;
@@ -182,6 +231,99 @@ class _EditRequestScreenState extends State<EditRequestScreen> {
               validator: (value) =>
                   Validators.required(value, field: 'عنوان الطلب'),
             ),
+            const SizedBox(height: 24),
+            Text(
+              'الغرض',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'buy', label: Text('شراء')),
+                ButtonSegment(value: 'rent', label: Text('إيجار')),
+              ],
+              selected: {_selectedPurpose},
+              onSelectionChanged: (Set<String> newSelection) {
+                setState(() => _selectedPurpose = newSelection.first);
+              },
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _selectedGovernorate,
+              decoration: const InputDecoration(
+                labelText: 'المحافظة *',
+                prefixIcon: Icon(Icons.map),
+              ),
+              items: iraqLocations.entries
+                  .map<DropdownMenuItem<String>>((e) => DropdownMenuItem<String>(
+                        value: e.key,
+                        child: Text(e.value['label'] as String),
+                      ))
+                  .toList(),
+              onChanged: _isSaving ? null : _onGovernorateChanged,
+              validator: (value) =>
+                  Validators.required(value, field: 'المحافظة'),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: _selectedArea,
+              decoration: const InputDecoration(
+                labelText: 'المنطقة *',
+                prefixIcon: Icon(Icons.location_on),
+              ),
+              items: _areaOptions
+                  .map<DropdownMenuItem<String>>((a) => DropdownMenuItem<String>(
+                        value: a['value'] as String,
+                        child: Text(a['label'] as String),
+                      ))
+                  .toList(),
+              onChanged: _isSaving
+                  ? null
+                  : (value) {
+                      setState(() {
+                        _selectedArea = value;
+                        if (value != 'other') {
+                          _areaOtherController.clear();
+                        }
+                      });
+                    },
+              validator: (value) =>
+                  Validators.required(value, field: 'المنطقة'),
+            ),
+            if (_selectedArea == 'other') ...[
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _areaOtherController,
+                decoration: const InputDecoration(
+                  labelText: 'اسم المنطقة *',
+                  prefixIcon: Icon(Icons.edit_location),
+                ),
+                validator: (value) =>
+                    Validators.required(value, field: 'اسم المنطقة'),
+              ),
+            ],
+            if (_selectedPurpose == 'rent') ...[
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedRentalPeriod,
+                decoration: const InputDecoration(
+                  labelText: 'مدة الإيجار *',
+                  prefixIcon: Icon(Icons.calendar_today),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'daily', child: Text('يومي')),
+                  DropdownMenuItem(value: 'weekly', child: Text('أسبوعي')),
+                  DropdownMenuItem(value: 'monthly', child: Text('شهري')),
+                  DropdownMenuItem(value: 'yearly', child: Text('سنوي')),
+                ],
+                onChanged: _isSaving
+                    ? null
+                    : (value) =>
+                        setState(() => _selectedRentalPeriod = value),
+                validator: (value) =>
+                    Validators.required(value, field: 'مدة الإيجار'),
+              ),
+            ],
             const SizedBox(height: 16),
             TextField(
               controller: _descriptionController,
@@ -237,6 +379,28 @@ class _EditRequestScreenState extends State<EditRequestScreen> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
+            if (_category == 'residential') ...[
+              DropdownButtonFormField<String>(
+                value: _selectedPropertySubtype,
+                decoration: const InputDecoration(
+                  labelText: 'نوع العقار *',
+                  prefixIcon: Icon(Icons.house),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'apartment', child: Text('شقة')),
+                  DropdownMenuItem(value: 'house', child: Text('بيت')),
+                  DropdownMenuItem(value: 'villa', child: Text('فيلا')),
+                  DropdownMenuItem(value: 'duplex', child: Text('دوبلكس')),
+                ],
+                onChanged: _isSaving
+                    ? null
+                    : (value) =>
+                        setState(() => _selectedPropertySubtype = value),
+                validator: (value) =>
+                    Validators.required(value, field: 'نوع العقار'),
+              ),
+              const SizedBox(height: 16),
+            ],
             Row(
               children: [
                 Expanded(

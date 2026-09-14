@@ -120,6 +120,11 @@ class PropertyRequest {
   final String? description;
   final String city;
   final String? areaName;
+  final String? purpose; // 'rent', 'buy'
+  final String? governorate;
+  final String? area;
+  final String? propertySubtype;
+  final String? rentalPeriod;
   final double? latitude;
   final double? longitude;
   final double? minPrice;
@@ -145,6 +150,11 @@ class PropertyRequest {
     this.description,
     required this.city,
     this.areaName,
+    this.purpose,
+    this.governorate,
+    this.area,
+    this.propertySubtype,
+    this.rentalPeriod,
     this.latitude,
     this.longitude,
     this.minPrice,
@@ -172,6 +182,11 @@ class PropertyRequest {
       description: json['description'] as String?,
       city: json['city'] as String,
       areaName: json['area_name'] as String?,
+      purpose: json['purpose'] as String?,
+      governorate: json['governorate'] as String?,
+      area: json['area'] as String?,
+      propertySubtype: json['property_subtype'] as String?,
+      rentalPeriod: json['rental_period'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
       minPrice: (json['min_price'] as num?)?.toDouble(),
@@ -202,6 +217,11 @@ class PropertyRequest {
       'description': description,
       'city': city,
       'area_name': areaName,
+      'purpose': purpose,
+      'governorate': governorate,
+      'area': area,
+      'property_subtype': propertySubtype,
+      'rental_period': rentalPeriod,
       'latitude': latitude,
       'longitude': longitude,
       'min_price': minPrice,
@@ -229,6 +249,11 @@ class PropertyRequest {
     String? description,
     String? city,
     String? areaName,
+    String? purpose,
+    String? governorate,
+    String? area,
+    String? propertySubtype,
+    String? rentalPeriod,
     double? latitude,
     double? longitude,
     double? minPrice,
@@ -254,6 +279,11 @@ class PropertyRequest {
       description: description ?? this.description,
       city: city ?? this.city,
       areaName: areaName ?? this.areaName,
+      purpose: purpose ?? this.purpose,
+      governorate: governorate ?? this.governorate,
+      area: area ?? this.area,
+      propertySubtype: propertySubtype ?? this.propertySubtype,
+      rentalPeriod: rentalPeriod ?? this.rentalPeriod,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       minPrice: minPrice ?? this.minPrice,
@@ -285,6 +315,11 @@ class PropertyRequest {
           description == other.description &&
           city == other.city &&
           areaName == other.areaName &&
+          purpose == other.purpose &&
+          governorate == other.governorate &&
+          area == other.area &&
+          propertySubtype == other.propertySubtype &&
+          rentalPeriod == other.rentalPeriod &&
           latitude == other.latitude &&
           longitude == other.longitude &&
           minPrice == other.minPrice &&
@@ -325,6 +360,13 @@ class PropertyRequest {
           status,
           isUrgent,
           preferredContact,
+        ),
+        Object.hash(
+          purpose,
+          governorate,
+          area,
+          propertySubtype,
+          rentalPeriod,
         ),
         createdAt,
         updatedAt,
