@@ -1307,6 +1307,39 @@ class SupabaseService {
     });
   }
 
+  /// Returns every governorate, active and inactive, ordered by sort_order
+  /// (admin only). See [adminListListOptions] for why this exists alongside
+  /// [getGovernorates].
+  Future<List<Map<String, dynamic>>> adminListGovernorates() {
+    return _guard(() async {
+      final response = await _client
+          .from('governorates')
+          .select('slug, label, sort_order, active')
+          .order('sort_order');
+
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
+
+  /// Returns every area of the governorate identified by [governorateSlug],
+  /// active and inactive, ordered by sort_order (admin only). See
+  /// [adminListListOptions] for why this exists alongside [getAreas].
+  Future<List<Map<String, dynamic>>> adminListAreas(String governorateSlug) {
+    return _guard(() async {
+      final response = await _client
+          .from('areas')
+          .select('id, value, label, sort_order, active')
+          .eq('governorate_slug', governorateSlug)
+          .order('sort_order');
+
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
+
   /// Creates or updates the governorate identified by [slug] (admin only).
   ///
   /// The `slug` is the conflict target, so re-submitting an existing

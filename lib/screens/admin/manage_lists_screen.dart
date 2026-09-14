@@ -42,7 +42,7 @@ class _ManageListsScreenState extends State<ManageListsScreen> {
     });
 
     try {
-      final options = await _service.getListOptions(_selectedList);
+      final options = await _service.adminListListOptions(_selectedList);
 
       if (!mounted) return;
       setState(() {
@@ -273,9 +273,13 @@ class _ManageListsScreenState extends State<ManageListsScreen> {
           final code = row['code'] as String? ?? '';
           final label = row['label'] as String? ?? '';
           final sortOrder = row['sort_order'] as int? ?? 0;
+          final active = row['active'] as bool? ?? true;
           return ListTile(
             title: Text(label),
-            subtitle: Text('Code: $code · Sort order: $sortOrder'),
+            subtitle: Text(
+              'Code: $code · Sort order: $sortOrder'
+              '${active ? '' : ' · Inactive'}',
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
