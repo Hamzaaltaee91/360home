@@ -855,4 +855,64 @@ class SupabaseService {
       return response;
     });
   }
+
+  // ==================== Moderation ====================
+
+  /// Reports the content identified by [entityType] and [entityId] for
+  /// moderator review. [reason] is a short free-text explanation.
+  ///
+  /// All authorization and validation happens server-side in the
+  /// `report_content` RPC.
+  Future<void> reportContent({
+    required String entityType,
+    required String entityId,
+    required String reason,
+  }) {
+    return _guard(
+      () => _client.rpc('report_content', params: {
+        'p_entity_type': entityType,
+        'p_entity_id': entityId,
+        'p_reason': reason,
+      }),
+    );
+  }
+
+  /// Blocks the user identified by [userId] for the current user.
+  ///
+  /// All authorization and validation happens server-side in the
+  /// `block_user` RPC.
+  Future<void> blockUser(String userId) {
+    return _guard(
+      () => _client.rpc('block_user', params: {
+        'p_user_id': userId,
+      }),
+    );
+  }
+
+  /// Removes a previously created block on the user identified by
+  /// [userId] for the current user.
+  ///
+  /// All authorization and validation happens server-side in the
+  /// `unblock_user` RPC.
+  Future<void> unblockUser(String userId) {
+    return _guard(
+      () => _client.rpc('unblock_user', params: {
+        'p_user_id': userId,
+      }),
+    );
+  }
+
+  /// Returns the users blocked by the current user.
+  ///
+  /// All authorization and validation happens server-side in the
+  /// `list_blocked_users` RPC.
+  Future<List<Map<String, dynamic>>> listBlockedUsers() {
+    return _guard(() async {
+      final response =
+          await _client.rpc('list_blocked_users') as List;
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
 }
