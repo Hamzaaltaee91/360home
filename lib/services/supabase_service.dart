@@ -614,6 +614,7 @@ class SupabaseService {
     required String licenseNumber,
     required DateTime licenseExpiry,
     required String documentUrl,
+    required String whatsappPhone,
   }) {
     return _guard(() async {
       await _client.rpc('submit_realtor_application', params: {
@@ -621,7 +622,41 @@ class SupabaseService {
         'p_license_number': licenseNumber,
         'p_license_expiry': licenseExpiry.toIso8601String().split('T').first,
         'p_document_url': documentUrl,
+        'p_whatsapp_phone': whatsappPhone,
       });
+    });
+  }
+
+  /// Uploads a realtor verification document (license/ID) to the private
+  /// 'verification-documents' bucket and returns its storage path — not a
+  /// public URL. Only the uploader and admins can read it (storage
+  /// policies in 20260914000008_storage_whatsapp_conversations.sql), so
+  /// display it via getVerificationDocumentUrl()'s signed URL, never as a
+  /// direct link.
+  Future<String> uploadVerificationDocument({
+    required String userId,
+    required String fileName,
+    required List<int> fileBytes,
+  }) {
+    return _guard(() async {
+      final filePath = '$userId/$fileName';
+      await _client.storage.from('verification-documents').uploadBinary(
+            filePath,
+            Uint8List.fromList(fileBytes),
+          );
+      return filePath;
+    });
+  }
+
+  /// Returns a time-limited signed URL for a document path returned by
+  /// [uploadVerificationDocument]. Used by the admin review screen; fails
+  /// for anyone who isn't the uploader or an admin (storage policy).
+  Future<String> getVerificationDocumentUrl(String path) {
+    return _guard(() async {
+      final response = await _client.storage
+          .from('verification-documents')
+          .createSignedUrl(path, 3600);
+      return response;
     });
   }
 
@@ -837,6 +872,21 @@ class SupabaseService {
   }
 
   // ==================== Messages ====================
+
+  /// Returns one row per offer with at least one message, newest
+  /// last-message first: {offer_id, other_party_id, other_party_name,
+  /// property_title, last_message, last_message_at, unread_count}.
+  /// Distinct from [listMessages], which returns the messages within one
+  /// offer's conversation.
+  Future<List<Map<String, dynamic>>> getMyConversations() {
+    return _guard(() async {
+      final response =
+          await _client.rpc('list_my_conversations') as List;
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
 
   /// Sends a message on the offer identified by [offerId].
   Future<void> sendMessage({
