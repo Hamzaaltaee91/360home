@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../services/analytics_service.dart';
 import '../../utils/error_handler.dart';
@@ -161,6 +162,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               icon: Icons.insights_outlined,
             ),
           ],
+        ),
+        const SizedBox(height: 24),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.verified_user_outlined),
+            title: const Text('توثيق الوسطاء'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push('/admin/verifications'),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.manage_accounts_outlined),
+            title: const Text('إدارة المستخدمين'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push('/admin/users'),
+          ),
         ),
       ],
     );
