@@ -32,6 +32,11 @@ export const RATE_LIMITS: Record<string, RateLimitConfig> = {
     maxRequests: 100,
     windowSeconds: 60,
   },
+  "delete-account": {
+    functionName: "delete-account",
+    maxRequests: 5,
+    windowSeconds: 300,
+  },
 };
 
 /** Prefers the authenticated user id; falls back to the first forwarded IP. */
