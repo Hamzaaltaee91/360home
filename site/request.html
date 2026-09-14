@@ -21,7 +21,11 @@
   </nav>
 
   <main class="container">
-    <a href="dashboard.html" class="btn btn-ghost">→ رجوع لطلباتي</a>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+      <a href="dashboard.html" class="btn btn-ghost">→ رجوع لطلباتي</a>
+      <a href="#" id="edit-request-btn" class="btn btn-ghost">تعديل الطلب</a>
+      <button type="button" id="delete-request-btn" class="btn btn-ghost">حذف الطلب</button>
+    </div>
 
     <div id="request-detail"></div>
 
@@ -42,13 +46,29 @@
 
   <script type="module">
     import { requireSession, signOut } from "./js/auth.js";
-    import { getRequest } from "./js/requests.js";
+    import { getRequest, deleteRequest } from "./js/requests.js";
     import { listOffersForRequest } from "./js/offers.js";
 
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
 
     const requestId = new URLSearchParams(window.location.search).get("id");
+
+    document.getElementById("edit-request-btn").href =
+      `edit-request.html?id=${encodeURIComponent(requestId)}`;
+
+    document
+      .getElementById("delete-request-btn")
+      .addEventListener("click", async () => {
+        if (!window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) return;
+        try {
+          await deleteRequest(requestId);
+          window.location.href = "dashboard.html";
+        } catch (err) {
+          console.error(err);
+          window.alert("تعذّر حذف الطلب، حاول مرة أخرى.");
+        }
+      });
     const request = await getRequest(requestId);
 
     {
