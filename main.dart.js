@@ -63473,7 +63473,7 @@ $0(){var s=this.a.a
 s===$&&A.a()
 s=s.Q
 s===$&&A.a()
-return A.Yh(s,B.ahF,"com.dabberli.app://login-callback/")},
+return A.Yh(s,B.ahF,null)},
 $S:82}
 A.aJ0.prototype={
 $0(){var s=0,r=A.r(t.H),q=this,p,o
@@ -126533,19 +126533,18 @@ return A.q($async$CI,r)},
 Fi(a,b,c,d){return this.aw6(a,b,c,d)},
 aw6(a,b,c,d){var s=0,r=A.r(t.PN),q,p=this,o,n,m,l
 var $async$Fi=A.n(function(e,f){if(e===1)return A.o(f,r)
-for(;;)switch(s){case 0:m=t.N
-l=A.ac(["provider",B.b.gap(a.M().split("."))],m,m)
-l.m(0,"redirect_to",c)
-o=p.ch
-s=o===B.i7?3:4
+for(;;)switch(s){case 0:n=t.N
+m=A.ac(["provider",B.b.gap(a.M().split("."))],n,n)
+l=p.ch
+s=l===B.i7?3:4
 break
-case 3:n=A.bdm()
+case 3:o=A.bdm()
 s=5
-return A.j(p.ay.rG("supabase.auth.token-code-verifier",n),$async$Fi)
-case 5:l.P(0,A.ac(["flow_type",o.b,"code_challenge",A.bdl(n),"code_challenge_method","s256"],m,m))
-case 4:m=A.q1(null,null,l,null).f
-if(m==null)m=""
-q=new A.a1f(p.e+"/authorize?"+m)
+return A.j(p.ay.rG("supabase.auth.token-code-verifier",o),$async$Fi)
+case 5:m.P(0,A.ac(["flow_type",l.b,"code_challenge",A.bdl(o),"code_challenge_method","s256"],n,n))
+case 4:n=A.q1(null,null,m,null).f
+if(n==null)n=""
+q=new A.a1f(p.e+"/authorize?"+n)
 s=1
 break
 case 1:return A.p(q,r)}})
