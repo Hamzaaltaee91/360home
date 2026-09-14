@@ -181,6 +181,69 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             onTap: () => context.push('/admin/users'),
           ),
         ),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.list_alt_outlined),
+            title: const Text('القوائم المنسدلة'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push('/admin/lists'),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.location_on_outlined),
+            title: const Text('المحافظات والمناطق'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push('/admin/locations'),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.flag_outlined),
+            title: const Text('البلاغات'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push('/admin/reports'),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.request_page_outlined),
+            title: const Text('طلبات العقارات'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push('/admin/requests'),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.local_offer_outlined),
+            title: const Text('عروض الوسطاء'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push('/admin/offers'),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.contact_phone_outlined),
+            title: const Text('دليل الوسطاء'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push('/admin/realtors-directory'),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.history_outlined),
+            title: const Text('سجل النشاطات'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push('/admin/audit-log'),
+          ),
+        ),
       ],
     );
   }
