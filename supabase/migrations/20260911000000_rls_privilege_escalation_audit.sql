@@ -13,6 +13,17 @@
 -- otherwise Postgres raises "infinite recursion detected in policy for
 -- relation users". We use SECURITY DEFINER helper functions that bypass RLS
 -- to read the caller's role safely.
+--
+-- FIX (applied before this migration was ever deployed): every occurrence
+-- below originally compared `id` (public.users' own primary key) against
+-- `auth.uid()` (the auth.users identity, exposed on public.users as
+-- `auth_id`). Those are different UUIDs for the same person — the
+-- comparison would never match, so current_user_role()/is_admin() would
+-- always return null/false, and the users_update_own policy would block
+-- every user from ever updating their own row, including the admin who
+-- redefined is_admin() out from under every RPC that calls it. Corrected
+-- to `auth_id = auth.uid()`, matching current_user_id() in
+-- 20260908000002_rls_policies.sql (the correct existing convention).
 
 create or replace function public.current_user_role()
   returns text
@@ -21,7 +32,7 @@ create or replace function public.current_user_role()
   security definer
   set search_path = pg_catalog, public
 as $$
-  select role from public.users where id = auth.uid();
+  select role from public.users where auth_id = auth.uid();
 $$;
 
 create or replace function public.is_admin()
@@ -33,7 +44,7 @@ create or replace function public.is_admin()
 as $$
   select exists (
     select 1 from public.users
-    where id = auth.uid() and role = 'admin'
+    where auth_id = auth.uid() and role = 'admin'
   );
 $$;
 
@@ -42,9 +53,9 @@ drop policy if exists "users_update_own" on public.users;
 create policy "users_update_own"
   on public.users
   for update
-  using (auth.uid() = id)
+  using (auth.uid() = auth_id)
   with check (
-    auth.uid() = id
+    auth.uid() = auth_id
     -- role must remain unchanged for non-admins
     and role = public.current_user_role()
   );
@@ -59,57 +70,32 @@ create policy "admins_update_users"
   with check (public.is_admin());
 
 -- ---------------------------------------------------------------------------
--- 2. Property requests: buyers may only mutate their own requests.
+-- 2. Property requests / offers: sections removed here (see fix note below).
 -- ---------------------------------------------------------------------------
-drop policy if exists "requests_update_own" on public.requests;
-
-create policy "requests_update_own"
-  on public.requests
-  for update
-  using (auth.uid() = buyer_id)
-  with check (auth.uid() = buyer_id);
-
-drop policy if exists "requests_delete_own" on public.requests;
-
-create policy "requests_delete_own"
-  on public.requests
-  for delete
-  using (auth.uid() = buyer_id);
-
--- ---------------------------------------------------------------------------
--- 3. Offers: realtors may only mutate their own offers, and only while the
---    parent request is still open (no editing offers on closed requests).
--- ---------------------------------------------------------------------------
-drop policy if exists "offers_update_own" on public.offers;
-
-create policy "offers_update_own"
-  on public.offers
-  for update
-  using (
-    auth.uid() = realtor_id
-    and exists (
-      select 1 from public.requests r
-      where r.id = offers.request_id and r.status = 'open'
-    )
-  )
-  with check (auth.uid() = realtor_id);
-
-drop policy if exists "offers_delete_own" on public.offers;
-
-create policy "offers_delete_own"
-  on public.offers
-  for delete
-  using (
-    auth.uid() = realtor_id
-    and exists (
-      select 1 from public.requests r
-      where r.id = offers.request_id and r.status = 'open'
-    )
-  );
-
+--
+-- FIX (applied before this migration was ever deployed — it never appears
+-- in `supabase migrations list` for any environment): the original sections
+-- 2, 3, 5, and 7 referenced public.requests, public.offers,
+-- public.subscriptions, and public.photos — none of which exist. The real
+-- table names are public.property_requests and public.realtor_offers
+-- (see 20260908000001_initial_schema.sql), there is no subscriptions table
+-- (realtor subscriptions were never built), and photos live in
+-- public.property_photos / the realtor_offers.photo_urls array, not a
+-- separate photos table. Applying this migration unmodified would have
+-- errored on the first DROP POLICY against a nonexistent table and blocked
+-- every migration after it. The protections these sections intended
+-- already exist correctly under the real table names in
+-- 20260908000002_rls_policies.sql (property_requests_update_own,
+-- realtor_offers_update_own, etc.), so they are not re-added here.
+--
 -- ---------------------------------------------------------------------------
 -- 4. Realtor verifications: realtors may only insert/update their own
 --    verification row, and may never set their own status to 'approved'.
+--
+-- FIX: realtor_verifications.realtor_id references public.users(id), not
+-- auth.users(id) — same auth.uid()-vs-app-id bug as section 1. Uses the
+-- existing public.current_user_id() helper (20260908000002_rls_policies.sql)
+-- instead of raw auth.uid().
 -- ---------------------------------------------------------------------------
 drop policy if exists "verifications_insert_own" on public.realtor_verifications;
 
@@ -117,7 +103,7 @@ create policy "verifications_insert_own"
   on public.realtor_verifications
   for insert
   with check (
-    auth.uid() = realtor_id
+    public.current_user_id() = realtor_id
     and status = 'pending'
   );
 
@@ -126,9 +112,9 @@ drop policy if exists "verifications_update_own" on public.realtor_verifications
 create policy "verifications_update_own"
   on public.realtor_verifications
   for update
-  using (auth.uid() = realtor_id)
+  using (public.current_user_id() = realtor_id)
   with check (
-    auth.uid() = realtor_id
+    public.current_user_id() = realtor_id
     -- realtors cannot self-approve; status must stay pending on their writes
     and status = 'pending'
   );
@@ -143,39 +129,15 @@ create policy "admins_update_verifications"
   with check (public.is_admin());
 
 -- ---------------------------------------------------------------------------
--- 5. Subscriptions: users may read their own subscription but never write
---    to it directly (writes happen via Edge Functions using the service role).
--- ---------------------------------------------------------------------------
-drop policy if exists "subscriptions_insert_own" on public.subscriptions;
-drop policy if exists "subscriptions_update_own" on public.subscriptions;
-drop policy if exists "subscriptions_delete_own" on public.subscriptions;
-
--- ---------------------------------------------------------------------------
 -- 6. Notifications: users may only mark their own notifications as read.
+--
+-- FIX: notifications.user_id references public.users(id), not
+-- auth.users(id) — same bug as sections 1 and 4.
 -- ---------------------------------------------------------------------------
 drop policy if exists "notifications_update_own" on public.notifications;
 
 create policy "notifications_update_own"
   on public.notifications
   for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
--- ---------------------------------------------------------------------------
--- 7. Photos: owners may only mutate photos attached to their own entities.
--- ---------------------------------------------------------------------------
-drop policy if exists "photos_delete_own" on public.photos;
-
-create policy "photos_delete_own"
-  on public.photos
-  for delete
-  using (
-    exists (
-      select 1 from public.requests r
-      where r.id = photos.request_id and r.buyer_id = auth.uid()
-    )
-    or exists (
-      select 1 from public.offers o
-      where o.id = photos.offer_id and o.realtor_id = auth.uid()
-    )
-  );
+  using (public.current_user_id() = user_id)
+  with check (public.current_user_id() = user_id);
