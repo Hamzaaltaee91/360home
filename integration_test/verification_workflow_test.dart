@@ -34,6 +34,7 @@ void main() {
     const companyName = 'Integration Realty';
     const licenseNumber = 'LIC-INTEGRATION-0001';
     const documentUrl = 'https://example.com/license.pdf';
+    const whatsappPhone = '+9647700000000';
     final licenseExpiry = DateTime.now().add(const Duration(days: 365));
 
     setUpAll(() async {
@@ -87,6 +88,7 @@ void main() {
           licenseNumber: licenseNumber,
           licenseExpiry: licenseExpiry,
           documentUrl: documentUrl,
+          whatsappPhone: whatsappPhone,
         );
 
         // Fetch it back and confirm persistence.

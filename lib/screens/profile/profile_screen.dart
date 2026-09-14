@@ -177,10 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ListTile(
                     leading: const Icon(Icons.work_outline),
                     title: const Text('سجّل كوسيط'),
-                    trailing: const Icon(
-                      Icons.chevron_right,
-                      matchTextDirection: true,
-                    ),
+                    trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.push('/verification'),
                   ),
                   const Divider(height: 1),
