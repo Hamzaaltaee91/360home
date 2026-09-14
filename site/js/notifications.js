@@ -63,5 +63,7 @@ export async function subscribeToUnreadCount(callback) {
     )
     .subscribe();
 
+  callback(await unreadCount());
+
   return channel;
 }
