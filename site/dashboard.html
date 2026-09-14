@@ -12,6 +12,7 @@
       <a href="index.html" class="brand">دبّرلي</a>
       <ul class="nav-links">
         <li><a href="dashboard.html">طلباتي</a></li>
+        <li><a href="notifications.html" id="notifications-link">الإشعارات</a></li>
         <li><a href="become-realtor.html">سجل كوسيط</a></li>
       </ul>
       <div class="nav-actions">
@@ -54,6 +55,7 @@
   <script type="module">
     import { requireSession, signOut } from "./js/auth.js";
     import { listMyRequests } from "./js/requests.js";
+    import { unreadCount } from "./js/notifications.js";
 
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
@@ -103,6 +105,16 @@
       card.append(h3, tags);
       a.appendChild(card);
       list.appendChild(a);
+    }
+
+    try {
+      const unread = await unreadCount();
+      if (unread > 0) {
+        const link = document.getElementById("notifications-link");
+        if (link) link.textContent = `الإشعارات (${unread})`;
+      }
+    } catch (err) {
+      console.error(err);
     }
   </script>
 </body>
