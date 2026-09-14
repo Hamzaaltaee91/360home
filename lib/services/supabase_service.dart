@@ -799,26 +799,26 @@ class SupabaseService {
 
   // ==================== Messages ====================
 
-  /// Sends a message to the conversation identified by [conversationId].
+  /// Sends a message on the offer identified by [offerId].
   Future<void> sendMessage({
-    required String conversationId,
+    required String offerId,
     required String body,
   }) {
     return _guard(
       () => _client.rpc('send_message', params: {
-        'p_conversation_id': conversationId,
+        'p_offer_id': offerId,
         'p_body': body,
       }),
     );
   }
 
-  /// Returns the messages in the conversation identified by
-  /// [conversationId], oldest first.
-  Future<List<Map<String, dynamic>>> listMessages(String conversationId) {
+  /// Returns the messages on the offer identified by [offerId], oldest
+  /// first.
+  Future<List<Map<String, dynamic>>> listMessages(String offerId) {
     return _guard(() async {
       final response =
           await _client.rpc('list_messages', params: {
-        'p_conversation_id': conversationId,
+        'p_offer_id': offerId,
       }) as List;
       return response
           .map((e) => (e as Map).cast<String, dynamic>())
@@ -826,12 +826,12 @@ class SupabaseService {
     });
   }
 
-  /// Marks every message in the conversation identified by
-  /// [conversationId] as read for the current user.
-  Future<void> markMessagesRead(String conversationId) {
+  /// Marks every message on the offer identified by [offerId] as read for
+  /// the current user.
+  Future<void> markMessagesRead(String offerId) {
     return _guard(
       () => _client.rpc('mark_messages_read', params: {
-        'p_conversation_id': conversationId,
+        'p_offer_id': offerId,
       }),
     );
   }
