@@ -18,7 +18,6 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
-  String _selectedRole = 'buyer';
   bool _isLoading = false;
   bool _acceptedTerms = false;
   bool _obscurePassword = true;
@@ -64,7 +63,7 @@ class _SignupScreenState extends State<SignupScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
         fullName: _nameController.text.trim(),
-        role: _selectedRole,
+        role: 'buyer',
       );
 
       if (!mounted) return;
@@ -97,7 +96,7 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'اختر دورك في المنصة',
+                'أنشئ حسابك وابدأ بنشر طلبك',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 24),
@@ -118,24 +117,6 @@ class _SignupScreenState extends State<SignupScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    // Role Selection
-                    SegmentedButton<String>(
-                      segments: const [
-                        ButtonSegment(
-                          value: 'buyer',
-                          label: Text('مشتري'),
-                        ),
-                        ButtonSegment(
-                          value: 'realtor',
-                          label: Text('وسيط'),
-                        ),
-                      ],
-                      selected: {_selectedRole},
-                      onSelectionChanged: (Set<String> newSelection) {
-                        setState(() => _selectedRole = newSelection.first);
-                      },
-                    ),
-                    const SizedBox(height: 24),
                     // Name Field
                     TextFormField(
                       controller: _nameController,
