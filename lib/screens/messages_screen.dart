@@ -26,6 +26,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   final ScrollController _scrollController = ScrollController();
 
   late Future<List<Map<String, dynamic>>> _messagesFuture;
+  List<Map<String, dynamic>>? _loadedMessages;
   bool _sending = false;
 
   @override
@@ -43,6 +44,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   Future<List<Map<String, dynamic>>> _loadMessages() async {
     final messages = await _service.listMessages(widget.offerId);
+    _loadedMessages = messages;
+    if (mounted) setState(() {});
     // Best-effort: mark messages as read once loaded.
     try {
       await _service.markMessagesRead(widget.offerId);
@@ -79,12 +82,160 @@ class _MessagesScreenState extends State<MessagesScreen> {
     }
   }
 
+  /// يشتقّ معرّف الطرف الآخر من أول رسالة محمّلة.
+  /// `null` إذا لم تُحمَّل رسائل بعد أو تعذّر التحديد.
+  String? _otherUserId() {
+    final messages = _loadedMessages;
+    if (messages == null || messages.isEmpty) return null;
+    final currentUserId = _service.getCurrentUserId();
+    final first = messages.first;
+    final senderId = first['sender_id'] as String?;
+    if (senderId != null && senderId != currentUserId) {
+      return senderId;
+    }
+    return first['recipient_id'] as String?;
+  }
+
+  void _handleMenuAction(String action, String? otherUserId) {
+    if (otherUserId == null) return;
+    if (action == 'report') {
+      _showReportDialog(otherUserId);
+    } else if (action == 'block') {
+      _confirmBlock(otherUserId);
+    }
+  }
+
+  Future<void> _showReportDialog(String reportedUserId) async {
+    final reasonController = TextEditingController();
+    final detailsController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('الإبلاغ عن المستخدم'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: reasonController,
+                decoration: const InputDecoration(labelText: 'السبب *'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: detailsController,
+                maxLines: 3,
+                decoration:
+                    const InputDecoration(labelText: 'تفاصيل إضافية (اختياري)'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('إلغاء'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (reasonController.text.trim().isEmpty) return;
+                Navigator.of(dialogContext).pop(true);
+              },
+              child: const Text('إرسال'),
+            ),
+          ],
+        );
+      },
+    );
+
+    final reason = reasonController.text.trim();
+    final details = detailsController.text.trim();
+    reasonController.dispose();
+    detailsController.dispose();
+
+    if (confirmed != true || reason.isEmpty) return;
+
+    try {
+      await _service.reportContent(
+        reportedUserId: reportedUserId,
+        reason: reason,
+        details: details.isEmpty ? null : details,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم إرسال الإبلاغ')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppException
+          ? error.message
+          : 'حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى';
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
+  Future<void> _confirmBlock(String otherUserId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('حظر المستخدم'),
+          content: const Text('هل أنت متأكد من حظر هذا المستخدم؟'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('إلغاء'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('حظر'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _service.blockUser(otherUserId);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is AppException
+          ? error.message
+          : 'حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى';
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUserId = _service.getCurrentUserId();
+    final otherUserId = _otherUserId();
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          if (otherUserId != null)
+            PopupMenuButton<String>(
+              onSelected: (value) => _handleMenuAction(value, otherUserId),
+              itemBuilder: (context) => const [
+                PopupMenuItem<String>(
+                  value: 'report',
+                  child: Text('الإبلاغ عن المستخدم'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'block',
+                  child: Text('حظر المستخدم'),
+                ),
+              ],
+            ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
