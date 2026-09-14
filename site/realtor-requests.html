@@ -27,6 +27,30 @@
       </div>
     </div>
 
+    <div class="filters">
+      <label>
+        الفئة
+        <select id="filter-category">
+          <option value="">الكل</option>
+          <option value="residential">سكني</option>
+          <option value="commercial">تجاري</option>
+          <option value="land">أرض</option>
+        </select>
+      </label>
+
+      <label>
+        المحافظة
+        <select id="filter-city">
+          <option value="">الكل</option>
+        </select>
+      </label>
+
+      <label>
+        الحد الأقصى للميزانية
+        <input type="number" id="filter-max-price" min="0" step="any">
+      </label>
+    </div>
+
     <div class="request-list" id="requests-list"></div>
 
     <div class="empty-state" hidden id="empty-msg">
@@ -50,16 +74,50 @@
   <script type="module">
     import { requireSession, signOut } from "./js/auth.js";
     import { listActiveRequestsForRealtor } from "./js/requests.js";
+    import iraqLocations from "./js/iraq-locations.js";
 
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
 
-    const requests = await listActiveRequestsForRealtor();
-    const list = document.getElementById("requests-list");
-    if (requests.length === 0) {
-      document.getElementById("empty-msg").hidden = false;
+    const citySelect = document.getElementById("filter-city");
+    for (const [value, governorate] of Object.entries(iraqLocations)) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = governorate.label;
+      citySelect.appendChild(option);
     }
-    for (const r of requests) {
+
+    const allRequests = await listActiveRequestsForRealtor();
+    const list = document.getElementById("requests-list");
+    const emptyMsg = document.getElementById("empty-msg");
+    const categorySelect = document.getElementById("filter-category");
+    const maxPriceInput = document.getElementById("filter-max-price");
+
+    function renderRequests() {
+      const category = categorySelect.value;
+      const city = citySelect.value;
+      const cityLabel = city === "" ? "" : iraqLocations[city].label;
+
+      const budgetText = maxPriceInput.value.trim();
+      const budget = budgetText === "" ? null : Number(budgetText);
+
+      const visible = allRequests.filter((r) => {
+        if (category !== "" && r.category !== category) return false;
+        if (city !== "" && r.city !== city && r.city !== cityLabel) return false;
+        if (
+          budget !== null &&
+          Number.isFinite(budget) &&
+          r.max_price != null &&
+          Number(r.max_price) > budget
+        ) {
+          return false;
+        }
+        return true;
+      });
+
+      list.innerHTML = "";
+
+      for (const r of visible) {
       const card = document.createElement("article");
       card.className = "card request-item";
 
@@ -94,7 +152,16 @@
 
       card.append(h3, tags, offerLink);
       list.appendChild(card);
+      }
+
+      emptyMsg.hidden = visible.length > 0;
     }
+
+    categorySelect.addEventListener("change", renderRequests);
+    citySelect.addEventListener("change", renderRequests);
+    maxPriceInput.addEventListener("input", renderRequests);
+
+    renderRequests();
   </script>
 </body>
 </html>
