@@ -796,4 +796,52 @@ class SupabaseService {
       return (response.first as Map).cast<String, dynamic>();
     });
   }
+
+  // ==================== Messages ====================
+
+  /// Sends a message to the conversation identified by [conversationId].
+  Future<void> sendMessage({
+    required String conversationId,
+    required String body,
+  }) {
+    return _guard(
+      () => _client.rpc('send_message', params: {
+        'p_conversation_id': conversationId,
+        'p_body': body,
+      }),
+    );
+  }
+
+  /// Returns the messages in the conversation identified by
+  /// [conversationId], oldest first.
+  Future<List<Map<String, dynamic>>> listMessages(String conversationId) {
+    return _guard(() async {
+      final response =
+          await _client.rpc('list_messages', params: {
+        'p_conversation_id': conversationId,
+      }) as List;
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
+
+  /// Marks every message in the conversation identified by
+  /// [conversationId] as read for the current user.
+  Future<void> markMessagesRead(String conversationId) {
+    return _guard(
+      () => _client.rpc('mark_messages_read', params: {
+        'p_conversation_id': conversationId,
+      }),
+    );
+  }
+
+  /// Returns the number of unread messages for the current user.
+  Future<int> unreadMessageCount() {
+    return _guard(() async {
+      final response =
+          await _client.rpc('unread_message_count') as int;
+      return response;
+    });
+  }
 }
