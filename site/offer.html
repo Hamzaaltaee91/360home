@@ -12,13 +12,15 @@
     <div id="offer-detail"></div>
     <div id="response-buttons"></div>
     <p id="response-status" hidden></p>
+    <div id="review-section"></div>
   </div>
 
   <script type="module">
     import { requireSession } from "./js/auth.js";
     import { getOffer, respondToOffer } from "./js/offers.js";
+    import { getMyReviewForOffer, submitReview } from "./js/reviews.js";
 
-    await requireSession();
+    const session = await requireSession();
 
     const offerId = new URLSearchParams(window.location.search).get("id");
     const offer = await getOffer(offerId);
@@ -99,6 +101,73 @@
     }
 
     renderButtons();
+
+    if (offer.status === "accepted" && session.user.id !== offer.realtor_id) {
+      await renderReviewSection();
+    }
+
+    async function renderReviewSection() {
+      const section = document.getElementById("review-section");
+      const existing = await getMyReviewForOffer(offerId);
+
+      let rating = typeof existing?.rating === "number" ? existing.rating : 0;
+
+      const heading = document.createElement("h2");
+      heading.textContent = "قيّم الوسيط";
+
+      const stars = document.createElement("div");
+      stars.id = "review-stars";
+
+      const starButtons = [];
+      for (let value = 1; value <= 5; value += 1) {
+        const star = document.createElement("button");
+        star.type = "button";
+        star.className = "btn";
+        star.textContent = "★";
+        star.dataset.value = String(value);
+        star.addEventListener("click", () => {
+          rating = value;
+          paintStars();
+        });
+        starButtons.push(star);
+        stars.appendChild(star);
+      }
+
+      function paintStars() {
+        starButtons.forEach((star) => {
+          star.style.color =
+            Number(star.dataset.value) <= rating ? "#f5a623" : "#c0c0c0";
+        });
+      }
+      paintStars();
+
+      const comment = document.createElement("textarea");
+      comment.id = "review-comment";
+      comment.rows = 3;
+      comment.placeholder = "اكتب تعليقك (اختياري)";
+      comment.value = existing?.comment ?? "";
+
+      const submitBtn = document.createElement("button");
+      submitBtn.type = "button";
+      submitBtn.className = "btn btn-primary";
+      submitBtn.textContent = "إرسال التقييم";
+
+      const feedback = document.createElement("p");
+      feedback.hidden = true;
+
+      submitBtn.addEventListener("click", async () => {
+        if (rating < 1) {
+          feedback.textContent = "اختر تقييماً من 1 إلى 5";
+          feedback.hidden = false;
+          return;
+        }
+        await submitReview(offerId, rating, comment.value);
+        feedback.textContent = "تم إرسال تقييمك، شكراً لك";
+        feedback.hidden = false;
+      });
+
+      section.append(heading, stars, comment, submitBtn, feedback);
+    }
   </script>
 </body>
 </html>
