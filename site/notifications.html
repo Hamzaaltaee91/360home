@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الإشعارات — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+        <li><a href="notifications.html">الإشعارات</a></li>
+        <li><a href="become-realtor.html">سجل كوسيط</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <h1>الإشعارات</h1>
+        <p>كل التحديثات على طلباتك وعروضك.</p>
+      </div>
+    </div>
+
+    <div class="request-list" id="notifications-list"></div>
+
+    <div class="empty-state" hidden id="empty-msg">
+      <h3>لا توجد إشعارات</h3>
+      <p>ستظهر هنا أي تحديثات على طلباتك.</p>
+    </div>
+  </main>
+
+  <!-- ===== الفوتر ===== -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="footer-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+        <li><a href="notifications.html">الإشعارات</a></li>
+        <li><a href="request-new.html">طلب جديد</a></li>
+        <li><a href="contact.html">اتصل بنا</a></li>
+      </ul>
+      <span>© ٢٠٢٦ دبّرلي</span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { requireSession, signOut } from "./js/auth.js";
+    import { listMyNotifications, markAsRead } from "./js/notifications.js";
+
+    await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    const notifications = await listMyNotifications();
+    const list = document.getElementById("notifications-list");
+
+    if (notifications.length === 0) {
+      document.getElementById("empty-msg").hidden = false;
+    }
+
+    for (const n of notifications) {
+      const card = document.createElement("article");
+      card.className = "card request-item";
+
+      if (!n.is_read) {
+        card.style.borderInlineStart = "4px solid var(--primary)";
+        card.style.background = "var(--primary-tint)";
+      }
+
+      const h3 = document.createElement("h3");
+      h3.textContent = n.title || "إشعار";
+
+      const body = document.createElement("p");
+      body.textContent = n.body || "";
+
+      const tags = document.createElement("ul");
+      tags.className = "request-tags";
+
+      const statusTag = document.createElement("li");
+      statusTag.className = n.is_read ? "tag" : "tag tag-active";
+      statusTag.textContent = n.is_read ? "مقروء" : "غير مقروء";
+
+      const dateTag = document.createElement("li");
+      dateTag.className = "tag";
+      dateTag.textContent = n.created_at
+        ? new Date(n.created_at).toLocaleString("ar")
+        : "—";
+
+      tags.append(statusTag, dateTag);
+
+      card.append(h3, body, tags);
+
+      if (!n.is_read) {
+        const markBtn = document.createElement("button");
+        markBtn.type = "button";
+        markBtn.className = "btn btn-ghost";
+        markBtn.textContent = "تعليم كمقروء";
+        markBtn.addEventListener("click", async () => {
+          markBtn.disabled = true;
+          try {
+            await markAsRead(n.id);
+            card.style.borderInlineStart = "";
+            card.style.background = "";
+            statusTag.className = "tag";
+            statusTag.textContent = "مقروء";
+            markBtn.remove();
+          } catch (err) {
+            markBtn.disabled = false;
+            console.error(err);
+          }
+        });
+        card.appendChild(markBtn);
+      }
+
+      list.appendChild(card);
+    }
+  </script>
+</body>
+</html>
