@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../services/location_service.dart';
 import '../../services/supabase_service.dart';
 import '../../utils/image_compressor.dart';
+import '../../utils/iraq_locations.dart';
 import '../../utils/validators.dart';
 
 class CreateRequestScreen extends StatefulWidget {
@@ -21,7 +22,7 @@ class CreateRequestScreen extends StatefulWidget {
 class _CreateRequestScreenState extends State<CreateRequestScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
-  final _cityController = TextEditingController();
+  final _areaOtherController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _minPriceController = TextEditingController();
   final _maxPriceController = TextEditingController();
@@ -32,6 +33,11 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
   final _locationService = LocationService();
 
   String _selectedCategory = 'residential';
+  String _selectedPurpose = 'buy';
+  String? _selectedGovernorate;
+  String? _selectedArea;
+  String? _selectedPropertySubtype;
+  String? _selectedRentalPeriod;
   bool _isUrgent = false;
   bool _isLoading = false;
 
@@ -41,7 +47,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
   @override
   void dispose() {
     _titleController.dispose();
-    _cityController.dispose();
+    _areaOtherController.dispose();
     _descriptionController.dispose();
     _minPriceController.dispose();
     _maxPriceController.dispose();
@@ -91,10 +97,13 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
 
     try {
       final service = SupabaseService();
+      final governorateLabel = _selectedGovernorate == null
+          ? ''
+          : iraqLocations[_selectedGovernorate]!['label'] as String;
       final request = await service.createPropertyRequest(
         category: _selectedCategory,
         title: _titleController.text.trim(),
-        city: _cityController.text.trim(),
+        city: governorateLabel,
         description: _descriptionController.text.trim().isNotEmpty
             ? _descriptionController.text.trim()
             : null,
@@ -113,6 +122,16 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
             ? int.parse(_bathroomsController.text.trim())
             : null,
         isUrgent: _isUrgent,
+        purpose: _selectedPurpose,
+        governorate: _selectedGovernorate,
+        area: _selectedArea == 'other'
+            ? _areaOtherController.text.trim()
+            : _selectedArea,
+        propertySubtype: _selectedCategory == 'residential'
+            ? _selectedPropertySubtype
+            : null,
+        rentalPeriod:
+            _selectedPurpose == 'rent' ? _selectedRentalPeriod : null,
       );
 
       for (var i = 0; i < _photos.length; i++) {
@@ -144,6 +163,20 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  List<Map> get _areaOptions {
+    final governorate = _selectedGovernorate;
+    if (governorate == null) return const <Map>[];
+    return (iraqLocations[governorate]!['areas'] as List).cast<Map>();
+  }
+
+  void _onGovernorateChanged(String? value) {
+    setState(() {
+      _selectedGovernorate = value;
+      _selectedArea = null;
+      _areaOtherController.clear();
+    });
   }
 
   @override
@@ -184,6 +217,22 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                 },
               ),
               const SizedBox(height: 24),
+              Text(
+                'الغرض',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'buy', label: Text('شراء')),
+                  ButtonSegment(value: 'rent', label: Text('إيجار')),
+                ],
+                selected: {_selectedPurpose},
+                onSelectionChanged: (Set<String> newSelection) {
+                  setState(() => _selectedPurpose = newSelection.first);
+                },
+              ),
+              const SizedBox(height: 24),
               // Basic Information
               Text(
                 'المعلومات الأساسية',
@@ -201,16 +250,60 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                     Validators.required(value, field: 'عنوان الطلب'),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _cityController,
+              DropdownButtonFormField<String>(
+                value: _selectedGovernorate,
                 decoration: const InputDecoration(
-                  hintText: 'دبي، أبو ظبي، إلخ',
-                  label: Text('المدينة *'),
+                  labelText: 'المحافظة *',
+                  prefixIcon: Icon(Icons.map),
+                ),
+                items: iraqLocations.entries
+                    .map<DropdownMenuItem<String>>((e) => DropdownMenuItem<String>(
+                          value: e.key,
+                          child: Text(e.value['label'] as String),
+                        ))
+                    .toList(),
+                onChanged: _isLoading ? null : _onGovernorateChanged,
+                validator: (value) =>
+                    Validators.required(value, field: 'المحافظة'),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedArea,
+                decoration: const InputDecoration(
+                  labelText: 'المنطقة *',
                   prefixIcon: Icon(Icons.location_on),
                 ),
+                items: _areaOptions
+                    .map<DropdownMenuItem<String>>((a) => DropdownMenuItem<String>(
+                          value: a['value'] as String,
+                          child: Text(a['label'] as String),
+                        ))
+                    .toList(),
+                onChanged: _isLoading
+                    ? null
+                    : (value) {
+                        setState(() {
+                          _selectedArea = value;
+                          if (value != 'other') {
+                            _areaOtherController.clear();
+                          }
+                        });
+                      },
                 validator: (value) =>
-                    Validators.required(value, field: 'المدينة'),
+                    Validators.required(value, field: 'المنطقة'),
               ),
+              if (_selectedArea == 'other') ...[
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _areaOtherController,
+                  decoration: const InputDecoration(
+                    labelText: 'اسم المنطقة *',
+                    prefixIcon: Icon(Icons.edit_location),
+                  ),
+                  validator: (value) =>
+                      Validators.required(value, field: 'اسم المنطقة'),
+                ),
+              ],
               const SizedBox(height: 16),
               TextField(
                 controller: _descriptionController,
@@ -269,6 +362,26 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: _selectedPropertySubtype,
+                  decoration: const InputDecoration(
+                    labelText: 'نوع العقار *',
+                    prefixIcon: Icon(Icons.house),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'apartment', child: Text('شقة')),
+                    DropdownMenuItem(value: 'house', child: Text('بيت')),
+                    DropdownMenuItem(value: 'villa', child: Text('فيلا')),
+                    DropdownMenuItem(value: 'duplex', child: Text('دوبلكس')),
+                  ],
+                  onChanged: _isLoading
+                      ? null
+                      : (value) =>
+                          setState(() => _selectedPropertySubtype = value),
+                  validator: (value) =>
+                      Validators.required(value, field: 'نوع العقار'),
+                ),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
@@ -309,6 +422,33 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
+              ],
+              if (_selectedPurpose == 'rent') ...[
+                const SizedBox(height: 24),
+                Text(
+                  'مدة الإيجار',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: _selectedRentalPeriod,
+                  decoration: const InputDecoration(
+                    labelText: 'مدة الإيجار *',
+                    prefixIcon: Icon(Icons.calendar_today),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'daily', child: Text('يومي')),
+                    DropdownMenuItem(value: 'weekly', child: Text('أسبوعي')),
+                    DropdownMenuItem(value: 'monthly', child: Text('شهري')),
+                    DropdownMenuItem(value: 'yearly', child: Text('سنوي')),
+                  ],
+                  onChanged: _isLoading
+                      ? null
+                      : (value) =>
+                          setState(() => _selectedRentalPeriod = value),
+                  validator: (value) =>
+                      Validators.required(value, field: 'مدة الإيجار'),
+                ),
               ],
               // Location Picker
               Text(
