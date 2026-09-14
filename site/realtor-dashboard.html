@@ -12,6 +12,7 @@
       <a href="index.html" class="brand">دبّرلي</a>
       <ul class="nav-links">
         <li><a href="realtor-requests.html">تصفح الطلبات</a></li>
+        <li><a href="notifications.html" id="notifications-link">الإشعارات</a></li>
         <li><a href="my-offers.html">عروضي</a></li>
       </ul>
       <div class="nav-actions">
@@ -49,9 +50,20 @@
 
   <script type="module">
     import { requireSession, signOut } from "./js/auth.js";
+    import { unreadCount } from "./js/notifications.js";
 
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    try {
+      const count = await unreadCount();
+      if (count > 0) {
+        document.getElementById("notifications-link").textContent =
+          `الإشعارات (${count})`;
+      }
+    } catch (err) {
+      console.error(err);
+    }
   </script>
 </body>
 </html>
