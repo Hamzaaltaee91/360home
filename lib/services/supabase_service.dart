@@ -1211,6 +1211,26 @@ class SupabaseService {
     });
   }
 
+  /// Returns every option of the list identified by [listName], active and
+  /// inactive, ordered by sort_order (admin only).
+  ///
+  /// Unlike [getListOptions] (which only returns active rows, for public
+  /// dropdowns), this includes inactive rows so an admin can find and
+  /// re-activate something they previously turned off.
+  Future<List<Map<String, dynamic>>> adminListListOptions(String listName) {
+    return _guard(() async {
+      final response = await _client
+          .from('list_options')
+          .select('code, label, sort_order, active')
+          .eq('list_name', listName)
+          .order('sort_order');
+
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
+
   /// Creates or updates a list option (admin only).
   ///
   /// The composite `(list_name, code)` is the conflict target, so
@@ -1260,7 +1280,7 @@ class SupabaseService {
     return _guard(() async {
       final response = await _client
           .from('governorates')
-          .select('slug, label')
+          .select('slug, label, sort_order, active')
           .eq('active', true)
           .order('sort_order');
 
@@ -1276,7 +1296,7 @@ class SupabaseService {
     return _guard(() async {
       final response = await _client
           .from('areas')
-          .select('value, label')
+          .select('id, value, label, sort_order, active')
           .eq('governorate_slug', governorateSlug)
           .eq('active', true)
           .order('sort_order');
