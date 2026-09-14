@@ -47,6 +47,10 @@
             <input type="text" id="property-address" required>
             <span class="error-text" data-error-for="property-address" hidden></span>
           </div>
+          <div class="form-field is-full">
+            <label for="property-photos">صور العقار</label>
+            <input type="file" id="property-photos" multiple accept="image/*">
+          </div>
         </div>
       </fieldset>
 
@@ -106,7 +110,7 @@
 
   <script type="module">
     import { requireSession, signOut } from "./js/auth.js";
-    import { createOffer } from "./js/offers.js";
+    import { createOffer, uploadOfferPhotos } from "./js/offers.js";
     import { toWesternDigits } from "./js/numerals.js";
 
     const pageErrorEl = document.getElementById("page-error");
@@ -197,7 +201,7 @@
         const numOrNull = (id) => (val(id) === "" ? null : Number(val(id)));
 
         try {
-          await createOffer({
+          const offer = await createOffer({
             request_id: requestId,
             property_title: val("property-title").trim(),
             property_description: val("property-description") || null,
@@ -210,6 +214,14 @@
             furnished: document.getElementById("furnished").checked,
             message_to_buyer: val("message-to-buyer") || null,
           });
+
+          const files = Array.from(
+            document.getElementById("property-photos").files
+          );
+          if (files.length > 0) {
+            await uploadOfferPhotos(offer.id, files);
+          }
+
           window.location.href = "my-offers.html";
         } catch (err) {
           formErrorEl.textContent = err.message;
