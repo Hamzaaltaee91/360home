@@ -439,6 +439,62 @@ class SupabaseService {
     );
   }
 
+  /// Returns property requests for the admin table, newest first.
+  ///
+  /// When [statusFilter] is provided (e.g. 'active', 'inactive', 'sold',
+  /// 'rented') only requests with that status are returned. When
+  /// [searchText] is provided, a case-insensitive match is performed
+  /// against the request title. Each row embeds the buyer's full name and
+  /// email under the `buyer` key. Results are capped at 100 rows.
+  /// Intended for the admin property requests screen; admin authorization
+  /// is enforced server-side by the property_requests RLS policy.
+  Future<List<Map<String, dynamic>>> adminListPropertyRequests({
+    String? statusFilter,
+    String? searchText,
+  }) {
+    return _guard(() async {
+      var query = _client.from('property_requests').select(
+            '*, buyer:users!property_requests_buyer_id_fkey(full_name, email)',
+          );
+
+      if (statusFilter != null && statusFilter.isNotEmpty) {
+        query = query.eq('status', statusFilter);
+      }
+
+      final trimmed = searchText?.trim() ?? '';
+      if (trimmed.isNotEmpty) {
+        query = query.ilike('title', '%$trimmed%');
+      }
+
+      final response = await query
+          .order('created_at', ascending: false)
+          .limit(100);
+
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
+
+  /// Updates the status of the property request identified by [requestId].
+  ///
+  /// [status] must be one of the existing CHECK constraint values:
+  /// 'active', 'inactive', 'sold', or 'rented'. Intended for the admin
+  /// property requests screen; admin authorization is enforced server-side
+  /// by the property_requests RLS policy — no privilege logic is performed
+  /// client-side.
+  Future<void> adminSetPropertyRequestStatus({
+    required String requestId,
+    required String status,
+  }) {
+    return _guard(
+      () => _client
+          .from('property_requests')
+          .update({'status': status})
+          .eq('id', requestId),
+    );
+  }
+
   // ==================== Realtor Offers ====================
 
   /// Fetches a page of offers received for [requestId], newest first.
