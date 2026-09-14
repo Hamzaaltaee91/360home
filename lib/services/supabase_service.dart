@@ -367,6 +367,11 @@ class SupabaseService {
     double? maxPrice,
     int? bedrooms,
     int? bathrooms,
+    String? purpose,
+    String? governorate,
+    String? area,
+    String? propertySubtype,
+    String? rentalPeriod,
   }) {
     return _guard(() => _client.from('property_requests').update({
           if (title != null) 'title': title,
@@ -376,6 +381,11 @@ class SupabaseService {
           if (maxPrice != null) 'max_price': maxPrice,
           if (bedrooms != null) 'bedrooms': bedrooms,
           if (bathrooms != null) 'bathrooms': bathrooms,
+          if (purpose != null) 'purpose': purpose,
+          if (governorate != null) 'governorate': governorate,
+          if (area != null) 'area': area,
+          if (propertySubtype != null) 'property_subtype': propertySubtype,
+          if (rentalPeriod != null) 'rental_period': rentalPeriod,
         }).eq('id', requestId));
   }
 
