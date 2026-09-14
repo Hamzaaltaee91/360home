@@ -38,11 +38,37 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
   String? _selectedArea;
   String? _selectedPropertySubtype;
   String? _selectedRentalPeriod;
+  String _selectedCurrency = 'IQD';
+  List<Map<String, dynamic>> _currencyOptions = const [];
   bool _isUrgent = false;
   bool _isLoading = false;
 
   final List<XFile> _photos = [];
   Coordinates? _coordinates;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrencyOptions();
+  }
+
+  Future<void> _loadCurrencyOptions() async {
+    try {
+      final options = await SupabaseService().getListOptions('currency');
+      if (!mounted) return;
+      setState(() {
+        _currencyOptions = options;
+        final codes = options.map((o) => o['code'] as String).toList();
+        if (codes.contains('IQD')) {
+          _selectedCurrency = 'IQD';
+        } else if (codes.isNotEmpty) {
+          _selectedCurrency = codes.first;
+        }
+      });
+    } catch (_) {
+      // Leave the default 'IQD' fallback in place on failure.
+    }
+  }
 
   @override
   void dispose() {
@@ -132,6 +158,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
             : null,
         rentalPeriod:
             _selectedPurpose == 'rent' ? _selectedRentalPeriod : null,
+        currency: _selectedCurrency,
       );
 
       for (var i = 0; i < _photos.length; i++) {
@@ -353,6 +380,33 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedCurrency,
+                decoration: const InputDecoration(
+                  labelText: 'العملة',
+                  prefixIcon: Icon(Icons.attach_money),
+                ),
+                items: _currencyOptions.isEmpty
+                    ? const [
+                        DropdownMenuItem(value: 'IQD', child: Text('IQD')),
+                      ]
+                    : _currencyOptions
+                        .map<DropdownMenuItem<String>>(
+                          (o) => DropdownMenuItem<String>(
+                            value: o['code'] as String,
+                            child: Text(o['label'] as String),
+                          ),
+                        )
+                        .toList(),
+                onChanged: _isLoading
+                    ? null
+                    : (value) {
+                        if (value != null) {
+                          setState(() => _selectedCurrency = value);
+                        }
+                      },
               ),
               const SizedBox(height: 24),
               // Property Specifications
