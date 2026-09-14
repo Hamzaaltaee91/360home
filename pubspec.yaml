@@ -77,8 +77,15 @@ flutter:
   generate: true
 
   # Assets
+  #
+  # .env.local must be listed here: flutter_dotenv's dotenv.load() reads it
+  # via the Flutter asset bundle (rootBundle), not the filesystem — without
+  # this entry the file is invisible to the app even when it exists on disk,
+  # dotenv.load() throws before runApp() ever runs, and the app shows a
+  # blank white screen with no visible error (main.dart:16).
+  assets:
+    - .env.local
   # TODO: Uncomment once the asset directories are populated.
-  # assets:
   #   - assets/images/
   #   - assets/icons/
   #   - assets/animations/
