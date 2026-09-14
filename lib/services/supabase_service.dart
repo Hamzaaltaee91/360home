@@ -2,6 +2,7 @@
 
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 import '../models/pagination.dart';
@@ -142,15 +143,24 @@ class SupabaseService {
 
   /// Starts the Google OAuth flow. Google is already enabled as a provider
   /// in Supabase Auth (the web app at site/js/auth.js uses the same
-  /// provider) — this opens the browser and, on success, the OS redirects
-  /// back into the app via the com.dabberli.app:// scheme registered in
-  /// ios/Runner/Info.plist and android/app/src/main/AndroidManifest.xml.
+  /// provider).
+  ///
+  /// On mobile, the OS redirects back into the app via the
+  /// com.dabberli.app:// scheme registered in ios/Runner/Info.plist and
+  /// android/app/src/main/AndroidManifest.xml. On web, `redirectTo` is left
+  /// null so the Supabase client defaults to the current page's own origin
+  /// (window.location.origin) instead — a custom URL scheme is meaningless
+  /// in a browser and would leave the OAuth flow stuck after Google's
+  /// consent screen. Either way, each concrete redirect URL still has to be
+  /// added to Supabase Auth's Redirect URLs allow-list (dashboard only, not
+  /// something this client code controls).
+  ///
   /// The GoRouter redirect listener already reacts to auth state changes,
-  /// so no extra glue is needed once the deep link lands.
+  /// so no extra glue is needed once the redirect lands.
   Future<void> signInWithGoogle() {
     return _guard(() => _client.auth.signInWithOAuth(
           Provider.google,
-          redirectTo: 'com.dabberli.app://login-callback/',
+          redirectTo: kIsWeb ? null : 'com.dabberli.app://login-callback/',
         ));
   }
 
