@@ -206,7 +206,7 @@ class _MyOffersScreenState extends State<MyOffersScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
-        onTap: () => context.go(
+        onTap: () => context.push(
           RouteNames.requestDetailsPath(offer.requestId),
         ),
         child: Padding(
@@ -284,7 +284,7 @@ class _MyOffersScreenState extends State<MyOffersScreen> {
                     ),
                   ),
                   TextButton.icon(
-                    onPressed: () => context.go(
+                    onPressed: () => context.push(
                       RouteNames.requestDetailsPath(offer.requestId),
                     ),
                     icon: const Icon(Icons.visibility, size: 18),

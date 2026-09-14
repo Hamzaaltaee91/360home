@@ -524,7 +524,7 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
                 width: 48,
                 height: 48,
                 child: GestureDetector(
-                  onTap: () => context.go('/create-offer/${request.id}'),
+                  onTap: () => context.push('/create-offer/${request.id}'),
                   child: Tooltip(
                     message: request.title,
                     child: Icon(
@@ -567,7 +567,7 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
-        onTap: () => context.go('/create-offer/${request.id}'),
+        onTap: () => context.push('/create-offer/${request.id}'),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -709,7 +709,7 @@ class _BrowseRequestsScreenState extends State<BrowseRequestsScreen> {
                   ),
                   ElevatedButton.icon(
                     onPressed: () =>
-                        context.go('/create-offer/${request.id}'),
+                        context.push('/create-offer/${request.id}'),
                     icon: const Icon(Icons.add),
                     label: const Text('إنشاء عرض'),
                   ),

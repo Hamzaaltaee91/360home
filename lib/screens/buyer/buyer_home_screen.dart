@@ -153,7 +153,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                         ),
                       ),
                     ),
-                    onTap: () => context.go('/request/${request.id}'),
+                    onTap: () => context.push('/request/${request.id}'),
                   ),
                 );
               },
@@ -162,7 +162,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/create-request'),
+        onPressed: () => context.push('/create-request'),
         label: const Text('طلب جديد'),
         icon: const Icon(Icons.add),
       ),

@@ -416,7 +416,7 @@ class _BrowseOffersScreenState extends State<BrowseOffersScreen> {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
-        onTap: () => context.go('/offer/${offer.id}'),
+        onTap: () => context.push('/offer/${offer.id}'),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
