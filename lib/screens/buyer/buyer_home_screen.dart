@@ -67,7 +67,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
               label: Text('$_unreadCount'),
               child: const Icon(Icons.notifications),
             ),
-            onPressed: () => context.go('/notifications'),
+            onPressed: () => context.push('/notifications'),
           ),
           IconButton(
             icon: const Icon(Icons.person),
