@@ -508,3 +508,10 @@ Analyze & Test	Analyze project	2026-09-14T08:24:54.8434809Z warning • 'withOpa
 ```
 تجاوز الحد: 456 سطر مضاف (الحد 300)
 ```
+
+## BLOCKED: Create lib/screens/admin/reports_screen.dart, an admin screen for moderating user reports. StatefulWidget ReportsScreen (no constructor params), static const String routeName = '/admin/reports'. On init, call SupabaseService().adminListReports(status: 'open') and render each report as a Card showing the reporter's and reported user's full_name (from the joined data), reason, details, and created_at, with two buttons: 'تمت المراجعة' calling SupabaseService().adminResolveReport(reportId: id, status: 'reviewed') and 'رفض البلاغ' calling SupabaseService().adminResolveReport(reportId: id, status: 'dismissed'); after either action succeeds, remove that card from the list (no full reload needed). Show 'لا توجد بلاغات مفتوحة' when the list is empty, a loading spinner while fetching, and an error state with retry on failure, following the same patterns already used in lib/screens/admin/verify_realtors_screen.dart. Touch only this one new file — nothing under lib/routes/, no other file.
+التاريخ: 2026-09-14 16:11:16
+آخر سبب فشل:
+```
+تجاوز الحد: 559 سطر مضاف (الحد 300)
+```
