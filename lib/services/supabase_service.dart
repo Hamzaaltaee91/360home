@@ -995,4 +995,55 @@ class SupabaseService {
           .toList();
     });
   }
+
+  // ==================== Reference Data ====================
+
+  /// Returns the active options of the list identified by [listName],
+  /// ordered by sort_order.
+  Future<List<Map<String, dynamic>>> getListOptions(String listName) {
+    return _guard(() async {
+      final response = await _client
+          .from('list_options')
+          .select('code, label')
+          .eq('list_name', listName)
+          .eq('active', true)
+          .order('sort_order');
+
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
+
+  /// Returns all active governorates, ordered by sort_order.
+  Future<List<Map<String, dynamic>>> getGovernorates() {
+    return _guard(() async {
+      final response = await _client
+          .from('governorates')
+          .select('slug, label')
+          .eq('active', true)
+          .order('sort_order');
+
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
+
+  /// Returns the active areas of the governorate identified by
+  /// [governorateSlug], ordered by sort_order.
+  Future<List<Map<String, dynamic>>> getAreas(String governorateSlug) {
+    return _guard(() async {
+      final response = await _client
+          .from('areas')
+          .select('value, label')
+          .eq('governorate_slug', governorateSlug)
+          .eq('active', true)
+          .order('sort_order');
+
+      return response
+          .map((e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    });
+  }
 }
