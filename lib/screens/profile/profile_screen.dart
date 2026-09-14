@@ -177,7 +177,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ListTile(
                     leading: const Icon(Icons.work_outline),
                     title: const Text('سجّل كوسيط'),
-                    trailing: const Icon(Icons.chevron_left),
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      matchTextDirection: true,
+                    ),
                     onTap: () => context.push('/verification'),
                   ),
                   const Divider(height: 1),
@@ -207,7 +210,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _roleLabel(String role) {
     switch (role) {
       case 'buyer':
-        return 'مشتري';
+        return 'عادي';
       case 'realtor':
         return 'وسيط عقاري';
       case 'admin':
