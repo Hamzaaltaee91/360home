@@ -5,6 +5,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/supabase_service.dart';
+import '../screens/admin/admin_dashboard_screen.dart';
+import '../screens/admin/manage_users_screen.dart';
+import '../screens/admin/verify_realtors_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
@@ -68,6 +71,8 @@ class RouteNames {
 
   // Admin
   static const String adminDashboard = '/admin';
+  static const String adminVerifications = '/admin/verifications';
+  static const String adminUsers = '/admin/users';
 
   /// Builds the concrete path for an offer details route.
   static String offerDetailsPath(String offerId) => '/offer/$offerId';
@@ -324,6 +329,20 @@ final appRoutes = GoRouter(
     GoRoute(
       path: RouteNames.about,
       builder: (context, state) => const AboutScreen(),
+    ),
+
+    // Admin Routes
+    GoRoute(
+      path: RouteNames.adminDashboard,
+      builder: (context, state) => const AdminDashboardScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.adminVerifications,
+      builder: (context, state) => const VerifyRealtorsScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.adminUsers,
+      builder: (context, state) => const ManageUsersScreen(),
     ),
   ],
   errorBuilder: (context, state) =>
