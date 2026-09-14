@@ -600,6 +600,20 @@ class _OfferDetailsScreenState extends State<OfferDetailsScreen> {
                                           ),
                                       ],
                                     ),
+                                    const SizedBox(height: 12),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () => context.push(
+                                          '/messages/${widget.offerId}',
+                                        ),
+                                        icon: const Icon(
+                                          Icons.message_outlined,
+                                          size: 18,
+                                        ),
+                                        label: const Text('الرسائل'),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
