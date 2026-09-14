@@ -92,6 +92,20 @@ class SupabaseService {
       localStorage: SecureLocalStorage(_secureStorage),
     );
     _client = Supabase.instance.client;
+
+    // signIn() refreshes the role cache itself for email/password, but an
+    // OAuth session (Google) is only established later, asynchronously,
+    // when the deep link redirect lands — nothing calls signIn() for that
+    // path. Without this listener, GoRouter's redirect (app_routes.dart)
+    // would read a stale null currentUserRole right after a Google sign-in
+    // and send the user to the wrong home screen.
+    _client.auth.onAuthStateChange.listen((state) {
+      if (state.event == AuthChangeEvent.signedIn) {
+        refreshCurrentUserRole();
+      } else if (state.event == AuthChangeEvent.signedOut) {
+        _currentUserRole = null;
+      }
+    });
   }
 
   // ==================== Authentication ====================
@@ -124,6 +138,20 @@ class SupabaseService {
       await refreshCurrentUserRole();
       return response;
     });
+  }
+
+  /// Starts the Google OAuth flow. Google is already enabled as a provider
+  /// in Supabase Auth (the web app at site/js/auth.js uses the same
+  /// provider) — this opens the browser and, on success, the OS redirects
+  /// back into the app via the com.dabberli.app:// scheme registered in
+  /// ios/Runner/Info.plist and android/app/src/main/AndroidManifest.xml.
+  /// The GoRouter redirect listener already reacts to auth state changes,
+  /// so no extra glue is needed once the deep link lands.
+  Future<void> signInWithGoogle() {
+    return _guard(() => _client.auth.signInWithOAuth(
+          Provider.google,
+          redirectTo: 'com.dabberli.app://login-callback/',
+        ));
   }
 
   Future<void> signOut() {

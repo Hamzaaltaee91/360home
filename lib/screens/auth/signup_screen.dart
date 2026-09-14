@@ -81,6 +81,35 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    if (!_acceptedTerms) {
+      setState(() => _errorMessage = 'يجب الموافقة على الشروط والأحكام');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // Opens the browser for Google sign-in/sign-up. handle_new_user()
+      // always creates new accounts as 'buyer' server-side regardless of
+      // how they authenticate, so this carries no privilege-escalation
+      // risk. GoRouter's redirect listener navigates once the deep link
+      // lands — no manual navigation needed here.
+      await SupabaseService().signInWithGoogle();
+    } on AppException catch (e) {
+      setState(() => _errorMessage = e.message);
+    } catch (e) {
+      setState(() => _errorMessage = 'خطأ في التسجيل عبر جوجل: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -204,6 +233,26 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                         )
                       : const Text('إنشاء الحساب'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: const [
+                  Expanded(child: Divider()),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('أو'),
+                  ),
+                  Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _handleGoogleSignIn,
+                  icon: const Icon(Icons.g_mobiledata, size: 28),
+                  label: const Text('المتابعة عبر Google'),
                 ),
               ),
               const SizedBox(height: 16),

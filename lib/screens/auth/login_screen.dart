@@ -106,6 +106,29 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // Opens the browser for Google sign-in. On success, the OS redirects
+      // back into the app via a deep link, GoRouter's redirect listener
+      // reacts to the new auth state, and navigates to the right home
+      // screen — no manual navigation needed here.
+      await SupabaseService().signInWithGoogle();
+    } on AppException catch (e) {
+      setState(() => _errorMessage = e.message);
+    } catch (e) {
+      setState(() => _errorMessage = 'خطأ في تسجيل الدخول عبر جوجل: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   Future<void> _handleForgotPassword() async {
     final email = _emailController.text.trim();
     if (Validators.email(email) != null) {
@@ -275,6 +298,26 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         )
                       : const Text('تسجيل الدخول'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: const [
+                  Expanded(child: Divider()),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('أو'),
+                  ),
+                  Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _handleGoogleSignIn,
+                  icon: const Icon(Icons.g_mobiledata, size: 28),
+                  label: const Text('المتابعة عبر Google'),
                 ),
               ),
               const SizedBox(height: 16),
