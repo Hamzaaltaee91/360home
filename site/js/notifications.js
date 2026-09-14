@@ -33,3 +33,35 @@ export async function markAsRead(id) {
     .eq("id", id);
   if (error) throw error;
 }
+
+/**
+ * Subscribes to Realtime changes on the current user's notifications.
+ * Invokes `callback` with the fresh unread count on every change.
+ * Resolves to the channel object so callers can unsubscribe:
+ *   const channel = await subscribeToUnreadCount(setCount);
+ *   ...later: await supabase.removeChannel(channel);
+ */
+export async function subscribeToUnreadCount(callback) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const channel = supabase
+    .channel(`notifications:${user.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${user.id}`,
+      },
+      async () => {
+        const count = await unreadCount();
+        callback(count);
+      },
+    )
+    .subscribe();
+
+  return channel;
+}
