@@ -55,7 +55,7 @@
   <script type="module">
     import { requireSession, signOut } from "./js/auth.js";
     import { listMyRequests } from "./js/requests.js";
-    import { unreadCount } from "./js/notifications.js";
+    import { subscribeToUnreadCount } from "./js/notifications.js";
 
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
@@ -108,11 +108,12 @@
     }
 
     try {
-      const unread = await unreadCount();
-      if (unread > 0) {
+      await subscribeToUnreadCount((count) => {
         const link = document.getElementById("notifications-link");
-        if (link) link.textContent = `الإشعارات (${unread})`;
-      }
+        if (!link) return;
+        link.textContent =
+          count > 0 ? `الإشعارات (${count})` : "الإشعارات";
+      });
     } catch (err) {
       console.error(err);
     }
