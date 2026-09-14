@@ -21,3 +21,11 @@ export async function getMyVerificationStatus() {
   if (!data || data.length === 0) return null;
   return data[0];
 }
+
+export async function uploadLicenseDocument(userId, file) {
+  const path = `realtor-documents/${userId}/${file.name}`;
+  const { error } = await supabase.storage.from("dabberli").upload(path, file);
+  if (error) throw error;
+  const { data } = supabase.storage.from("dabberli").getPublicUrl(path);
+  return data.publicUrl;
+}
