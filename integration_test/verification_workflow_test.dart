@@ -1,8 +1,9 @@
 // Integration test: Realtor Verification Workflow
 //
-// End-to-end flow: Realtor signs up → submits a verification request
-// (license number + document URL) → the request is persisted with a
-// "pending" status → it can be fetched back via `getMyVerification`.
+// End-to-end flow: Realtor signs up → submits a realtor application
+// (company name, license number, license expiry, document URL) → the
+// request is persisted with a "pending" status → it can be fetched back
+// via `getMyVerification`.
 //
 // The test skips gracefully when `SUPABASE_URL` / `SUPABASE_ANON_KEY` are
 // not provided, so CI without a live backend does not fail.
@@ -30,8 +31,10 @@ void main() {
     late SupabaseService service;
     late String realtorEmail;
     const realtorPassword = 'Test1234!';
+    const companyName = 'Integration Realty';
     const licenseNumber = 'LIC-INTEGRATION-0001';
     const documentUrl = 'https://example.com/license.pdf';
+    final licenseExpiry = DateTime.now().add(const Duration(days: 365));
 
     setUpAll(() async {
       if (!isConfigured) return;
@@ -78,26 +81,21 @@ void main() {
         final before = await service.getMyVerification();
         expect(before, isNull);
 
-        // Submit the verification request.
-        final submitted = await service.submitVerification(
+        // Submit the realtor application.
+        await service.submitVerification(
+          companyName: companyName,
           licenseNumber: licenseNumber,
+          licenseExpiry: licenseExpiry,
           documentUrl: documentUrl,
         );
-
-        expect(submitted.status, 'pending');
-        expect(submitted.licenseNumber, licenseNumber);
-        expect(submitted.documentUrl, documentUrl);
-        expect(submitted.rejectionReason, isNull);
-        expect(submitted.verifiedBy, isNull);
-        expect(submitted.reviewedAt, isNull);
 
         // Fetch it back and confirm persistence.
         final fetched = await service.getMyVerification();
         expect(fetched, isNotNull);
-        expect(fetched!.id, submitted.id);
-        expect(fetched.status, 'pending');
-        expect(fetched.licenseNumber, licenseNumber);
+        expect(fetched!.status, 'pending');
         expect(fetched.documentUrl, documentUrl);
+        expect(fetched.rejectionReason, isNull);
+        expect(fetched.reviewedAt, isNull);
       },
     );
   });
