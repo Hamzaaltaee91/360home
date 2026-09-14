@@ -64,10 +64,10 @@
             <span class="error-text" data-error-for="license-expiry" hidden></span>
           </div>
           <div class="form-field is-full">
-            <label for="document-url">رابط مستند الرخصة</label>
-            <input type="url" id="document-url" required>
-            <span>حالياً الصق رابط مستند الرخصة (الرفع المباشر سيتوفر لاحقاً).</span>
-            <span class="error-text" data-error-for="document-url" hidden></span>
+            <label for="license-document">مستند الرخصة</label>
+            <input type="file" id="license-document" accept="image/*,application/pdf" required>
+            <span>ارفع صورة أو ملف PDF لرخصة الوسيط.</span>
+            <span class="error-text" data-error-for="license-document" hidden></span>
           </div>
         </div>
       </fieldset>
@@ -90,7 +90,11 @@
 
   <script type="module">
     import { requireSession, signOut } from "./js/auth.js";
-    import { getMyVerificationStatus, submitRealtorApplication } from "./js/verification.js";
+    import {
+      getMyVerificationStatus,
+      submitRealtorApplication,
+      uploadLicenseDocument,
+    } from "./js/verification.js";
 
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
@@ -175,8 +179,10 @@
         showFieldError("license-expiry", "الرجاء اختيار تاريخ انتهاء الرخصة.");
         hasError = true;
       }
-      if (!val("document-url")) {
-        showFieldError("document-url", "الرجاء إدخال رابط مستند الرخصة.");
+      const documentInput = document.getElementById("license-document");
+      const documentFile = documentInput.files && documentInput.files[0];
+      if (!documentFile) {
+        showFieldError("license-document", "الرجاء اختيار مستند الرخصة.");
         hasError = true;
       }
 
@@ -185,11 +191,13 @@
       }
 
       try {
+        const session = await requireSession();
+        const documentUrl = await uploadLicenseDocument(session.user.id, documentFile);
         await submitRealtorApplication(
           val("company-name"),
           val("license-number"),
           val("license-expiry"),
-          val("document-url"),
+          documentUrl,
         );
         await refreshStatus();
       } catch (err) {
