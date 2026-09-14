@@ -8,6 +8,12 @@ import '../services/supabase_service.dart';
 import '../screens/admin/admin_dashboard_screen.dart';
 import '../screens/admin/manage_users_screen.dart';
 import '../screens/admin/verify_realtors_screen.dart';
+import '../screens/admin/manage_lists_screen.dart';
+import '../screens/admin/manage_requests_screen.dart';
+import '../screens/admin/manage_offers_screen.dart';
+import '../screens/admin/realtors_directory_screen.dart';
+import '../screens/admin/audit_log_screen.dart';
+import '../screens/admin/reports_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
@@ -75,6 +81,12 @@ class RouteNames {
   static const String adminDashboard = '/admin';
   static const String adminVerifications = '/admin/verifications';
   static const String adminUsers = '/admin/users';
+  static const String adminLists = '/admin/lists';
+  static const String adminReports = '/admin/reports';
+  static const String adminRequests = '/admin/requests';
+  static const String adminOffers = '/admin/offers';
+  static const String adminRealtorsDirectory = '/admin/realtors-directory';
+  static const String adminAuditLog = '/admin/audit-log';
 
   /// Builds the concrete path for an offer details route.
   static String offerDetailsPath(String offerId) => '/offer/$offerId';
@@ -348,6 +360,30 @@ final appRoutes = GoRouter(
     GoRoute(
       path: RouteNames.adminUsers,
       builder: (context, state) => const ManageUsersScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.adminLists,
+      builder: (context, state) => const ManageListsScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.adminReports,
+      builder: (context, state) => const ReportsScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.adminRequests,
+      builder: (context, state) => const ManageRequestsScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.adminOffers,
+      builder: (context, state) => const ManageOffersScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.adminRealtorsDirectory,
+      builder: (context, state) => const RealtorsDirectoryScreen(),
+    ),
+    GoRoute(
+      path: RouteNames.adminAuditLog,
+      builder: (context, state) => const AuditLogScreen(),
     ),
   ],
   errorBuilder: (context, state) =>
