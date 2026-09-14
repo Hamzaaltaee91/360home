@@ -1090,4 +1090,79 @@ class SupabaseService {
           .toList();
     });
   }
+
+  /// Creates or updates the governorate identified by [slug] (admin only).
+  ///
+  /// The `slug` is the conflict target, so re-submitting an existing
+  /// governorate updates it in place instead of inserting a duplicate.
+  /// Admin authorization is enforced server-side by the governorates RLS
+  /// policy — no privilege logic is performed client-side.
+  Future<void> adminUpsertGovernorate({
+    required String slug,
+    required String label,
+    int sortOrder = 0,
+    bool active = true,
+  }) {
+    return _guard(
+      () => _client.from('governorates').upsert(
+            {
+              'slug': slug,
+              'label': label,
+              'sort_order': sortOrder,
+              'active': active,
+            },
+            onConflict: 'slug',
+          ),
+    );
+  }
+
+  /// Deletes the governorate identified by [slug] (admin only).
+  ///
+  /// Admin authorization is enforced server-side by the governorates RLS
+  /// policy — no privilege logic is performed client-side.
+  Future<void> adminDeleteGovernorate(String slug) {
+    return _guard(
+      () => _client.from('governorates').delete().eq('slug', slug),
+    );
+  }
+
+  /// Creates or updates an area (admin only).
+  ///
+  /// When [id] is null it is omitted from the payload, so the table's
+  /// default `gen_random_uuid()` assigns the id on insert; pass an existing
+  /// [id] to update that row. The `id` is the conflict target.
+  /// Admin authorization is enforced server-side by the areas RLS policy —
+  /// no privilege logic is performed client-side.
+  Future<void> adminUpsertArea({
+    String? id,
+    required String governorateSlug,
+    required String value,
+    required String label,
+    int sortOrder = 0,
+    bool active = true,
+  }) {
+    return _guard(
+      () => _client.from('areas').upsert(
+            {
+              if (id != null) 'id': id,
+              'governorate_slug': governorateSlug,
+              'value': value,
+              'label': label,
+              'sort_order': sortOrder,
+              'active': active,
+            },
+            onConflict: 'id',
+          ),
+    );
+  }
+
+  /// Deletes the area identified by [id] (admin only).
+  ///
+  /// Admin authorization is enforced server-side by the areas RLS policy —
+  /// no privilege logic is performed client-side.
+  Future<void> adminDeleteArea(String id) {
+    return _guard(
+      () => _client.from('areas').delete().eq('id', id),
+    );
+  }
 }
