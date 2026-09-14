@@ -34,6 +34,7 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('الدردشات')),
+      bottomNavigationBar: _buildBottomNavigationBar(context),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _conversationsFuture,
         builder: (context, snapshot) {
@@ -110,6 +111,52 @@ class _ChatsListScreenState extends State<ChatsListScreen> {
         },
       ),
     );
+  }
+
+  Widget? _buildBottomNavigationBar(BuildContext context) {
+    final role = _service.currentUserRole;
+
+    if (role == 'buyer') {
+      return BottomNavigationBar(
+        currentIndex: 2,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'الرئيسية'),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'العروض'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'الدردشات',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'الملف الشخصي'),
+        ],
+        onTap: (index) {
+          if (index == 0) context.go('/buyer-home');
+          if (index == 1) context.go('/browse-offers');
+          if (index == 3) context.go('/profile');
+        },
+      );
+    }
+
+    if (role == 'realtor') {
+      return BottomNavigationBar(
+        currentIndex: 2,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'الرئيسية'),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'الطلبات'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'الدردشات',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'الملف الشخصي'),
+        ],
+        onTap: (index) {
+          if (index == 0) context.go('/realtor-home');
+          if (index == 1) context.go('/browse-requests');
+          if (index == 3) context.go('/profile');
+        },
+      );
+    }
+
+    return null;
   }
 
   int _asInt(Object? value) {
