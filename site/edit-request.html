@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تعديل الطلب — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <h1>تعديل الطلب</h1>
+        <p>عدّل مواصفات طلبك.</p>
+      </div>
+    </div>
+
+    <form id="request-form" class="card">
+      <fieldset>
+        <legend>الفئة والغرض</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="category">الفئة</label>
+            <select id="category" required>
+              <option value="residential">سكني</option>
+              <option value="commercial">تجاري</option>
+              <option value="land">أرض</option>
+            </select>
+            <span class="error-text" data-error-for="category" hidden></span>
+          </div>
+          <div class="form-field" id="subtype-field" hidden>
+            <label for="property-subtype">نوع العقار</label>
+            <select id="property-subtype">
+              <option value="" disabled selected>— اختر النوع —</option>
+              <option value="apartment">شقة</option>
+              <option value="house">بيت</option>
+              <option value="villa">فيلا</option>
+              <option value="duplex">دوبلكس</option>
+            </select>
+            <span class="error-text" data-error-for="property-subtype" hidden></span>
+          </div>
+          <div class="form-field">
+            <label for="purpose">الغرض</label>
+            <select id="purpose" required>
+              <option value="" disabled selected>— اختر الغرض —</option>
+              <option value="rent">إيجار</option>
+              <option value="buy">شراء</option>
+            </select>
+            <span class="error-text" data-error-for="purpose" hidden></span>
+          </div>
+          <div class="form-field" id="rent-duration-field" hidden>
+            <label for="rent-duration">مدة الإيجار</label>
+            <select id="rent-duration">
+              <option value="daily">يومي</option>
+              <option value="weekly">أسبوعي</option>
+              <option value="monthly" selected>شهري</option>
+              <option value="yearly">سنوي</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="title">عنوان مختصر للطلب</label>
+            <input type="text" id="title" placeholder="مثلاً: شقة 3 غرف قريبة من الجامعة" required>
+            <span class="error-text" data-error-for="title" hidden></span>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>الموقع</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="city">المحافظة</label>
+            <select id="city" required>
+              <option value="" disabled selected>— اختر المحافظة —</option>
+            </select>
+            <span class="error-text" data-error-for="city" hidden></span>
+          </div>
+          <div class="form-field">
+            <label for="area-name">المنطقة</label>
+            <select id="area-name">
+              <option value="" disabled selected>— اختر المحافظة أولاً —</option>
+            </select>
+            <span class="error-text" data-error-for="area-name" hidden></span>
+          </div>
+          <div class="form-field" id="area-other-field" hidden>
+            <label for="area-other">اسم المنطقة</label>
+            <input type="text" id="area-other">
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>الميزانية</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="max-price">سقف الميزانية (دينار عراقي — الرقم الكامل)</label>
+            <input type="text" inputmode="numeric" id="max-price" placeholder="500000">
+            <span class="error-text" data-error-for="max-price" hidden></span>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>المواصفات</legend>
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="bedrooms">عدد غرف النوم</label>
+            <select id="bedrooms">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="bathrooms">عدد الحمامات</label>
+            <select id="bathrooms">
+              <option value="1" selected>1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label><input type="checkbox" id="furnished"> مفروش</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>تفاصيل إضافية</legend>
+        <div class="form-grid">
+          <div class="form-field is-full">
+            <label for="description">الوصف</label>
+            <textarea id="description"></textarea>
+          </div>
+        </div>
+      </fieldset>
+      <p class="error-text" id="form-error" hidden></p>
+      <button type="submit" class="btn btn-primary btn-lg">احفظ التعديلات</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { requireSession, signOut } from "./js/auth.js";
+    import { getRequest, updateRequest } from "./js/requests.js";
+    import iraqLocations from "./js/iraq-locations.js";
+    import { toWesternDigits } from "./js/numerals.js";
+
+    await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    const requestId = new URLSearchParams(window.location.search).get("id");
+
+    function sanitizeNumericInput(input, digitsOnly) {
+      const converted = toWesternDigits(input.value);
+      const sanitized = digitsOnly ? converted.replace(/\D/g, "") : converted;
+      if (sanitized === input.value) {
+        return;
+      }
+      const caret = input.selectionStart;
+      input.value = sanitized;
+      if (caret !== null) {
+        input.setSelectionRange(caret, Math.min(caret, sanitized.length));
+      }
+    }
+
+    const numericInputs = [
+      { id: "max-price", digitsOnly: true },
+    ];
+
+    numericInputs.forEach(({ id, digitsOnly }) => {
+      const input = document.getElementById(id);
+      input.addEventListener("input", () => sanitizeNumericInput(input, digitsOnly));
+    });
+
+    const citySelect = document.getElementById("city");
+    const areaSelect = document.getElementById("area-name");
+    const areaOtherField = document.getElementById("area-other-field");
+    const areaOtherInput = document.getElementById("area-other");
+
+    Object.entries(iraqLocations).forEach(([key, gov]) => {
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = gov.label;
+      citySelect.appendChild(option);
+    });
+
+    function populateAreas(govKey, selectedAreaValue) {
+      areaSelect.innerHTML = "";
+      areaOtherField.hidden = true;
+      areaOtherInput.value = "";
+
+      const gov = iraqLocations[govKey];
+      if (!gov) {
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        placeholder.textContent = "— اختر المحافظة أولاً —";
+        areaSelect.appendChild(placeholder);
+        return;
+      }
+
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.disabled = true;
+      placeholder.textContent = "— اختر المنطقة —";
+      areaSelect.appendChild(placeholder);
+
+      const knownValues = gov.areas.map((a) => a.value);
+      const isKnown = selectedAreaValue != null && knownValues.includes(selectedAreaValue);
+
+      gov.areas.forEach((area) => {
+        const option = document.createElement("option");
+        option.value = area.value;
+        option.textContent = area.label;
+        if (isKnown && area.value === selectedAreaValue) {
+          option.selected = true;
+        }
+        areaSelect.appendChild(option);
+      });
+
+      if (!isKnown && selectedAreaValue) {
+        areaSelect.value = "other";
+        areaOtherField.hidden = false;
+        areaOtherInput.value = selectedAreaValue;
+      } else if (!selectedAreaValue) {
+        placeholder.selected = true;
+      }
+    }
+
+    citySelect.addEventListener("change", () => populateAreas(citySelect.value, null));
+
+    areaSelect.addEventListener("change", () => {
+      const isOther = areaSelect.value === "other";
+      areaOtherField.hidden = !isOther;
+      if (!isOther) {
+        areaOtherInput.value = "";
+      }
+    });
+
+    const categorySelect = document.getElementById("category");
+    const subtypeField = document.getElementById("subtype-field");
+    const subtypeSelect = document.getElementById("property-subtype");
+
+    function updateSubtypeVisibility() {
+      const isResidential = categorySelect.value === "residential";
+      subtypeField.hidden = !isResidential;
+      if (!isResidential) {
+        subtypeSelect.value = "";
+      }
+    }
+
+    categorySelect.addEventListener("change", updateSubtypeVisibility);
+
+    const purposeSelect = document.getElementById("purpose");
+    const rentDurationField = document.getElementById("rent-duration-field");
+
+    function updateRentDurationVisibility() {
+      rentDurationField.hidden = purposeSelect.value !== "rent";
+    }
+
+    purposeSelect.addEventListener("change", updateRentDurationVisibility);
+
+    const formErrorEl = document.getElementById("form-error");
+
+    function clearFieldErrors() {
+      formErrorEl.hidden = true;
+      formErrorEl.textContent = "";
+      document.querySelectorAll("[data-error-for]").forEach((el) => {
+        el.hidden = true;
+        el.textContent = "";
+      });
+    }
+
+    function showFieldError(fieldId, message) {
+      const el = document.querySelector(`[data-error-for="${fieldId}"]`);
+      if (el) {
+        el.textContent = message;
+        el.hidden = false;
+      }
+    }
+
+    if (!requestId) {
+      formErrorEl.textContent = "لا يوجد طلب محدد.";
+      formErrorEl.hidden = false;
+      document.getElementById("request-form").hidden = true;
+    } else {
+      let request;
+      try {
+        request = await getRequest(requestId);
+      } catch (err) {
+        formErrorEl.textContent = err.message;
+        formErrorEl.hidden = false;
+        document.getElementById("request-form").hidden = true;
+      }
+
+      if (request) {
+        categorySelect.value = request.category ?? "residential";
+        purposeSelect.value = request.purpose ?? "";
+        document.getElementById("title").value = request.title ?? "";
+        document.getElementById("description").value = request.description ?? "";
+        document.getElementById("max-price").value =
+          request.max_price != null ? String(request.max_price) : "";
+        document.getElementById("bedrooms").value =
+          request.bedrooms != null ? String(request.bedrooms) : "2";
+        document.getElementById("bathrooms").value =
+          request.bathrooms != null ? String(request.bathrooms) : "1";
+        document.getElementById("furnished").checked = Boolean(request.furnished);
+
+        updateSubtypeVisibility();
+        if (request.property_subtype) {
+          subtypeSelect.value = request.property_subtype;
+        }
+
+        updateRentDurationVisibility();
+        if (request.rental_period) {
+          document.getElementById("rent-duration").value = request.rental_period;
+        }
+
+        if (request.governorate && iraqLocations[request.governorate]) {
+          citySelect.value = request.governorate;
+          populateAreas(request.governorate, request.area ?? null);
+        }
+      }
+    }
+
+    document.getElementById("request-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearFieldErrors();
+
+      let hasError = false;
+
+      if (!document.getElementById("purpose").value) {
+        showFieldError("purpose", "الرجاء اختيار الغرض (إيجار أو شراء).");
+        hasError = true;
+      }
+
+      if (!document.getElementById("category").value) {
+        showFieldError("category", "الرجاء اختيار الفئة.");
+        hasError = true;
+      }
+
+      if (!document.getElementById("title").value.trim()) {
+        showFieldError("title", "الرجاء إدخال عنوان الطلب.");
+        hasError = true;
+      }
+
+      if (!document.getElementById("city").value) {
+        showFieldError("city", "الرجاء اختيار المحافظة.");
+        hasError = true;
+      }
+
+      if (hasError) {
+        return;
+      }
+
+      const val = (id) => document.getElementById(id).value;
+      const num = (id) => (val(id) === "" ? null : Number(val(id)));
+      const budget = num("max-price");
+
+      const gov = iraqLocations[val("city")];
+      const areaName = areaSelect.value === "other"
+        ? (val("area-other") || null)
+        : areaSelect.value
+          ? (gov?.areas.find((a) => a.value === areaSelect.value)?.label ?? null)
+          : null;
+      const area = areaSelect.value === "other"
+        ? (val("area-other") || null)
+        : (areaSelect.value || null);
+
+      try {
+        await updateRequest(requestId, {
+          category: val("category"),
+          purpose: purposeSelect.value,
+          property_subtype: categorySelect.value === "residential"
+            ? (val("property-subtype") || null)
+            : null,
+          rental_period: purposeSelect.value === "rent"
+            ? val("rent-duration")
+            : null,
+          title: val("title"),
+          description: val("description") || null,
+          governorate: val("city") || null,
+          city: gov ? gov.label : null,
+          area,
+          area_name: areaName,
+          min_price:
+            budget === null ? null : Math.round(budget * 0.7),
+          max_price: budget,
+          bedrooms: num("bedrooms"),
+          bathrooms: num("bathrooms"),
+          furnished: document.getElementById("furnished").checked,
+        });
+        window.location.href = `request.html?id=${encodeURIComponent(requestId)}`;
+      } catch (err) {
+        formErrorEl.textContent = err.message;
+        formErrorEl.hidden = false;
+      }
+    });
+  </script>
+</body>
+</html>
