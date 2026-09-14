@@ -290,6 +290,11 @@ class _MyOffersScreenState extends State<MyOffersScreen> {
                     icon: const Icon(Icons.visibility, size: 18),
                     label: const Text('عرض الطلب'),
                   ),
+                  TextButton.icon(
+                    onPressed: () => context.push('/messages/${offer.id}'),
+                    icon: const Icon(Icons.message, size: 18),
+                    label: const Text('الرسائل'),
+                  ),
                 ],
               ),
             ],
