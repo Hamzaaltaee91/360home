@@ -27,6 +27,28 @@
 
     {
       const detail = document.getElementById("offer-detail");
+
+      if (Array.isArray(offer.photo_urls) && offer.photo_urls.length > 0) {
+        const gallery = document.createElement("div");
+        gallery.style.display = "flex";
+        gallery.style.flexWrap = "wrap";
+        gallery.style.gap = "8px";
+        gallery.style.marginBottom = "12px";
+
+        offer.photo_urls.forEach((url) => {
+          const img = document.createElement("img");
+          img.src = url;
+          img.alt = offer.property_title ?? "";
+          img.style.width = "120px";
+          img.style.height = "120px";
+          img.style.objectFit = "cover";
+          img.style.borderRadius = "8px";
+          gallery.appendChild(img);
+        });
+
+        detail.appendChild(gallery);
+      }
+
       const card = document.createElement("div");
       card.className = "card";
 
