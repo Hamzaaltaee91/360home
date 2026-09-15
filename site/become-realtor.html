@@ -94,7 +94,7 @@
   </footer>
 
   <script type="module">
-    import { requireSession, signOut } from "./js/auth.js";
+    import { requireSession, signOut, getCurrentAppUserId } from "./js/auth.js";
     import {
       getMyVerificationStatus,
       submitRealtorApplication,
@@ -200,8 +200,9 @@
       }
 
       try {
-        const session = await requireSession();
-        const documentUrl = await uploadLicenseDocument(session.user.id, documentFile);
+        await requireSession();
+        const appUserId = await getCurrentAppUserId();
+        const documentUrl = await uploadLicenseDocument(appUserId, documentFile);
         await submitRealtorApplication(
           val("company-name"),
           val("license-number"),

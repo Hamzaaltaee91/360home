@@ -29,10 +29,19 @@ class _MessagesScreenState extends State<MessagesScreen> {
   List<Map<String, dynamic>>? _loadedMessages;
   bool _sending = false;
 
+  /// The signed-in user's public.users.id — NOT the same as
+  /// getCurrentUserId() (that's the auth.uid() space; sender_id/
+  /// recipient_id reference public.users.id). Resolved once and cached,
+  /// since build() needs it synchronously for message-bubble alignment.
+  String? _currentAppUserId;
+
   @override
   void initState() {
     super.initState();
     _messagesFuture = _loadMessages();
+    _service.getCurrentUser().then((user) {
+      if (mounted) setState(() => _currentAppUserId = user.id);
+    }).catchError((_) {});
   }
 
   @override
@@ -87,7 +96,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   String? _otherUserId() {
     final messages = _loadedMessages;
     if (messages == null || messages.isEmpty) return null;
-    final currentUserId = _service.getCurrentUserId();
+    final currentUserId = _currentAppUserId;
     final first = messages.first;
     final senderId = first['sender_id'] as String?;
     if (senderId != null && senderId != currentUserId) {
@@ -213,7 +222,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = _service.getCurrentUserId();
+    final currentUserId = _currentAppUserId;
     final otherUserId = _otherUserId();
 
     return Scaffold(

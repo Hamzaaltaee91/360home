@@ -16,7 +16,7 @@
   </div>
 
   <script type="module">
-    import { requireSession } from "./js/auth.js";
+    import { requireSession, getCurrentAppUserId } from "./js/auth.js";
     import { getOffer, respondToOffer } from "./js/offers.js";
     import { getMyReviewForOffer, submitReview } from "./js/reviews.js";
 
@@ -108,7 +108,7 @@
 
     renderButtons();
 
-    if (offer.status === "accepted" && session.user.id !== offer.realtor_id) {
+    if (offer.status === "accepted" && (await getCurrentAppUserId()) !== offer.realtor_id) {
       await renderReviewSection();
     }
 

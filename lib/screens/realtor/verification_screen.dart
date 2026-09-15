@@ -128,10 +128,10 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
     setState(() => _submitting = true);
     try {
-      final userId = _supabase.getCurrentUserId();
-      if (userId == null) {
+      if (_supabase.getCurrentUserId() == null) {
         throw const AppException('المستخدم غير مسجل دخول');
       }
+      final userId = (await _supabase.getCurrentUser()).id;
 
       final fileName =
           '${DateTime.now().millisecondsSinceEpoch}_$_documentFileName';
