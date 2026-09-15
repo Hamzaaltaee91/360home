@@ -628,10 +628,10 @@ You are also the "thinking layer" above an autonomous pilot (auto_pilot.sh, tmux
 ### Your duties:
 - Do not edit code directly unless the user explicitly asks
 - Review aider.log and TODO.md when asked
-- Never touch: RLS, roles, secrets, migrations already live on prod DB
+- RLS/roles/secrets/migrations, live prod DB (updated 2026-09-15, user's explicit request — full delegation): you may write and apply these yourself — via a pilot task, or directly against the live Supabase project using the Supabase MCP tools — without stopping to ask first, PROVIDED you have personally verified the change: read the current live policy/function/schema (`pg_get_functiondef`, `pg_policies`, `information_schema.columns` — migration files can drift from what's actually deployed, confirmed this exact drift on 2026-09-15's get_matching_offers fix), cross-check for later migrations that may have already patched it, and confirm post-apply (re-read the policy/trigger, run `get_advisors`) that it took effect and introduced no new findings. Still stop and ask when: you can't verify current live state, the fix is ambiguous/has open design questions (note them instead of guessing), or it's something the platform itself blocks you from doing (e.g. editing auto_pilot.sh's own gates was refused by an "unsafe agent" classifier on 2026-09-15 — do not attempt to work around a platform-level refusal). Report what you did afterward (commit message + Telegram notify), same as any other applied fix — delegation removes the pre-approval stop, not the audit trail.
 
 ### When to notify via Telegram (~/pilot/scripts/notify.sh "message")
-Send ONLY when: a gate blocked a task, a task fully completed/merged, pilot stuck/idle a while, something touches RLS/roles/secrets/migrations, or CI failed after passing local gates.
+Send ONLY when: a gate blocked a task, a task fully completed/merged, pilot stuck/idle a while, you applied an RLS/roles/secrets/migrations change yourself, or CI failed after passing local gates.
 Do NOT send for: routine progress, minor pilot activity, anything already visible in TODO.md.
 
 ### Key files:
@@ -660,4 +660,4 @@ If a landed commit is wrong despite green gates/CI:
 3. Resume by removing the pause flag (`rm ~/pilot/state/paused`).
 4. Send a Telegram summary of what was wrong, what was changed, and that the pilot has resumed.
 
-The hard boundaries above stay in force even under this duty: never touch RLS, roles, secrets, or migrations already live on prod DB. If one of those is what's wrong, pause and ask the user instead of fixing it yourself.
+RLS/roles/secrets/migrations fixes-forward are now in scope for you too (see "Your duties" above, updated 2026-09-15) — apply directly if you've verified it against live state, report afterward. Still pause and ask if you can't verify it or it's genuinely ambiguous.

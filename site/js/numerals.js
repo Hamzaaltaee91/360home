@@ -16,3 +16,22 @@ export function toWesternDigits(str) {
   }
   return result;
 }
+
+// Inserts Western-digit thousands separators (commas) every 3 digits
+// from the right. Non-digit characters are dropped first, so Arabic-Indic
+// digits, spaces and stray punctuation are tolerated.
+// `750000` -> `'750,000'`; `''`, `null`, `'abc'` -> `''`.
+
+export function formatThousands(value) {
+  const digits = toWesternDigits(String(value)).replace(/[^0-9]/g, '');
+  if (digits === '') return '';
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+// Removes comma characters from a numeric string and normalises any
+// Arabic-Indic digits to Western ones.
+// `'750,000'` -> `'750000'`.
+
+export function stripThousands(str) {
+  return toWesternDigits(String(str)).replace(/,/g, '');
+}
