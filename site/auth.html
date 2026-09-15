@@ -111,6 +111,7 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       errorEl.hidden = true;
+      submitBtn.disabled = true;
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
       const fullName = document.getElementById("full-name").value;
@@ -123,6 +124,7 @@
       if (error) {
         errorEl.textContent = error.message;
         errorEl.hidden = false;
+        submitBtn.disabled = false;
         return;
       }
       await redirectAfterAuth();
