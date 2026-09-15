@@ -29,6 +29,8 @@
       </div>
     </div>
 
+    <p id="loading-msg">جاري التحميل...</p>
+
     <div class="card" id="status-view" hidden>
       <fieldset>
         <legend>حالة الطلب</legend>
@@ -111,6 +113,7 @@
     const rejectionField = document.getElementById("rejection-field");
     const rejectionReason = document.getElementById("rejection-reason");
     const formErrorEl = document.getElementById("form-error");
+    const loadingMsg = document.getElementById("loading-msg");
 
     function statusLabel(status) {
       switch (status) {
@@ -218,7 +221,11 @@
       }
     });
 
-    await refreshStatus();
+    try {
+      await refreshStatus();
+    } finally {
+      loadingMsg.hidden = true;
+    }
   </script>
 </body>
 </html>
