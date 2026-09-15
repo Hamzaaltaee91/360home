@@ -53,12 +53,28 @@
   </footer>
 
   <script type="module">
-    import { requireSession, signOut } from "./js/auth.js";
+    import { requireSession, signOut, getCurrentUserDisplay } from "./js/auth.js";
     import { listMyRequests } from "./js/requests.js";
     import { subscribeToUnreadCount } from "./js/notifications.js";
 
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
+
+    try {
+      const currentUser = await getCurrentUserDisplay();
+      if (currentUser) {
+        const displayName =
+          currentUser.full_name && currentUser.full_name.trim()
+            ? currentUser.full_name
+            : currentUser.email;
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = displayName;
+        const signoutBtn = document.getElementById("signout-btn");
+        signoutBtn.parentNode.insertBefore(nameSpan, signoutBtn);
+      }
+    } catch (err) {
+      console.error(err);
+    }
 
     const requests = await listMyRequests();
     const list = document.getElementById("requests-list");
