@@ -39,6 +39,7 @@
     <div class="card">
       <p id="loading-msg">جاري التحميل...</p>
       <div id="messages-list"></div>
+      <p class="error-text" id="messages-error" hidden></p>
     </div>
 
     <div class="empty-state" hidden id="empty-msg">
@@ -90,6 +91,7 @@
 
     const list = document.getElementById("messages-list");
     const loadingMsg = document.getElementById("loading-msg");
+    const messagesError = document.getElementById("messages-error");
     const emptyMsg = document.getElementById("empty-msg");
     const input = document.getElementById("message-input");
     const sendBtn = document.getElementById("send-btn");
@@ -169,6 +171,8 @@
       }
     } catch (err) {
       console.error(err);
+      messagesError.textContent = "تعذّر تحميل الرسائل";
+      messagesError.hidden = false;
     } finally {
       loadingMsg.hidden = true;
     }
