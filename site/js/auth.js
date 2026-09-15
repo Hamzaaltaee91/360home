@@ -41,6 +41,23 @@ export async function getCurrentAppUserId() {
   return data.id;
 }
 
+// Returns the signed-in user's display info as { full_name, email },
+// or null when nobody is signed in. Mirrors getCurrentAppUserId's
+// error handling: the query error is thrown as-is.
+export async function getCurrentUserDisplay() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data, error } = await supabase
+    .from("users")
+    .select("full_name, email")
+    .eq("auth_id", user.id)
+    .single();
+  if (error) throw error;
+  return { full_name: data.full_name, email: data.email };
+}
+
 export async function requireSession() {
   const { data } = await supabase.auth.getSession();
   if (!data.session) {
