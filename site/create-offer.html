@@ -50,6 +50,7 @@
           <div class="form-field is-full">
             <label for="property-photos">صور العقار</label>
             <input type="file" id="property-photos" multiple accept="image/*">
+            <span class="error-text" data-error-for="property-photos" hidden></span>
           </div>
         </div>
       </fieldset>
@@ -71,6 +72,7 @@
           <div class="form-field">
             <label for="area-sqft">مساحة العقار (قدم مربع)</label>
             <input type="text" inputmode="numeric" id="area-sqft">
+            <span class="error-text" data-error-for="area-sqft" hidden></span>
           </div>
           <div class="form-field">
             <label for="bedrooms">عدد الغرف</label>
@@ -82,6 +84,7 @@
               <option value="4">4</option>
               <option value="5">5</option>
             </select>
+            <span class="error-text" data-error-for="bedrooms" hidden></span>
           </div>
           <div class="form-field">
             <label for="bathrooms">عدد الحمامات</label>
@@ -93,6 +96,7 @@
               <option value="4">4</option>
               <option value="5">5</option>
             </select>
+            <span class="error-text" data-error-for="bathrooms" hidden></span>
           </div>
           <div class="form-field">
             <label><input type="checkbox" id="furnished"> مفروش</label>
@@ -196,6 +200,26 @@
 
         if (!document.getElementById("offered-price").value.trim()) {
           showFieldError("offered-price", "الرجاء إدخال السعر المعروض.");
+          hasError = true;
+        }
+
+        if (!document.getElementById("area-sqft").value.trim()) {
+          showFieldError("area-sqft", "الرجاء إدخال مساحة العقار.");
+          hasError = true;
+        }
+
+        if (!document.getElementById("bedrooms").value) {
+          showFieldError("bedrooms", "الرجاء اختيار عدد الغرف.");
+          hasError = true;
+        }
+
+        if (!document.getElementById("bathrooms").value) {
+          showFieldError("bathrooms", "الرجاء اختيار عدد الحمامات.");
+          hasError = true;
+        }
+
+        if (document.getElementById("property-photos").files.length === 0) {
+          showFieldError("property-photos", "الرجاء اختيار صورة واحدة على الأقل.");
           hasError = true;
         }
 
