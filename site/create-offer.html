@@ -62,13 +62,6 @@
             <input type="text" inputmode="numeric" id="offered-price" required>
             <span class="error-text" data-error-for="offered-price" hidden></span>
           </div>
-          <div class="form-field">
-            <label for="lease-type">نوع العرض</label>
-            <select id="lease-type">
-              <option value="rent" selected>إيجار</option>
-              <option value="sale">بيع</option>
-            </select>
-          </div>
         </div>
       </fieldset>
 
@@ -208,7 +201,6 @@
             property_description: val("property-description") || null,
             property_address: val("property-address").trim(),
             offered_price: Number(stripThousands(val("offered-price"))),
-            lease_type: val("lease-type"),
             area_sqft: numOrNull("area-sqft"),
             bedrooms: numOrNull("bedrooms"),
             bathrooms: numOrNull("bathrooms"),
