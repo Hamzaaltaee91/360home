@@ -32,6 +32,8 @@
 
     <p id="loading-msg">جاري التحميل...</p>
 
+    <p id="error-msg" class="error-text" hidden></p>
+
     <div class="request-list" id="notifications-list"></div>
 
     <div class="empty-state" hidden id="empty-msg">
@@ -64,6 +66,12 @@
     let notifications;
     try {
       notifications = await listMyNotifications();
+    } catch (err) {
+      console.error(err);
+      const errorMsg = document.getElementById("error-msg");
+      errorMsg.textContent = "تعذّر تحميل الإشعارات. حاول مرة أخرى.";
+      errorMsg.hidden = false;
+      notifications = [];
     } finally {
       document.getElementById("loading-msg").hidden = true;
     }
@@ -122,6 +130,9 @@
           } catch (err) {
             markBtn.disabled = false;
             console.error(err);
+            const errorMsg = document.getElementById("error-msg");
+            errorMsg.textContent = "تعذّر تعليم الإشعار كمقروء. حاول مرة أخرى.";
+            errorMsg.hidden = false;
           }
         });
         card.appendChild(markBtn);
