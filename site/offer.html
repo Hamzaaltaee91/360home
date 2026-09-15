@@ -24,6 +24,7 @@
     <p id="loading-msg">جاري التحميل...</p>
     <div id="offer-detail"></div>
     <div id="response-buttons"></div>
+    <p class="error-text" id="respond-error" hidden></p>
     <p id="response-status" hidden></p>
     <div id="review-section"></div>
   </div>
@@ -120,7 +121,25 @@
     }
 
     async function respond(response) {
-      await respondToOffer(offerId, response);
+      const errorEl = document.getElementById("respond-error");
+      const interestedBtn = document.getElementById("interested-btn");
+      const notInterestedBtn = document.getElementById("not-interested-btn");
+
+      errorEl.hidden = true;
+      errorEl.textContent = "";
+      interestedBtn.disabled = true;
+      notInterestedBtn.disabled = true;
+
+      try {
+        await respondToOffer(offerId, response);
+      } catch (err) {
+        errorEl.textContent = "تعذّر إرسال ردّك، حاول مرة أخرى";
+        errorEl.hidden = false;
+        interestedBtn.disabled = false;
+        notInterestedBtn.disabled = false;
+        return;
+      }
+
       status.textContent = response === "interested" ? "تم إرسال اهتمامك" : "تم تسجيل عدم الاهتمام";
       status.hidden = false;
       buttons.innerHTML = "";
