@@ -37,6 +37,7 @@
     <p id="safety-status" role="status" hidden style="margin-top:12px;"></p>
 
     <div class="card">
+      <p id="loading-msg">جاري التحميل...</p>
       <div id="messages-list"></div>
     </div>
 
@@ -88,6 +89,7 @@
     }
 
     const list = document.getElementById("messages-list");
+    const loadingMsg = document.getElementById("loading-msg");
     const emptyMsg = document.getElementById("empty-msg");
     const input = document.getElementById("message-input");
     const sendBtn = document.getElementById("send-btn");
@@ -167,6 +169,8 @@
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      loadingMsg.hidden = true;
     }
 
     try {
