@@ -24,6 +24,23 @@ export async function signOut() {
   window.location.href = "auth.html";
 }
 
+// Resolves the signed-in auth user to their public.users.id — the id
+// referenced by buyer_id/realtor_id/etc, NOT the same as auth.getUser()'s
+// user.id (that's auth.users.id, a different id space).
+export async function getCurrentAppUserId() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("not authenticated");
+  const { data, error } = await supabase
+    .from("users")
+    .select("id")
+    .eq("auth_id", user.id)
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
 export async function requireSession() {
   const { data } = await supabase.auth.getSession();
   if (!data.session) {

@@ -317,13 +317,15 @@ class SupabaseService {
     DateTime? expiresAt,
   }) {
     return _guard(() async {
-      final userId = getCurrentUserId();
-      if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
+      if (getCurrentUserId() == null) {
+        throw const AppException('المستخدم غير مسجل دخول');
+      }
+      final buyerId = (await getCurrentUser()).id;
 
       final response = await _client
           .from('property_requests')
           .insert({
-            'buyer_id': userId,
+            'buyer_id': buyerId,
             'category': category,
             'title': title,
             'city': city,
@@ -384,13 +386,15 @@ class SupabaseService {
     int offset = 0,
   }) {
     return _guard(() async {
-      final userId = getCurrentUserId();
-      if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
+      if (getCurrentUserId() == null) {
+        throw const AppException('المستخدم غير مسجل دخول');
+      }
+      final buyerId = (await getCurrentUser()).id;
 
       final response = await _client
           .from('property_requests')
           .select()
-          .eq('buyer_id', userId)
+          .eq('buyer_id', buyerId)
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
@@ -541,13 +545,15 @@ class SupabaseService {
     int offset = 0,
   }) {
     return _guard(() async {
-      final userId = getCurrentUserId();
-      if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
+      if (getCurrentUserId() == null) {
+        throw const AppException('المستخدم غير مسجل دخول');
+      }
+      final buyerId = (await getCurrentUser()).id;
 
       final response = await _client
           .from('realtor_offers')
           .select('*, property_requests!inner(buyer_id)')
-          .eq('property_requests.buyer_id', userId)
+          .eq('property_requests.buyer_id', buyerId)
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
@@ -565,13 +571,15 @@ class SupabaseService {
     int offset = 0,
   }) {
     return _guard(() async {
-      final userId = getCurrentUserId();
-      if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
+      if (getCurrentUserId() == null) {
+        throw const AppException('المستخدم غير مسجل دخول');
+      }
+      final realtorId = (await getCurrentUser()).id;
 
       final response = await _client
           .from('realtor_offers')
           .select()
-          .eq('realtor_id', userId)
+          .eq('realtor_id', realtorId)
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
@@ -603,13 +611,15 @@ class SupabaseService {
     String? messageToBuyer,
   }) {
     return _guard(() async {
-      final userId = getCurrentUserId();
-      if (userId == null) throw const AppException('المستخدم غير مسجل دخول');
+      if (getCurrentUserId() == null) {
+        throw const AppException('المستخدم غير مسجل دخول');
+      }
+      final realtorId = (await getCurrentUser()).id;
 
       final response = await _client
           .from('realtor_offers')
           .insert({
-            'realtor_id': userId,
+            'realtor_id': realtorId,
             'request_id': requestId,
             'property_title': propertyTitle,
             'property_address': propertyAddress,

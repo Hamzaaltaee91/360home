@@ -1,4 +1,5 @@
 import { supabase } from "./supabase-client.js";
+import { getCurrentAppUserId } from "./auth.js";
 
 export async function listMyRequests() {
   const { data, error } = await supabase
@@ -50,12 +51,10 @@ export async function getRequest(id) {
 }
 
 export async function createRequest(fields) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const buyerId = await getCurrentAppUserId();
   const { data, error } = await supabase
     .from("property_requests")
-    .insert({ ...fields, buyer_id: user.id })
+    .insert({ ...fields, buyer_id: buyerId })
     .select()
     .single();
   if (error) throw error;

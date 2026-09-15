@@ -1,26 +1,23 @@
 import { supabase } from "./supabase-client.js";
+import { getCurrentAppUserId } from "./auth.js";
 
 export async function listMyNotifications() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userId = await getCurrentAppUserId();
   const { data, error } = await supabase
     .from("notifications")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data;
 }
 
 export async function unreadCount() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userId = await getCurrentAppUserId();
   const { count, error } = await supabase
     .from("notifications")
     .select("*", { count: "exact", head: true })
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .eq("is_read", false);
   if (error) throw error;
   return count ?? 0;
@@ -42,19 +39,17 @@ export async function markAsRead(id) {
  *   ...later: await supabase.removeChannel(channel);
  */
 export async function subscribeToUnreadCount(callback) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const userId = await getCurrentAppUserId();
 
   const channel = supabase
-    .channel(`notifications:${user.id}`)
+    .channel(`notifications:${userId}`)
     .on(
       "postgres_changes",
       {
         event: "*",
         schema: "public",
         table: "notifications",
-        filter: `user_id=eq.${user.id}`,
+        filter: `user_id=eq.${userId}`,
       },
       async () => {
         const count = await unreadCount();

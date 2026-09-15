@@ -1,4 +1,5 @@
 import { supabase } from "./supabase-client.js";
+import { getCurrentAppUserId } from "./auth.js";
 
 export async function listOffersForRequest(requestId) {
   const { data, error } = await supabase
@@ -30,12 +31,10 @@ export async function respondToOffer(id, response) {
 }
 
 export async function createOffer(fields) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const realtorId = await getCurrentAppUserId();
   const { data, error } = await supabase
     .from("realtor_offers")
-    .insert({ ...fields, realtor_id: user.id })
+    .insert({ ...fields, realtor_id: realtorId })
     .select()
     .single();
   if (error) throw error;
@@ -43,13 +42,11 @@ export async function createOffer(fields) {
 }
 
 export async function listMyOffers() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const realtorId = await getCurrentAppUserId();
   const { data, error } = await supabase
     .from("realtor_offers")
     .select("*")
-    .eq("realtor_id", user.id)
+    .eq("realtor_id", realtorId)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data;
