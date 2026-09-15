@@ -237,11 +237,17 @@
 
   <script type="module">
     import { supabase } from "./js/supabase-client.js";
+    import { getRoleHomePath } from "./js/auth.js";
 
     try {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        window.location.href = "dashboard.html";
+        const { data: profile } = await supabase
+          .from("users")
+          .select("role")
+          .eq("auth_id", data.session.user.id)
+          .single();
+        window.location.href = getRoleHomePath(profile?.role);
       }
     } catch (err) {
       console.error(err);
