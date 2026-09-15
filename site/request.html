@@ -27,6 +27,7 @@
       <a href="dashboard.html" class="btn btn-ghost">→ رجوع لطلباتي</a>
       <a href="#" id="edit-request-btn" class="btn btn-ghost">تعديل الطلب</a>
       <button type="button" id="delete-request-btn" class="btn btn-ghost">حذف الطلب</button>
+      <p class="error-text" id="delete-error" hidden></p>
     </div>
 
     <p id="detail-loading">جاري التحميل...</p>
@@ -70,7 +71,9 @@
           window.location.href = "dashboard.html";
         } catch (err) {
           console.error(err);
-          window.alert("تعذّر حذف الطلب، حاول مرة أخرى.");
+          const errorEl = document.getElementById("delete-error");
+          errorEl.textContent = "تعذّر حذف الطلب، حاول مرة أخرى.";
+          errorEl.hidden = false;
         }
       });
     let request;
