@@ -53,6 +53,7 @@
       </label>
     </div>
 
+    <p id="loading-msg">جاري التحميل...</p>
     <div class="request-list" id="requests-list"></div>
 
     <div class="empty-state" hidden id="empty-msg">
@@ -89,7 +90,14 @@
       citySelect.appendChild(option);
     }
 
-    const allRequests = await listActiveRequestsForRealtor();
+    const loadingMsg = document.getElementById("loading-msg");
+
+    let allRequests;
+    try {
+      allRequests = await listActiveRequestsForRealtor();
+    } finally {
+      loadingMsg.hidden = true;
+    }
     const list = document.getElementById("requests-list");
     const emptyMsg = document.getElementById("empty-msg");
     const categorySelect = document.getElementById("filter-category");
