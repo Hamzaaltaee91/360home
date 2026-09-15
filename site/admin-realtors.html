@@ -28,6 +28,8 @@
       </div>
     </div>
 
+    <p id="page-error" role="status" hidden></p>
+
     <p id="loading-msg">جاري التحميل...</p>
     <div class="request-list" id="applications-list"></div>
 
@@ -63,6 +65,12 @@
     const list = document.getElementById("applications-list");
     const emptyMsg = document.getElementById("empty-msg");
     const loadingMsg = document.getElementById("loading-msg");
+    const pageError = document.getElementById("page-error");
+
+    function showPageError(message) {
+      pageError.textContent = message;
+      pageError.hidden = false;
+    }
 
     function makeTag(text) {
       const li = document.createElement("li");
@@ -109,6 +117,7 @@
           .catch((err) => {
             console.error(err);
             docLink.remove();
+            showPageError("تعذّر تحميل المستند");
           });
       }
 
@@ -133,6 +142,7 @@
           removeCard(card);
         } catch (err) {
           console.error(err);
+          showPageError("تعذّر قبول الطلب");
           approveBtn.disabled = false;
           rejectBtn.disabled = false;
         }
@@ -150,6 +160,7 @@
           removeCard(card);
         } catch (err) {
           console.error(err);
+          showPageError("تعذّر رفض الطلب");
           approveBtn.disabled = false;
           rejectBtn.disabled = false;
         }
