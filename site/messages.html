@@ -226,6 +226,8 @@
         });
       } catch (err) {
         console.error(err);
+        safetyStatus.hidden = false;
+        safetyStatus.textContent = "تعذّر إرسال الرسالة، حاول مرة أخرى.";
       } finally {
         sendBtn.disabled = false;
       }
