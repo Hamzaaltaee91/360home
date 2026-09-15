@@ -28,6 +28,7 @@
       </div>
     </div>
 
+    <p id="loading-msg">جاري التحميل...</p>
     <div class="request-list" id="applications-list"></div>
 
     <div class="empty-state" hidden id="empty-msg">
@@ -61,6 +62,7 @@
 
     const list = document.getElementById("applications-list");
     const emptyMsg = document.getElementById("empty-msg");
+    const loadingMsg = document.getElementById("loading-msg");
 
     function makeTag(text) {
       const li = document.createElement("li");
@@ -160,13 +162,17 @@
       return card;
     }
 
-    const applications = await listPendingRealtorApplications();
-    if (!applications || applications.length === 0) {
-      emptyMsg.hidden = false;
-    } else {
-      for (const app of applications) {
-        list.appendChild(renderCard(app));
+    try {
+      const applications = await listPendingRealtorApplications();
+      if (!applications || applications.length === 0) {
+        emptyMsg.hidden = false;
+      } else {
+        for (const app of applications) {
+          list.appendChild(renderCard(app));
+        }
       }
+    } finally {
+      loadingMsg.hidden = true;
     }
   </script>
 </body>
