@@ -66,3 +66,11 @@ export async function requireSession() {
   }
   return data.session;
 }
+
+// Maps a public.users.role value to the landing page for that role.
+// Unknown or missing roles fall back to the buyer dashboard.
+export function getRoleHomePath(role) {
+  if (role === "realtor") return "realtor-dashboard.html";
+  if (role === "admin") return "admin-realtors.html";
+  return "dashboard.html";
+}
