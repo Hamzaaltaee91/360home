@@ -54,6 +54,7 @@
       approveRealtorApplication,
       rejectRealtorApplication,
     } from "./js/admin.js";
+    import { getVerificationDocumentUrl } from "./js/verification.js";
 
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
@@ -94,11 +95,19 @@
       if (app.document_url) {
         const docLink = document.createElement("a");
         docLink.className = "btn btn-ghost";
-        docLink.href = app.document_url;
         docLink.target = "_blank";
         docLink.rel = "noopener noreferrer";
         docLink.textContent = "عرض المستند";
         card.appendChild(docLink);
+
+        getVerificationDocumentUrl(app.document_url)
+          .then((signedUrl) => {
+            docLink.href = signedUrl;
+          })
+          .catch((err) => {
+            console.error(err);
+            docLink.remove();
+          });
       }
 
       const approveBtn = document.createElement("button");
