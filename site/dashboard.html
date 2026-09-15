@@ -30,6 +30,8 @@
       </div>
     </div>
 
+    <p id="loading-msg">جاري التحميل...</p>
+
     <div class="request-list" id="requests-list"></div>
 
     <div class="empty-state" hidden id="empty-msg">
@@ -83,7 +85,13 @@
       console.error(err);
     }
 
-    const requests = await listMyRequests();
+    const loadingMsg = document.getElementById("loading-msg");
+    let requests;
+    try {
+      requests = await listMyRequests();
+    } finally {
+      loadingMsg.hidden = true;
+    }
     const list = document.getElementById("requests-list");
     if (requests.length === 0) {
       document.getElementById("empty-msg").hidden = false;
