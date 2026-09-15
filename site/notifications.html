@@ -30,6 +30,8 @@
       </div>
     </div>
 
+    <p id="loading-msg">جاري التحميل...</p>
+
     <div class="request-list" id="notifications-list"></div>
 
     <div class="empty-state" hidden id="empty-msg">
@@ -59,7 +61,12 @@
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
 
-    const notifications = await listMyNotifications();
+    let notifications;
+    try {
+      notifications = await listMyNotifications();
+    } finally {
+      document.getElementById("loading-msg").hidden = true;
+    }
     const list = document.getElementById("notifications-list");
 
     if (notifications.length === 0) {
