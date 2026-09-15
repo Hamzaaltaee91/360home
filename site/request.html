@@ -29,6 +29,7 @@
       <button type="button" id="delete-request-btn" class="btn btn-ghost">حذف الطلب</button>
     </div>
 
+    <p id="detail-loading">جاري التحميل...</p>
     <div id="request-detail"></div>
 
     <div class="page-head">
@@ -38,6 +39,7 @@
       </div>
     </div>
 
+    <p id="offers-loading">جاري التحميل...</p>
     <div class="request-list" id="offers-list"></div>
 
     <div class="empty-state" hidden id="empty-msg">
@@ -71,7 +73,12 @@
           window.alert("تعذّر حذف الطلب، حاول مرة أخرى.");
         }
       });
-    const request = await getRequest(requestId);
+    let request;
+    try {
+      request = await getRequest(requestId);
+    } finally {
+      document.getElementById("detail-loading").hidden = true;
+    }
 
     {
       const detail = document.getElementById("request-detail");
@@ -124,7 +131,12 @@
       detail.appendChild(card);
     }
 
-    const offers = await listOffersForRequest(requestId);
+    let offers;
+    try {
+      offers = await listOffersForRequest(requestId);
+    } finally {
+      document.getElementById("offers-loading").hidden = true;
+    }
     const list = document.getElementById("offers-list");
     if (offers.length === 0) {
       document.getElementById("empty-msg").hidden = false;
