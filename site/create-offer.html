@@ -111,7 +111,7 @@
   <script type="module">
     import { requireSession, signOut } from "./js/auth.js";
     import { createOffer, uploadOfferPhotos } from "./js/offers.js";
-    import { toWesternDigits } from "./js/numerals.js";
+    import { toWesternDigits, formatThousands, stripThousands } from "./js/numerals.js";
 
     const pageErrorEl = document.getElementById("page-error");
     const offerForm = document.getElementById("offer-form");
@@ -128,29 +128,30 @@
 
       // تحويل الأرقام العربية-الهندية (٠-٩) إلى غربية (0-9) لحظياً أثناء الكتابة،
       // بنفس نمط site/request-new.html (أرقام غربية فقط بلا فواصل آلاف أو رموز).
-      function sanitizeNumericInput(input, digitsOnly) {
+      function sanitizeNumericInput(input, digitsOnly, format) {
         const converted = toWesternDigits(input.value);
         const sanitized = digitsOnly ? converted.replace(/\D/g, "") : converted;
-        if (sanitized === input.value) {
+        const newValue = format ? formatThousands(sanitized) : sanitized;
+        if (newValue === input.value) {
           return;
         }
         const caret = input.selectionStart;
-        input.value = sanitized;
+        input.value = newValue;
         if (caret !== null) {
-          input.setSelectionRange(caret, Math.min(caret, sanitized.length));
+          input.setSelectionRange(caret, Math.min(caret, newValue.length));
         }
       }
 
       const numericInputs = [
-        { id: "offered-price", digitsOnly: true },
+        { id: "offered-price", digitsOnly: true, format: true },
         { id: "area-sqft", digitsOnly: true },
         { id: "bedrooms", digitsOnly: true },
         { id: "bathrooms", digitsOnly: true },
       ];
 
-      numericInputs.forEach(({ id, digitsOnly }) => {
+      numericInputs.forEach(({ id, digitsOnly, format }) => {
         const input = document.getElementById(id);
-        input.addEventListener("input", () => sanitizeNumericInput(input, digitsOnly));
+        input.addEventListener("input", () => sanitizeNumericInput(input, digitsOnly, format));
       });
 
       const formErrorEl = document.getElementById("form-error");
@@ -206,7 +207,7 @@
             property_title: val("property-title").trim(),
             property_description: val("property-description") || null,
             property_address: val("property-address").trim(),
-            offered_price: Number(val("offered-price")),
+            offered_price: Number(stripThousands(val("offered-price"))),
             lease_type: val("lease-type"),
             area_sqft: numOrNull("area-sqft"),
             bedrooms: numOrNull("bedrooms"),
