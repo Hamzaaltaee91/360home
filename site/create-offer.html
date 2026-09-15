@@ -74,11 +74,25 @@
           </div>
           <div class="form-field">
             <label for="bedrooms">عدد الغرف</label>
-            <input type="text" inputmode="numeric" id="bedrooms">
+            <select id="bedrooms">
+              <option value="" disabled selected>— اختر —</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
           </div>
           <div class="form-field">
             <label for="bathrooms">عدد الحمامات</label>
-            <input type="text" inputmode="numeric" id="bathrooms">
+            <select id="bathrooms">
+              <option value="" disabled selected>— اختر —</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
           </div>
           <div class="form-field">
             <label><input type="checkbox" id="furnished"> مفروش</label>
@@ -138,8 +152,6 @@
       const numericInputs = [
         { id: "offered-price", digitsOnly: true, format: true },
         { id: "area-sqft", digitsOnly: true },
-        { id: "bedrooms", digitsOnly: true },
-        { id: "bathrooms", digitsOnly: true },
       ];
 
       numericInputs.forEach(({ id, digitsOnly, format }) => {
