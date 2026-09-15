@@ -58,10 +58,12 @@
         gallery.style.gap = "8px";
         gallery.style.marginBottom = "12px";
 
-        offer.photo_urls.forEach((url) => {
+        const total = offer.photo_urls.length;
+
+        offer.photo_urls.forEach((url, index) => {
           const img = document.createElement("img");
           img.src = url;
-          img.alt = offer.property_title ?? "";
+          img.alt = `${offer.property_title ?? ""} — صورة ${index + 1} من ${total}`;
           img.style.width = "120px";
           img.style.height = "120px";
           img.style.objectFit = "cover";
