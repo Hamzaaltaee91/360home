@@ -21,6 +21,7 @@
 
   <div class="container">
     <a href="#" id="back-link" class="btn">→ رجوع</a>
+    <p id="loading-msg">جاري التحميل...</p>
     <div id="offer-detail"></div>
     <div id="response-buttons"></div>
     <p id="response-status" hidden></p>
@@ -36,7 +37,13 @@
     document.getElementById("signout-btn").addEventListener("click", signOut);
 
     const offerId = new URLSearchParams(window.location.search).get("id");
-    const offer = await getOffer(offerId);
+    const loadingMsg = document.getElementById("loading-msg");
+    let offer;
+    try {
+      offer = await getOffer(offerId);
+    } finally {
+      loadingMsg.hidden = true;
+    }
 
     document.getElementById("back-link").href = `request.html?id=${encodeURIComponent(offer.request_id)}`;
 
