@@ -30,6 +30,8 @@
       </div>
     </div>
 
+    <p id="loading-msg">جاري التحميل...</p>
+
     <form id="request-form" class="card">
       <fieldset>
         <legend>الفئة والغرض</legend>
@@ -300,6 +302,7 @@
     }
 
     if (!requestId) {
+      document.getElementById("loading-msg").hidden = true;
       formErrorEl.textContent = "لا يوجد طلب محدد.";
       formErrorEl.hidden = false;
       document.getElementById("request-form").hidden = true;
@@ -311,6 +314,8 @@
         formErrorEl.textContent = err.message;
         formErrorEl.hidden = false;
         document.getElementById("request-form").hidden = true;
+      } finally {
+        document.getElementById("loading-msg").hidden = true;
       }
 
       if (request) {
