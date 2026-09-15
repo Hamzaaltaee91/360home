@@ -160,33 +160,36 @@
     import { requireSession, signOut } from "./js/auth.js";
     import { createRequest } from "./js/requests.js";
     import iraqLocations from "./js/iraq-locations.js";
-    import { toWesternDigits } from "./js/numerals.js";
+    import { toWesternDigits, formatThousands, stripThousands } from "./js/numerals.js";
 
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
 
     // تحويل الأرقام العربية-الهندية (٠-٩) إلى غربية (0-9) لحظياً أثناء الكتابة.
     // حقل الميزانية يقبل الأرقام الغربية فقط، بلا فواصل آلاف ولا رموز ولا حروف.
-    function sanitizeNumericInput(input, digitsOnly) {
+    function sanitizeNumericInput(input, digitsOnly, formatThousandsEnabled) {
       const converted = toWesternDigits(input.value);
-      const sanitized = digitsOnly ? converted.replace(/\D/g, "") : converted;
-      if (sanitized === input.value) {
+      const digits = digitsOnly ? converted.replace(/\D/g, "") : converted;
+      const display = formatThousandsEnabled ? formatThousands(digits) : digits;
+      if (display === input.value) {
         return;
       }
       const caret = input.selectionStart;
-      input.value = sanitized;
+      input.value = display;
       if (caret !== null) {
-        input.setSelectionRange(caret, Math.min(caret, sanitized.length));
+        input.setSelectionRange(caret, Math.min(caret, display.length));
       }
     }
 
     const numericInputs = [
-      { id: "max-price", digitsOnly: true },
+      { id: "max-price", digitsOnly: true, formatThousandsEnabled: true },
     ];
 
-    numericInputs.forEach(({ id, digitsOnly }) => {
+    numericInputs.forEach(({ id, digitsOnly, formatThousandsEnabled }) => {
       const input = document.getElementById(id);
-      input.addEventListener("input", () => sanitizeNumericInput(input, digitsOnly));
+      input.addEventListener("input", () =>
+        sanitizeNumericInput(input, digitsOnly, formatThousandsEnabled),
+      );
     });
 
     const citySelect = document.getElementById("city");
@@ -318,7 +321,8 @@
 
       const val = (id) => document.getElementById(id).value;
       const num = (id) => (val(id) === "" ? null : Number(val(id)));
-      const budget = num("max-price");
+      const budgetValue = stripThousands(val("max-price"));
+      const budget = budgetValue === "" ? null : Number(budgetValue);
 
       // نحوّل مفاتيح الـselect إلى الأسماء العربية (كما كان السلوك السابق مع النص الحر).
       const gov = iraqLocations[val("city")];
