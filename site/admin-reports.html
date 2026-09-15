@@ -28,6 +28,8 @@
       </div>
     </div>
 
+    <p id="loading-msg">جاري التحميل...</p>
+
     <div class="request-list" id="reports-list"></div>
 
     <div class="empty-state" hidden id="empty-msg">
@@ -145,7 +147,12 @@
       return card;
     }
 
-    const reports = await listOpenReports();
+    let reports;
+    try {
+      reports = await listOpenReports();
+    } finally {
+      document.getElementById("loading-msg").hidden = true;
+    }
     if (!reports || reports.length === 0) {
       emptyMsg.hidden = false;
     } else {
