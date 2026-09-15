@@ -7,6 +7,18 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+      </div>
+    </div>
+  </nav>
+
   <div class="container">
     <a href="#" id="back-link" class="btn">→ رجوع</a>
     <div id="offer-detail"></div>
@@ -16,11 +28,12 @@
   </div>
 
   <script type="module">
-    import { requireSession, getCurrentAppUserId } from "./js/auth.js";
+    import { requireSession, getCurrentAppUserId, signOut } from "./js/auth.js";
     import { getOffer, respondToOffer } from "./js/offers.js";
     import { getMyReviewForOffer, submitReview } from "./js/reviews.js";
 
     const session = await requireSession();
+    document.getElementById("signout-btn").addEventListener("click", signOut);
 
     const offerId = new URLSearchParams(window.location.search).get("id");
     const offer = await getOffer(offerId);
