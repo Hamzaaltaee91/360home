@@ -7,6 +7,7 @@ import {
   handleCorsPreflight,
   jsonResponse,
 } from "../_shared/cors.ts";
+import { requireCaller } from "../_shared/auth.ts";
 import {
   enforceRateLimit,
   RATE_LIMITS,
@@ -192,8 +193,15 @@ serve(async (req) => {
       return jsonResponse({ error: "Method not allowed" }, 405, origin);
     }
 
+    // Require an authenticated caller — property_requests holds private
+    // buyer data (budget, location, contact prefs); without this, anyone
+    // unauthenticated could read every buyer's requests.
+    const authResult = await requireCaller(req, supabase, origin);
+    if ("error" in authResult) return authResult.error;
+    const { caller } = authResult;
+
     const identifier = resolveRateLimitIdentifier(
-      null,
+      caller.appUserId,
       req.headers.get("x-forwarded-for")
     );
     const limited = await enforceRateLimit(
@@ -205,6 +213,12 @@ serve(async (req) => {
 
     const body: SearchQuery = await req.json();
     const filters = normalizeSearchQuery(body);
+
+    // This endpoint's only legitimate purpose is browsing OPEN listings
+    // (mirrors property_requests_select_active_for_realtor, which only
+    // exposes status='active' rows). Force it regardless of what the
+    // caller requested.
+    filters.status = "active";
 
     // ابدأ ببناء الاستعلام
     const baseQuery = supabase

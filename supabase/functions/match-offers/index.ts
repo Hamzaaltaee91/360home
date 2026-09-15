@@ -7,12 +7,13 @@ import {
   handleCorsPreflight,
   jsonResponse,
 } from "../_shared/cors.ts";
+import { requireCaller } from "../_shared/auth.ts";
 import {
   enforceRateLimit,
   RATE_LIMITS,
   resolveRateLimitIdentifier,
 } from "../_shared/rate_limit.ts";
-import { sanitizeInt, sanitizeString, sanitizeUuid } from "../_shared/sanitize.ts";
+import { sanitizeInt, sanitizeString } from "../_shared/sanitize.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -20,7 +21,6 @@ const supabase = createClient(
 );
 
 interface MatchRequest {
-  realtor_id: string;
   category?: string;
   limit?: number;
 }
@@ -96,14 +96,21 @@ serve(async (req) => {
       return jsonResponse({ error: "Method not allowed" }, 405, origin);
     }
 
+    // Require an authenticated realtor caller — realtor_id used to come
+    // straight from the request body, letting anyone pull any realtor's
+    // matched (private) buyer leads by guessing/enumerating a user id.
+    const authResult = await requireCaller(req, supabase, origin);
+    if ("error" in authResult) return authResult.error;
+    const { caller } = authResult;
+
+    if (caller.role !== "realtor") {
+      return jsonResponse({ error: "Realtor access only" }, 403, origin);
+    }
+    const realtor_id = caller.appUserId;
+
     const body: MatchRequest = await req.json();
-    const realtor_id = sanitizeUuid(body.realtor_id);
     const category = sanitizeString(body.category, 64) || undefined;
     const limit = sanitizeInt(body.limit, { min: 1, max: 100 }) ?? 10;
-
-    if (!realtor_id) {
-      return jsonResponse({ error: "Invalid realtor_id" }, 400, origin);
-    }
 
     const identifier = resolveRateLimitIdentifier(
       realtor_id,

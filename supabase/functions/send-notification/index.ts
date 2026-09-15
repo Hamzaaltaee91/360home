@@ -7,6 +7,7 @@ import {
   handleCorsPreflight,
   jsonResponse,
 } from "../_shared/cors.ts";
+import { requireCaller } from "../_shared/auth.ts";
 import {
   enforceRateLimit,
   RATE_LIMITS,
@@ -89,6 +90,13 @@ serve(async (req) => {
       return jsonResponse({ error: "Method not allowed" }, 405, origin);
     }
 
+    // Require an authenticated caller — was completely missing, letting
+    // anyone push arbitrary attacker-authored content to any user's
+    // notification channel + trigger an email to them.
+    const authResult = await requireCaller(req, supabase, origin);
+    if ("error" in authResult) return authResult.error;
+    const { caller } = authResult;
+
     const rawBody: NotificationPayload = await req.json();
     const user_id = sanitizeUuid(rawBody.user_id);
     const type = rawBody.type;
@@ -96,8 +104,12 @@ serve(async (req) => {
     const message = sanitizeString(rawBody.message, 2000);
     const data = sanitizeObject<Record<string, unknown>>(rawBody.data ?? {});
 
+    if (type === "verification_status" && caller.role !== "admin") {
+      return jsonResponse({ error: "Admin access only" }, 403, origin);
+    }
+
     const identifier = resolveRateLimitIdentifier(
-      user_id,
+      caller.appUserId,
       req.headers.get("x-forwarded-for")
     );
     const limited = await enforceRateLimit(

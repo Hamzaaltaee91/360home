@@ -7,6 +7,7 @@ import {
   handleCorsPreflight,
   jsonResponse,
 } from "../_shared/cors.ts";
+import { requireCaller } from "../_shared/auth.ts";
 import {
   enforceRateLimit,
   RATE_LIMITS,
@@ -62,19 +63,26 @@ serve(async (req) => {
       return jsonResponse({ error: "Method not allowed" }, 405, origin);
     }
 
+    // Require an authenticated caller — type=realtor/buyer used to return
+    // any specified user's private aggregate stats to anyone,
+    // unauthenticated.
+    const authResult = await requireCaller(req, supabase, origin);
+    if ("error" in authResult) return authResult.error;
+    const { caller } = authResult;
+
     const body: AnalyticsQuery = await req.json();
     const type = sanitizeEnum(
       body.type,
       ["realtor", "buyer", "platform"] as const
     );
-    const user_id = sanitizeUuid(body.user_id);
+    const requestedUserId = sanitizeUuid(body.user_id);
     const date_from =
       sanitizeString(body.date_from, 40) ||
       new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     const date_to = sanitizeString(body.date_to, 40) || new Date().toISOString();
 
     const identifier = resolveRateLimitIdentifier(
-      user_id || null,
+      caller.appUserId,
       req.headers.get("x-forwarded-for")
     );
     const limited = await enforceRateLimit(
@@ -84,21 +92,35 @@ serve(async (req) => {
     );
     if (limited) return limited;
 
-    if (type === "realtor" && user_id) {
+    // A caller may only ever see their OWN stats, unless they're an
+    // admin. `platform` (site-wide aggregates) is admin-only.
+    if (type === "platform") {
+      if (caller.role !== "admin") {
+        return jsonResponse({ error: "Admin access only" }, 403, origin);
+      }
+      return jsonResponse(
+        await getPlatformStats(date_from, date_to),
+        200,
+        origin
+      );
+    }
+
+    if (caller.role !== "admin" && requestedUserId && requestedUserId !== caller.appUserId) {
+      return jsonResponse({ error: "Cannot view another user's stats" }, 403, origin);
+    }
+    const user_id = caller.role === "admin"
+      ? (requestedUserId || caller.appUserId)
+      : caller.appUserId;
+
+    if (type === "realtor") {
       return jsonResponse(
         await getRealtorStats(user_id, date_from, date_to),
         200,
         origin
       );
-    } else if (type === "buyer" && user_id) {
+    } else if (type === "buyer") {
       return jsonResponse(
         await getBuyerStats(user_id, date_from, date_to),
-        200,
-        origin
-      );
-    } else if (type === "platform") {
-      return jsonResponse(
-        await getPlatformStats(date_from, date_to),
         200,
         origin
       );
