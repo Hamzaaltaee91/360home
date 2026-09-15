@@ -28,6 +28,7 @@
       </div>
     </div>
 
+    <p id="page-error" role="status" hidden></p>
     <p id="loading-msg">جاري التحميل...</p>
 
     <div class="request-list" id="reports-list"></div>
@@ -58,6 +59,12 @@
 
     const list = document.getElementById("reports-list");
     const emptyMsg = document.getElementById("empty-msg");
+    const pageError = document.getElementById("page-error");
+
+    function showPageError(message) {
+      pageError.textContent = message;
+      pageError.hidden = false;
+    }
 
     function makeTag(text) {
       const li = document.createElement("li");
@@ -122,6 +129,7 @@
           removeCard(card);
         } catch (err) {
           console.error(err);
+          showPageError("تعذّر تحديث حالة البلاغ");
           reviewedBtn.disabled = false;
           dismissBtn.disabled = false;
         }
@@ -135,6 +143,7 @@
           removeCard(card);
         } catch (err) {
           console.error(err);
+          showPageError("تعذّر تحديث حالة البلاغ");
           reviewedBtn.disabled = false;
           dismissBtn.disabled = false;
         }
