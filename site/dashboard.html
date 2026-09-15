@@ -56,6 +56,13 @@
     import { requireSession, signOut, getCurrentUserDisplay } from "./js/auth.js";
     import { listMyRequests } from "./js/requests.js";
     import { subscribeToUnreadCount } from "./js/notifications.js";
+    import { formatThousands } from "./js/numerals.js";
+
+    const CATEGORY_LABELS = {
+      residential: "سكني",
+      commercial: "تجاري",
+      land: "أرض",
+    };
 
     await requireSession();
     document.getElementById("signout-btn").addEventListener("click", signOut);
@@ -98,7 +105,7 @@
 
       const catTag = document.createElement("li");
       catTag.className = "tag tag-active";
-      catTag.textContent = r.category;
+      catTag.textContent = CATEGORY_LABELS[r.category] || r.category;
 
       const cityTag = document.createElement("li");
       cityTag.className = "tag";
@@ -114,7 +121,8 @@
 
       const budgetTag = document.createElement("li");
       budgetTag.className = "tag";
-      budgetTag.textContent = r.max_price != null ? `${r.max_price}` : "—";
+      budgetTag.textContent =
+        r.max_price != null ? `${formatThousands(r.max_price)} د.ع` : "—";
 
       tags.append(catTag, cityTag, governorateTag, purposeTag, budgetTag);
 
