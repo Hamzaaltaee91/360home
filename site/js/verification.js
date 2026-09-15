@@ -25,9 +25,18 @@ export async function getMyVerificationStatus() {
 }
 
 export async function uploadLicenseDocument(userId, file) {
-  const path = `realtor-documents/${userId}/${file.name}`;
-  const { error } = await supabase.storage.from("dabberli").upload(path, file);
+  const path = `${userId}/${file.name}`;
+  const { error } = await supabase.storage
+    .from("verification-documents")
+    .upload(path, file);
   if (error) throw error;
-  const { data } = supabase.storage.from("dabberli").getPublicUrl(path);
-  return data.publicUrl;
+  return path;
+}
+
+export async function getVerificationDocumentUrl(path) {
+  const { data, error } = await supabase.storage
+    .from("verification-documents")
+    .createSignedUrl(path, 3600);
+  if (error) throw error;
+  return data.signedUrl;
 }
