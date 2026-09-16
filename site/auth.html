@@ -38,26 +38,48 @@
           <input type="password" id="password" required minlength="6">
         </div>
         <p class="error-text" id="error" hidden></p>
+        <p id="reset-sent" hidden>تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.</p>
         <button type="submit" class="btn btn-primary btn-block btn-lg" id="submit-btn">دخول</button>
       </form>
 
+      <p class="auth-toggle" id="forgot-password-row"><a href="#" id="forgot-password-link">نسيت كلمة المرور؟</a></p>
       <p class="auth-toggle"><a href="#" id="toggle-mode">ليس لديك حساب؟ أنشئ حسابًا جديدًا</a></p>
   </div>
 
   <script type="module">
-    import { signUpBuyer, signIn, signInWithGoogle } from "./js/auth.js";
+    import { signUpBuyer, signIn, signInWithGoogle, requestPasswordReset } from "./js/auth.js";
     import { supabase } from "./js/supabase-client.js";
 
     let mode = new URLSearchParams(window.location.search).get("mode") === "signup" ? "signup" : "signin";
     const form = document.getElementById("auth-form");
     const nameField = document.getElementById("name-field");
+    const passwordField = document.getElementById("password").closest(".form-field");
     const formTitle = document.getElementById("form-title");
     const submitBtn = document.getElementById("submit-btn");
     const toggle = document.getElementById("toggle-mode");
     const errorEl = document.getElementById("error");
+    const resetSentEl = document.getElementById("reset-sent");
+    const forgotRow = document.getElementById("forgot-password-row");
+    const forgotLink = document.getElementById("forgot-password-link");
+
+    const passwordInput = document.getElementById("password");
 
     function applyMode() {
+      resetSentEl.hidden = true;
+      if (mode === "reset") {
+        nameField.hidden = true;
+        passwordField.hidden = true;
+        passwordInput.required = false;
+        forgotRow.hidden = true;
+        formTitle.textContent = "إعادة تعيين كلمة المرور";
+        submitBtn.textContent = "إرسال رابط إعادة التعيين";
+        toggle.textContent = "العودة لتسجيل الدخول";
+        return;
+      }
       nameField.hidden = mode === "signin";
+      passwordField.hidden = false;
+      passwordInput.required = true;
+      forgotRow.hidden = mode !== "signin";
       formTitle.textContent = mode === "signin" ? "تسجيل الدخول" : "إنشاء حساب";
       submitBtn.textContent = mode === "signin" ? "دخول" : "إنشاء حساب";
       toggle.textContent = mode === "signin"
@@ -65,6 +87,13 @@
         : "لديك حساب بالفعل؟ سجّل الدخول";
     }
     applyMode();
+
+    forgotLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      mode = "reset";
+      errorEl.hidden = true;
+      applyMode();
+    });
 
     async function redirectAfterAuth() {
       let role = null;
@@ -93,7 +122,7 @@
 
     toggle.addEventListener("click", (e) => {
       e.preventDefault();
-      mode = mode === "signin" ? "signup" : "signin";
+      mode = mode === "reset" ? "signin" : mode === "signin" ? "signup" : "signin";
       applyMode();
       errorEl.hidden = true;
     });
@@ -115,6 +144,18 @@
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
       const fullName = document.getElementById("full-name").value;
+
+      if (mode === "reset") {
+        const { error } = await requestPasswordReset(email);
+        submitBtn.disabled = false;
+        if (error) {
+          errorEl.textContent = error.message;
+          errorEl.hidden = false;
+          return;
+        }
+        resetSentEl.hidden = false;
+        return;
+      }
 
       const { error } =
         mode === "signin"

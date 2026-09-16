@@ -126,6 +126,16 @@ export async function mountProfileMenu(container) {
   });
 }
 
+export async function requestPasswordReset(email) {
+  return supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password.html`,
+  });
+}
+
+export async function updatePassword(newPassword) {
+  return supabase.auth.updateUser({ password: newPassword });
+}
+
 export async function requireSession() {
   const { data } = await supabase.auth.getSession();
   if (!data.session) {
