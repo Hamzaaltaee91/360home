@@ -17,7 +17,7 @@
         <li><a href="notifications.html">الإشعارات</a></li>
       </ul>
       <div class="nav-actions">
-        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <div id="profile-menu-slot"></div>
         <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
       </div>
     </div>
@@ -56,11 +56,11 @@
   </footer>
 
   <script type="module">
-    import { requireSession, signOut } from "./js/auth.js";
+    import { requireSession, mountProfileMenu } from "./js/auth.js";
     import { listMyOffers } from "./js/offers.js";
 
     await requireSession();
-    document.getElementById("signout-btn").addEventListener("click", signOut);
+    await mountProfileMenu(document.getElementById("profile-menu-slot"));
 
     const loadingMsg = document.getElementById("loading-msg");
     let offers;

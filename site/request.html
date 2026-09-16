@@ -16,7 +16,7 @@
         <li><a href="become-realtor.html">سجل كوسيط</a></li>
       </ul>
       <div class="nav-actions">
-        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <div id="profile-menu-slot"></div>
         <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
       </div>
     </div>
@@ -50,28 +50,12 @@
   </main>
 
   <script type="module">
-    import { requireSession, signOut, getCurrentUserDisplay } from "./js/auth.js";
+    import { requireSession, mountProfileMenu } from "./js/auth.js";
     import { getRequest, deleteRequest } from "./js/requests.js";
     import { listOffersForRequest } from "./js/offers.js";
 
     await requireSession();
-    document.getElementById("signout-btn").addEventListener("click", signOut);
-
-    try {
-      const currentUser = await getCurrentUserDisplay();
-      if (currentUser) {
-        const displayName =
-          currentUser.full_name && currentUser.full_name.trim()
-            ? currentUser.full_name
-            : currentUser.email;
-        const nameSpan = document.createElement("span");
-        nameSpan.textContent = displayName;
-        const signoutBtn = document.getElementById("signout-btn");
-        signoutBtn.parentNode.insertBefore(nameSpan, signoutBtn);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+    await mountProfileMenu(document.getElementById("profile-menu-slot"));
 
     const requestId = new URLSearchParams(window.location.search).get("id");
 

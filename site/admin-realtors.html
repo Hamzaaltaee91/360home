@@ -15,7 +15,7 @@
         <li><a href="admin-reports.html">البلاغات</a></li>
       </ul>
       <div class="nav-actions">
-        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <div id="profile-menu-slot"></div>
       </div>
     </div>
   </nav>
@@ -51,7 +51,7 @@
   </footer>
 
   <script type="module">
-    import { requireSession, signOut } from "./js/auth.js";
+    import { requireSession, mountProfileMenu } from "./js/auth.js";
     import {
       listPendingRealtorApplications,
       approveRealtorApplication,
@@ -60,7 +60,7 @@
     import { getVerificationDocumentUrl } from "./js/verification.js";
 
     await requireSession();
-    document.getElementById("signout-btn").addEventListener("click", signOut);
+    await mountProfileMenu(document.getElementById("profile-menu-slot"));
 
     const list = document.getElementById("applications-list");
     const emptyMsg = document.getElementById("empty-msg");

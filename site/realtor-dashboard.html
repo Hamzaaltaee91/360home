@@ -16,7 +16,7 @@
         <li><a href="my-offers.html">عروضي</a></li>
       </ul>
       <div class="nav-actions">
-        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <div id="profile-menu-slot"></div>
       </div>
     </div>
   </nav>
@@ -49,11 +49,11 @@
   </footer>
 
   <script type="module">
-    import { requireSession, signOut } from "./js/auth.js";
+    import { requireSession, mountProfileMenu } from "./js/auth.js";
     import { subscribeToUnreadCount } from "./js/notifications.js";
 
     await requireSession();
-    document.getElementById("signout-btn").addEventListener("click", signOut);
+    await mountProfileMenu(document.getElementById("profile-menu-slot"));
 
     const notificationsLink = document.getElementById("notifications-link");
 

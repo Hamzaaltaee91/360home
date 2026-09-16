@@ -16,7 +16,7 @@
         <li><a href="become-realtor.html">سجل كوسيط</a></li>
       </ul>
       <div class="nav-actions">
-        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <div id="profile-menu-slot"></div>
         <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
       </div>
     </div>
@@ -159,13 +159,13 @@
   </div>
 
   <script type="module">
-    import { requireSession, signOut } from "./js/auth.js";
+    import { requireSession, mountProfileMenu } from "./js/auth.js";
     import { createRequest } from "./js/requests.js";
     import iraqLocations from "./js/iraq-locations.js";
     import { toWesternDigits, formatThousands, stripThousands } from "./js/numerals.js";
 
     await requireSession();
-    document.getElementById("signout-btn").addEventListener("click", signOut);
+    await mountProfileMenu(document.getElementById("profile-menu-slot"));
 
     // تحويل الأرقام العربية-الهندية (٠-٩) إلى غربية (0-9) لحظياً أثناء الكتابة.
     // حقل الميزانية يقبل الأرقام الغربية فقط، بلا فواصل آلاف ولا رموز ولا حروف.

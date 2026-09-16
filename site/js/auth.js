@@ -58,6 +58,74 @@ export async function getCurrentUserDisplay() {
   return { full_name: data.full_name, email: data.email };
 }
 
+// Renders an avatar button + dropdown (name, email, sign-out) into `container`.
+// Replaces a plain sign-out button in the nav. Renders nothing if unauthenticated.
+export async function mountProfileMenu(container) {
+  const currentUser = await getCurrentUserDisplay();
+  if (!currentUser) return;
+
+  const displayName =
+    currentUser.full_name && currentUser.full_name.trim()
+      ? currentUser.full_name
+      : currentUser.email;
+  const initial = displayName.trim().charAt(0).toUpperCase();
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "profile-menu";
+
+  const avatarBtn = document.createElement("button");
+  avatarBtn.type = "button";
+  avatarBtn.className = "profile-avatar";
+  avatarBtn.textContent = initial;
+  avatarBtn.setAttribute("aria-haspopup", "true");
+  avatarBtn.setAttribute("aria-expanded", "false");
+  avatarBtn.setAttribute("aria-label", displayName);
+
+  const dropdown = document.createElement("div");
+  dropdown.className = "profile-dropdown";
+  dropdown.hidden = true;
+
+  const nameEl = document.createElement("p");
+  nameEl.className = "profile-dropdown-name";
+  nameEl.textContent = displayName;
+
+  const emailEl = document.createElement("p");
+  emailEl.className = "profile-dropdown-email";
+  emailEl.textContent = currentUser.email;
+
+  const signoutBtn = document.createElement("button");
+  signoutBtn.type = "button";
+  signoutBtn.className = "btn btn-ghost";
+  signoutBtn.textContent = "تسجيل الخروج";
+  signoutBtn.addEventListener("click", signOut);
+
+  dropdown.append(nameEl, emailEl, signoutBtn);
+  wrapper.append(avatarBtn, dropdown);
+  container.appendChild(wrapper);
+
+  function closeDropdown() {
+    dropdown.hidden = true;
+    avatarBtn.setAttribute("aria-expanded", "false");
+    document.removeEventListener("click", onOutsideClick);
+  }
+
+  function onOutsideClick(e) {
+    if (!wrapper.contains(e.target)) closeDropdown();
+  }
+
+  avatarBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const willOpen = dropdown.hidden;
+    dropdown.hidden = !willOpen;
+    avatarBtn.setAttribute("aria-expanded", String(willOpen));
+    if (willOpen) {
+      document.addEventListener("click", onOutsideClick);
+    } else {
+      document.removeEventListener("click", onOutsideClick);
+    }
+  });
+}
+
 export async function requireSession() {
   const { data } = await supabase.auth.getSession();
   if (!data.session) {

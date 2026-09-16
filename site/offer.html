@@ -14,7 +14,7 @@
         <li><a href="dashboard.html">طلباتي</a></li>
       </ul>
       <div class="nav-actions">
-        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <div id="profile-menu-slot"></div>
       </div>
     </div>
   </nav>
@@ -30,12 +30,12 @@
   </div>
 
   <script type="module">
-    import { requireSession, getCurrentAppUserId, signOut } from "./js/auth.js";
+    import { requireSession, getCurrentAppUserId, mountProfileMenu } from "./js/auth.js";
     import { getOffer, respondToOffer } from "./js/offers.js";
     import { getMyReviewForOffer, submitReview } from "./js/reviews.js";
 
     const session = await requireSession();
-    document.getElementById("signout-btn").addEventListener("click", signOut);
+    await mountProfileMenu(document.getElementById("profile-menu-slot"));
 
     const offerId = new URLSearchParams(window.location.search).get("id");
     const loadingMsg = document.getElementById("loading-msg");

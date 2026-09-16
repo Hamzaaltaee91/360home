@@ -16,7 +16,7 @@
         <li><a href="notifications.html">الإشعارات</a></li>
       </ul>
       <div class="nav-actions">
-        <button id="signout-btn" class="btn btn-ghost">تسجيل الخروج</button>
+        <div id="profile-menu-slot"></div>
       </div>
     </div>
   </nav>
@@ -122,7 +122,7 @@
   </div>
 
   <script type="module">
-    import { requireSession, signOut } from "./js/auth.js";
+    import { requireSession, mountProfileMenu } from "./js/auth.js";
     import { createOffer, uploadOfferPhotos } from "./js/offers.js";
     import { toWesternDigits, formatThousands, stripThousands } from "./js/numerals.js";
 
@@ -137,7 +137,7 @@
       offerForm.hidden = true;
     } else {
       await requireSession();
-      document.getElementById("signout-btn").addEventListener("click", signOut);
+      await mountProfileMenu(document.getElementById("profile-menu-slot"));
 
       // تحويل الأرقام العربية-الهندية (٠-٩) إلى غربية (0-9) لحظياً أثناء الكتابة،
       // بنفس نمط site/request-new.html (أرقام غربية فقط بلا فواصل آلاف أو رموز).
