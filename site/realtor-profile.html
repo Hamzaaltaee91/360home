@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ملف الوسيط — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+      </ul>
+      <div class="nav-actions">
+        <div id="profile-menu-slot"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <p id="loading-msg">جاري التحميل...</p>
+    <p class="error-text" id="page-error" hidden>تعذّر تحميل الملف الشخصي</p>
+    <div id="profile-content" hidden>
+      <div class="card">
+        <h1 id="rating-summary"></h1>
+      </div>
+      <h2>التقييمات</h2>
+      <ul id="reviews-list"></ul>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireSession, mountProfileMenu } from "./js/auth.js";
+    import { supabase } from "./js/supabase-client.js";
+
+    await requireSession();
+    await mountProfileMenu(document.getElementById("profile-menu-slot"));
+
+    const loadingMsg = document.getElementById("loading-msg");
+    const pageError = document.getElementById("page-error");
+    const content = document.getElementById("profile-content");
+    const realtorId = new URLSearchParams(window.location.search).get("realtor_id");
+
+    async function load() {
+      if (!realtorId) throw new Error("missing realtor_id");
+
+      const { data: summaryRows, error: summaryError } = await supabase.rpc(
+        "get_realtor_rating_summary",
+        { p_realtor_id: realtorId },
+      );
+      if (summaryError) throw summaryError;
+
+      const { data: reviews, error: reviewsError } = await supabase.rpc(
+        "list_realtor_reviews",
+        { p_realtor_id: realtorId },
+      );
+      if (reviewsError) throw reviewsError;
+
+      const summary = Array.isArray(summaryRows) ? summaryRows[0] : summaryRows;
+      const avgRating = summary?.average_rating ?? 0;
+      const totalReviews = summary?.review_count ?? 0;
+
+      document.getElementById("rating-summary").textContent =
+        `التقييم: ${avgRating} (${totalReviews} تقييم)`;
+
+      const list = document.getElementById("reviews-list");
+      list.innerHTML = "";
+      for (const review of reviews ?? []) {
+        const li = document.createElement("li");
+        li.className = "card";
+        const stars = document.createElement("p");
+        stars.textContent = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+        const comment = document.createElement("p");
+        comment.textContent = review.comment ?? "";
+        const date = document.createElement("p");
+        date.textContent = new Date(review.created_at).toLocaleDateString("ar");
+        li.append(stars, comment, date);
+        list.appendChild(li);
+      }
+
+      content.hidden = false;
+    }
+
+    try {
+      await load();
+    } catch (err) {
+      console.error(err);
+      pageError.hidden = false;
+    } finally {
+      loadingMsg.hidden = true;
+    }
+  </script>
+</body>
+</html>
