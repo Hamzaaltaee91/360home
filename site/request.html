@@ -53,6 +53,11 @@
     import { requireSession, mountProfileMenu } from "./js/auth.js";
     import { getRequest, deleteRequest } from "./js/requests.js";
     import { listOffersForRequest } from "./js/offers.js";
+    import iraqLocations from "./js/iraq-locations.js";
+
+    const PURPOSE_LABELS = { rent: "إيجار", buy: "شراء" };
+    const SUBTYPE_LABELS = { apartment: "شقة", house: "منزل", villa: "فيلا", duplex: "دوبلكس" };
+    const RENTAL_PERIOD_LABELS = { daily: "يومي", weekly: "أسبوعي", monthly: "شهري", yearly: "سنوي" };
 
     await requireSession();
     await mountProfileMenu(document.getElementById("profile-menu-slot"));
@@ -104,26 +109,24 @@
 
       const purposeTag = document.createElement("li");
       purposeTag.className = "tag";
-      purposeTag.textContent = request.purpose;
-
-      const govTag = document.createElement("li");
-      govTag.className = "tag";
-      govTag.textContent = request.governorate;
+      purposeTag.textContent = PURPOSE_LABELS[request.purpose] || request.purpose;
 
       const areaTag = document.createElement("li");
       areaTag.className = "tag";
-      areaTag.textContent = request.area;
+      areaTag.textContent =
+        iraqLocations[request.governorate]?.areas.find((a) => a.value === request.area)?.label ||
+        request.area;
 
       const subtypeTag = document.createElement("li");
       subtypeTag.className = "tag";
-      subtypeTag.textContent = request.property_subtype;
+      subtypeTag.textContent = SUBTYPE_LABELS[request.property_subtype] || request.property_subtype;
 
-      tags.append(catTag, cityTag, purposeTag, govTag, areaTag, subtypeTag);
+      tags.append(catTag, cityTag, purposeTag, areaTag, subtypeTag);
 
       if (request.rental_period != null) {
         const rentalTag = document.createElement("li");
         rentalTag.className = "tag";
-        rentalTag.textContent = request.rental_period;
+        rentalTag.textContent = RENTAL_PERIOD_LABELS[request.rental_period] || request.rental_period;
         tags.appendChild(rentalTag);
       }
 
