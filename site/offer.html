@@ -100,6 +100,12 @@
       messagesLink.textContent = "الرسائل";
       messagesLink.href = `messages.html?offer_id=${encodeURIComponent(offerId)}`;
       detail.appendChild(messagesLink);
+
+      const realtorLink = document.createElement("a");
+      realtorLink.className = "btn";
+      realtorLink.textContent = "ملف الوسيط";
+      realtorLink.href = `realtor-profile.html?realtor_id=${encodeURIComponent(offer.realtor_id)}`;
+      detail.appendChild(realtorLink);
     }
 
     const buttons = document.getElementById("response-buttons");
