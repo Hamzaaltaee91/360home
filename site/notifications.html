@@ -105,9 +105,14 @@
 
       const dateTag = document.createElement("li");
       dateTag.className = "tag";
-      dateTag.textContent = n.created_at
-        ? new Date(n.created_at).toLocaleString("ar")
-        : "—";
+      if (n.created_at) {
+        const created = new Date(n.created_at);
+        const datePart = created.toLocaleDateString("ar");
+        const timePart = created.toLocaleTimeString("ar");
+        dateTag.textContent = `${datePart} — ${timePart}`;
+      } else {
+        dateTag.textContent = "—";
+      }
 
       tags.append(statusTag, dateTag);
 
