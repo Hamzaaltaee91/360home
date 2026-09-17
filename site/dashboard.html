@@ -34,6 +34,8 @@
 
     <div class="request-list" id="requests-list"></div>
 
+    <p class="error-text" id="load-error" hidden>تعذّر تحميل الطلبات — قد تكون جلستك انتهت. <a href="auth.html">سجّل الدخول من جديد</a></p>
+
     <div class="empty-state" hidden id="empty-msg">
       <h3>لا توجد طلبات بعد</h3>
       <p>انشر طلبك الأول وخلّي العروض تجيك.</p>
@@ -70,17 +72,21 @@
     await mountProfileMenu(document.getElementById("profile-menu-slot"));
 
     const loadingMsg = document.getElementById("loading-msg");
-    let requests;
+    const loadError = document.getElementById("load-error");
+    let requests = null;
     try {
       requests = await listMyRequests();
+    } catch (err) {
+      console.error(err);
+      loadError.hidden = false;
     } finally {
       loadingMsg.hidden = true;
     }
     const list = document.getElementById("requests-list");
-    if (requests.length === 0) {
+    if (requests && requests.length === 0) {
       document.getElementById("empty-msg").hidden = false;
     }
-    for (const r of requests) {
+    for (const r of requests || []) {
       const a = document.createElement("a");
       a.href = `request.html?id=${encodeURIComponent(r.id)}`;
       a.style.textDecoration = "none";
