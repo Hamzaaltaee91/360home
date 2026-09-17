@@ -2,9 +2,11 @@ import { supabase } from "./supabase-client.js";
 import { getCurrentAppUserId } from "./auth.js";
 
 export async function listMyRequests() {
+  const buyerId = await getCurrentAppUserId();
   const { data, error } = await supabase
     .from("property_requests")
     .select("*")
+    .eq("buyer_id", buyerId)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data;
