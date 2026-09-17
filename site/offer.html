@@ -33,6 +33,7 @@
     import { requireSession, getCurrentAppUserId, mountProfileMenu } from "./js/auth.js";
     import { getOffer, respondToOffer } from "./js/offers.js";
     import { getMyReviewForOffer, submitReview } from "./js/reviews.js";
+    import { supabase } from "./js/supabase-client.js";
 
     const session = await requireSession();
     await mountProfileMenu(document.getElementById("profile-menu-slot"));
@@ -106,6 +107,24 @@
       realtorLink.textContent = "ملف الوسيط";
       realtorLink.href = `realtor-profile.html?realtor_id=${encodeURIComponent(offer.realtor_id)}`;
       detail.appendChild(realtorLink);
+
+      const { data: realtorRow } = await supabase
+        .from("realtors")
+        .select("whatsapp_phone")
+        .eq("user_id", offer.realtor_id)
+        .single();
+      if (realtorRow?.whatsapp_phone) {
+        const digits = realtorRow.whatsapp_phone.replace(/\D/g, "");
+        if (digits) {
+          const whatsappLink = document.createElement("a");
+          whatsappLink.className = "btn";
+          whatsappLink.target = "_blank";
+          whatsappLink.rel = "noopener";
+          whatsappLink.textContent = "تواصل عبر واتساب";
+          whatsappLink.href = `https://wa.me/${digits}`;
+          detail.appendChild(whatsappLink);
+        }
+      }
     }
 
     const buttons = document.getElementById("response-buttons");
