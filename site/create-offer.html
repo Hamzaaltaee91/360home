@@ -150,7 +150,8 @@
       let savedProperties = [];
       try {
         savedProperties = await listMyProperties();
-      } catch (_) {
+      } catch (err) {
+        console.error(err);
         savedProperties = [];
       }
 
