@@ -32,6 +32,13 @@
     <p class="error-text" id="page-error" hidden></p>
 
     <form id="offer-form" class="card">
+      <div class="form-field">
+        <label for="saved-property">اختر من عقاراتي المحفوظة (اختياري)</label>
+        <select id="saved-property">
+          <option value="">— إدخال يدوي —</option>
+        </select>
+      </div>
+
       <fieldset>
         <legend>تفاصيل العقار</legend>
         <div class="form-grid">
@@ -125,6 +132,7 @@
     import { requireSession, mountProfileMenu } from "./js/auth.js";
     import { createOffer, uploadOfferPhotos } from "./js/offers.js";
     import { toWesternDigits, formatThousands, stripThousands } from "./js/numerals.js";
+    import { listMyProperties } from "./js/properties.js";
 
     const pageErrorEl = document.getElementById("page-error");
     const offerForm = document.getElementById("offer-form");
@@ -138,6 +146,37 @@
     } else {
       await requireSession();
       await mountProfileMenu(document.getElementById("profile-menu-slot"));
+
+      let savedProperties = [];
+      try {
+        savedProperties = await listMyProperties();
+      } catch (_) {
+        savedProperties = [];
+      }
+
+      const savedPropertySelect = document.getElementById("saved-property");
+      savedProperties.forEach((property) => {
+        const option = document.createElement("option");
+        option.value = property.id;
+        option.textContent = property.title;
+        savedPropertySelect.appendChild(option);
+      });
+
+      savedPropertySelect.addEventListener("change", () => {
+        const selected = savedProperties.find(
+          (p) => p.id === savedPropertySelect.value
+        );
+        if (!selected) {
+          return; // "— إدخال يدوي —": لا تمسح القيم الحالية
+        }
+        document.getElementById("property-title").value = selected.title ?? "";
+        document.getElementById("property-address").value = selected.address ?? "";
+        document.getElementById("offered-price").value = selected.price ?? "";
+        document.getElementById("area-sqft").value = selected.area_sqft ?? "";
+        document.getElementById("bedrooms").value = selected.bedrooms ?? "";
+        document.getElementById("bathrooms").value = selected.bathrooms ?? "";
+        document.getElementById("furnished").checked = !!selected.furnished;
+      });
 
       // تحويل الأرقام العربية-الهندية (٠-٩) إلى غربية (0-9) لحظياً أثناء الكتابة،
       // بنفس نمط site/request-new.html (أرقام غربية فقط بلا فواصل آلاف أو رموز).
