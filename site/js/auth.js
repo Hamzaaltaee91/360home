@@ -1,4 +1,5 @@
 import { supabase } from "./supabase-client.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 
 export async function signUpBuyer(email, password, fullName) {
   return supabase.auth.signUp({
@@ -99,7 +100,30 @@ export async function mountProfileMenu(container) {
   signoutBtn.textContent = "تسجيل الخروج";
   signoutBtn.addEventListener("click", signOut);
 
-  dropdown.append(nameEl, emailEl, signoutBtn);
+  const deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.className = "btn btn-ghost";
+  deleteBtn.textContent = "حذف الحساب";
+  deleteBtn.addEventListener("click", async () => {
+    if (!window.confirm("هل أنت متأكد من حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.")) return;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/delete-account`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session?.access_token}`,
+        apikey: SUPABASE_ANON_KEY,
+      },
+    });
+    if (!response.ok) {
+      window.alert("تعذّر حذف الحساب، حاول مرة أخرى.");
+      return;
+    }
+    await signOut();
+  });
+
+  dropdown.append(nameEl, emailEl, signoutBtn, deleteBtn);
   wrapper.append(avatarBtn, dropdown);
   container.appendChild(wrapper);
 
