@@ -24,6 +24,10 @@
     <p class="error-text" id="page-error" hidden>تعذّر تحميل الملف الشخصي</p>
     <div id="profile-content" hidden>
       <div class="card">
+        <h1 id="realtor-name"></h1>
+        <p id="realtor-email"></p>
+      </div>
+      <div class="card">
         <h1 id="rating-summary"></h1>
       </div>
       <h2>التقييمات</h2>
@@ -45,6 +49,21 @@
 
     async function load() {
       if (!realtorId) throw new Error("missing realtor_id");
+
+      try {
+        const { data: realtor, error: realtorError } = await supabase
+          .from("users")
+          .select("full_name, email")
+          .eq("id", realtorId)
+          .single();
+        if (realtorError) throw realtorError;
+        document.getElementById("realtor-name").textContent =
+          realtor?.full_name ?? "";
+        document.getElementById("realtor-email").textContent =
+          realtor?.email ?? "";
+      } catch (realtorErr) {
+        console.error(realtorErr);
+      }
 
       const { data: summaryRows, error: summaryError } = await supabase.rpc(
         "get_realtor_rating_summary",
