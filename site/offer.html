@@ -201,7 +201,7 @@
       stars.id = "review-stars";
 
       const starButtons = [];
-      for (let value = 1; value <= 5; value += 1) {
+      for (let value = 5; value >= 1; value -= 1) {
         const star = document.createElement("button");
         star.type = "button";
         star.className = "btn";
