@@ -169,7 +169,6 @@
 
       status.textContent = response === "interested" ? "تم إرسال اهتمامك" : "تم تسجيل عدم الاهتمام";
       status.hidden = false;
-      buttons.innerHTML = "";
       offer.buyer_response = response;
 
       if (response === "interested" && (await getCurrentAppUserId()) !== offer.realtor_id) {
@@ -178,6 +177,12 @@
     }
 
     renderButtons();
+
+    if (offer.buyer_response === "interested" || offer.buyer_response === "not_interested") {
+      status.textContent =
+        offer.buyer_response === "interested" ? "تم إرسال اهتمامك" : "تم تسجيل عدم الاهتمام";
+      status.hidden = false;
+    }
 
     if (offer.buyer_response === "interested" && (await getCurrentAppUserId()) !== offer.realtor_id) {
       await renderReviewSection();
