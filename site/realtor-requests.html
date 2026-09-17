@@ -79,6 +79,13 @@
     import { requireSession, mountProfileMenu } from "./js/auth.js";
     import { listActiveRequestsForRealtor } from "./js/requests.js";
     import iraqLocations from "./js/iraq-locations.js";
+    import { formatThousands } from "./js/numerals.js";
+
+    const CATEGORY_LABELS = {
+      residential: "سكني",
+      commercial: "تجاري",
+      land: "أرض",
+    };
 
     await requireSession();
     await mountProfileMenu(document.getElementById("profile-menu-slot"));
@@ -140,7 +147,7 @@
 
       const catTag = document.createElement("li");
       catTag.className = "tag tag-active";
-      catTag.textContent = r.category;
+      catTag.textContent = CATEGORY_LABELS[r.category] || r.category;
 
       const cityTag = document.createElement("li");
       cityTag.className = "tag";
@@ -152,7 +159,10 @@
 
       const budgetTag = document.createElement("li");
       budgetTag.className = "tag";
-      budgetTag.textContent = r.max_price != null ? `${r.max_price}` : "—";
+      budgetTag.textContent =
+        r.max_price != null
+          ? `${formatThousands(r.max_price)} ${r.currency ?? "د.ع"}`
+          : "—";
 
       tags.append(catTag, cityTag, purposeTag, budgetTag);
 
