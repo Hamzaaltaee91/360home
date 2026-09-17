@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>عقاراتي المحفوظة — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="my-offers.html">عروضي</a></li>
+        <li><a href="realtor-requests.html">تصفح الطلبات</a></li>
+        <li><a href="notifications.html">الإشعارات</a></li>
+      </ul>
+      <div class="nav-actions">
+        <div id="profile-menu-slot"></div>
+        <a href="request-new.html" class="btn btn-primary">+ طلب جديد</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-head">
+      <div>
+        <h1>عقاراتي المحفوظة</h1>
+        <p>أضف عقاراتك المحفوظة وأدِر مخزونك.</p>
+      </div>
+    </div>
+
+    <form id="property-form" class="card">
+      <fieldset>
+        <legend>بيانات العقار</legend>
+        <div class="form-grid">
+          <div class="form-field is-full">
+            <label for="title">عنوان العقار</label>
+            <input type="text" id="title" required>
+          </div>
+          <div class="form-field is-full">
+            <label for="address">العنوان التفصيلي</label>
+            <input type="text" id="address" required>
+          </div>
+          <div class="form-field">
+            <label for="price">السعر</label>
+            <input type="number" id="price" step="any" min="0">
+          </div>
+          <div class="form-field">
+            <label for="currency">العملة</label>
+            <select id="currency">
+              <option value="IQD" selected>IQD</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="lease-type">نوع العرض</label>
+            <select id="lease-type">
+              <option value="rent">إيجار</option>
+              <option value="sale">بيع</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="area-sqft">المساحة (قدم مربع)</label>
+            <input type="number" id="area-sqft" step="any" min="0">
+          </div>
+          <div class="form-field">
+            <label for="bedrooms">عدد غرف النوم</label>
+            <input type="number" id="bedrooms" min="0">
+          </div>
+          <div class="form-field">
+            <label for="bathrooms">عدد الحمامات</label>
+            <input type="number" id="bathrooms" min="0">
+          </div>
+          <div class="form-field">
+            <label><input type="checkbox" id="furnished"> مفروش</label>
+          </div>
+        </div>
+      </fieldset>
+      <p class="error-text" id="form-error" hidden></p>
+      <button type="submit" class="btn btn-primary btn-lg" style="margin-top: 24px;">حفظ العقار</button>
+    </form>
+
+    <p id="loading-msg">جاري التحميل...</p>
+    <ul id="properties-list"></ul>
+  </div>
+
+  <script type="module">
+    import { requireSession, mountProfileMenu } from "./js/auth.js";
+    import { createProperty, listMyProperties, deleteProperty } from "./js/properties.js";
+
+    await requireSession();
+    await mountProfileMenu(document.getElementById("profile-menu-slot"));
+
+    const form = document.getElementById("property-form");
+    const loadingMsg = document.getElementById("loading-msg");
+    const listEl = document.getElementById("properties-list");
+    const formErrorEl = document.getElementById("form-error");
+
+    function renderProperties(properties) {
+      listEl.replaceChildren();
+      for (const p of properties) {
+        const li = document.createElement("li");
+        li.className = "card";
+
+        const h3 = document.createElement("h3");
+        h3.textContent = p.title || "—";
+
+        const address = document.createElement("p");
+        address.textContent = p.address || "—";
+
+        const price = document.createElement("p");
+        price.textContent =
+          p.price != null ? `${p.price} ${p.currency || ""}`.trim() : "—";
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "btn btn-ghost";
+        deleteBtn.textContent = "حذف";
+        deleteBtn.addEventListener("click", async () => {
+          deleteBtn.disabled = true;
+          try {
+            await deleteProperty(p.id);
+            await refresh();
+          } catch (err) {
+            deleteBtn.disabled = false;
+            console.error(err);
+            formErrorEl.textContent = "تعذّر حذف العقار. حاول مرة أخرى.";
+            formErrorEl.hidden = false;
+          }
+        });
+
+        li.append(h3, address, price, deleteBtn);
+        listEl.appendChild(li);
+      }
+    }
+
+    async function refresh() {
+      const properties = await listMyProperties();
+      renderProperties(properties);
+    }
+
+    let initialProperties;
+    try {
+      initialProperties = await listMyProperties();
+    } finally {
+      loadingMsg.hidden = true;
+    }
+    renderProperties(initialProperties);
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      formErrorEl.hidden = true;
+      formErrorEl.textContent = "";
+
+      const val = (id) => document.getElementById(id).value;
+      const numOrNull = (id) => (val(id) === "" ? null : Number(val(id)));
+
+      try {
+        await createProperty({
+          title: val("title"),
+          address: val("address"),
+          price: numOrNull("price"),
+          currency: val("currency"),
+          lease_type: val("lease-type"),
+          area_sqft: numOrNull("area-sqft"),
+          bedrooms: numOrNull("bedrooms"),
+          bathrooms: numOrNull("bathrooms"),
+          furnished: document.getElementById("furnished").checked,
+        });
+        form.reset();
+        await refresh();
+      } catch (err) {
+        formErrorEl.textContent = err.message;
+        formErrorEl.hidden = false;
+      }
+    });
+  </script>
+</body>
+</html>
