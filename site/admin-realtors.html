@@ -41,15 +41,15 @@
 
     <div class="page-head">
       <div>
-        <h1>الوسطاء الموثّقون</h1>
-        <p>الوسطاء المعتمدون حالياً على المنصّة.</p>
+        <h1>الوسطاء</h1>
+        <p>كل الوسطاء الذين قدّموا طلب توثيق — يمكن إلغاء أو إعادة التوثيق لأي منهم.</p>
       </div>
     </div>
 
     <p id="verified-loading">جاري التحميل...</p>
     <div class="request-list" id="verified-list"></div>
     <div class="empty-state" hidden id="verified-empty-msg">
-      <h3>لا يوجد وسطاء موثّقون بعد</h3>
+      <h3>لا يوجد وسطاء بعد</h3>
     </div>
   </main>
 
@@ -213,36 +213,42 @@
       h3.textContent = realtor.users?.full_name ?? "—";
       card.appendChild(h3);
 
+      const isVerified = realtor.verified_at != null;
+
       const tags = document.createElement("ul");
       tags.className = "request-tags";
       tags.appendChild(makeTag(`البريد: ${realtor.users?.email ?? "—"}`));
       tags.appendChild(makeTag(`الشركة: ${realtor.company_name ?? "—"}`));
       tags.appendChild(makeTag(`التقييم: ${realtor.average_rating ?? 0}`));
       tags.appendChild(makeTag(`عدد العروض: ${realtor.total_offers ?? 0}`));
+      tags.appendChild(makeTag(isVerified ? "موثّق" : "غير موثّق"));
       card.appendChild(tags);
 
-      const unverifyBtn = document.createElement("button");
-      unverifyBtn.className = "btn btn-ghost";
-      unverifyBtn.textContent = "إلغاء التوثيق";
-      unverifyBtn.style.marginTop = "12px";
-      unverifyBtn.addEventListener("click", async () => {
-        if (!window.confirm("هل أنت متأكد من إلغاء توثيق هذا الوسيط؟")) return;
-        unverifyBtn.disabled = true;
+      const toggleBtn = document.createElement("button");
+      toggleBtn.className = "btn btn-ghost";
+      toggleBtn.textContent = isVerified ? "إلغاء التوثيق" : "إعادة التوثيق";
+      toggleBtn.style.marginTop = "12px";
+      toggleBtn.addEventListener("click", async () => {
+        const confirmMsg = isVerified
+          ? "هل أنت متأكد من إلغاء توثيق هذا الوسيط؟"
+          : "هل أنت متأكد من إعادة توثيق هذا الوسيط؟";
+        if (!window.confirm(confirmMsg)) return;
+        toggleBtn.disabled = true;
         try {
           const { error } = await supabase
             .from("realtors")
-            .update({ verified_at: null })
+            .update({ verified_at: isVerified ? null : new Date().toISOString() })
             .eq("id", realtor.id);
           if (error) throw error;
-          card.remove();
-          if (verifiedList.children.length === 0) verifiedEmptyMsg.hidden = false;
+          realtor.verified_at = isVerified ? null : new Date().toISOString();
+          card.replaceWith(renderVerifiedCard(realtor));
         } catch (err) {
           console.error(err);
-          showPageError("تعذّر إلغاء توثيق الوسيط");
-          unverifyBtn.disabled = false;
+          showPageError(isVerified ? "تعذّر إلغاء توثيق الوسيط" : "تعذّر إعادة توثيق الوسيط");
+          toggleBtn.disabled = false;
         }
       });
-      card.appendChild(unverifyBtn);
+      card.appendChild(toggleBtn);
 
       return card;
     }
@@ -250,9 +256,10 @@
     try {
       const { data, error } = await supabase
         .from("realtors")
-        .select("id, company_name, average_rating, total_offers, users!realtors_user_id_fkey(full_name, email)")
-        .not("verified_at", "is", null)
-        .order("verified_at", { ascending: false });
+        .select(
+          "id, company_name, average_rating, total_offers, verified_at, users!realtors_user_id_fkey(full_name, email)"
+        )
+        .order("verified_at", { ascending: false, nullsFirst: false });
       if (error) throw error;
       if (!data || data.length === 0) {
         verifiedEmptyMsg.hidden = false;
