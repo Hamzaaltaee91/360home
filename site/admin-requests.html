@@ -112,7 +112,6 @@
     const STATUS_LABELS = { active: "نشط", inactive: "غير نشط", sold: "مباع", rented: "مؤجَّر" };
 
     await requireSession();
-    await mountProfileMenu(document.getElementById("profile-menu-slot"));
 
     const list = document.getElementById("requests-list");
     const emptyMsg = document.getElementById("empty-msg");
@@ -203,19 +202,26 @@
     }
 
     let requests;
-    try {
-      const { data, error } = await supabase
-        .from("property_requests")
-        .select("*, users!property_requests_buyer_id_fkey(full_name, email)")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      requests = data;
-    } catch (err) {
-      console.error(err);
-      showPageError("تعذّر تحميل الطلبات");
-    } finally {
-      loadingMsg.hidden = true;
+    async function loadRequests() {
+      try {
+        const { data, error } = await supabase
+          .from("property_requests")
+          .select("*, users!property_requests_buyer_id_fkey(full_name, email)")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        requests = data;
+      } catch (err) {
+        console.error(err);
+        showPageError("تعذّر تحميل الطلبات");
+      } finally {
+        loadingMsg.hidden = true;
+      }
     }
+
+    await Promise.all([
+      mountProfileMenu(document.getElementById("profile-menu-slot")),
+      loadRequests(),
+    ]);
 
     const statusFilter = document.getElementById("filter-status");
     const categoryFilter = document.getElementById("filter-category");

@@ -125,7 +125,6 @@
     import { supabase } from "./js/supabase-client.js";
 
     await requireSession();
-    await mountProfileMenu(document.getElementById("profile-menu-slot"));
 
     const list = document.getElementById("applications-list");
     const emptyMsg = document.getElementById("empty-msg");
@@ -232,17 +231,19 @@
       return row;
     }
 
-    try {
-      const applications = await listPendingRealtorApplications();
-      if (!applications || applications.length === 0) {
-        emptyMsg.hidden = false;
-      } else {
-        for (const app of applications) {
-          list.appendChild(renderRow(app));
+    async function loadApplications() {
+      try {
+        const applications = await listPendingRealtorApplications();
+        if (!applications || applications.length === 0) {
+          emptyMsg.hidden = false;
+        } else {
+          for (const app of applications) {
+            list.appendChild(renderRow(app));
+          }
         }
+      } finally {
+        loadingMsg.hidden = true;
       }
-    } finally {
-      loadingMsg.hidden = true;
     }
 
     const verifiedList = document.getElementById("verified-list");
@@ -328,22 +329,30 @@
     verificationFilter.addEventListener("change", renderRealtorsList);
     realtorsSortBy.addEventListener("change", renderRealtorsList);
 
-    try {
-      const { data, error } = await supabase
-        .from("realtors")
-        .select(
-          "id, company_name, average_rating, total_offers, verified_at, users!realtors_user_id_fkey(full_name, email)"
-        )
-        .order("verified_at", { ascending: false, nullsFirst: false });
-      if (error) throw error;
-      realtors = data ?? [];
-      renderRealtorsList();
-    } catch (err) {
-      console.error(err);
-      showPageError("تعذّر تحميل قائمة الوسطاء");
-    } finally {
-      verifiedLoading.hidden = true;
+    async function loadRealtors() {
+      try {
+        const { data, error } = await supabase
+          .from("realtors")
+          .select(
+            "id, company_name, average_rating, total_offers, verified_at, users!realtors_user_id_fkey(full_name, email)"
+          )
+          .order("verified_at", { ascending: false, nullsFirst: false });
+        if (error) throw error;
+        realtors = data ?? [];
+        renderRealtorsList();
+      } catch (err) {
+        console.error(err);
+        showPageError("تعذّر تحميل قائمة الوسطاء");
+      } finally {
+        verifiedLoading.hidden = true;
+      }
     }
+
+    await Promise.all([
+      mountProfileMenu(document.getElementById("profile-menu-slot")),
+      loadApplications(),
+      loadRealtors(),
+    ]);
   </script>
 </body>
 </html>
