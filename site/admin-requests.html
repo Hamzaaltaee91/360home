@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>طلبات العقارات — دبّرلي</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="container">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="nav-links">
+        <li><a href="admin-realtors.html">توثيق الوسطاء</a></li>
+        <li><a href="admin-reports.html">البلاغات</a></li>
+        <li><a href="admin-requests.html">طلبات العقارات</a></li>
+      </ul>
+      <div class="nav-actions">
+        <div id="profile-menu-slot"></div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="page-head">
+      <div>
+        <h1>طلبات العقارات</h1>
+        <p>جميع طلبات العقارات المقدَّمة من المشترين.</p>
+      </div>
+    </div>
+
+    <p class="error-text" id="page-error" hidden></p>
+    <p id="loading-msg">جاري التحميل...</p>
+
+    <ul class="request-list" id="requests-list"></ul>
+
+    <div class="empty-state" hidden id="empty-msg">
+      <h3>لا توجد طلبات</h3>
+      <p>لم يقدّم أي مشترٍ طلب عقار بعد.</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a href="index.html" class="brand">دبّرلي</a>
+      <ul class="footer-links">
+        <li><a href="dashboard.html">طلباتي</a></li>
+        <li><a href="contact.html">اتصل بنا</a></li>
+      </ul>
+      <span>© ٢٠٢٦ دبّرلي</span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { requireSession, mountProfileMenu } from "./js/auth.js";
+    import { supabase } from "./js/supabase-client.js";
+
+    const CATEGORY_LABELS = {
+      apartment: "شقة",
+      villa: "فيلا",
+      land: "أرض",
+      office: "مكتب",
+      shop: "محل تجاري",
+      other: "أخرى",
+    };
+
+    await requireSession();
+    await mountProfileMenu(document.getElementById("profile-menu-slot"));
+
+    const list = document.getElementById("requests-list");
+    const emptyMsg = document.getElementById("empty-msg");
+    const loadingMsg = document.getElementById("loading-msg");
+    const pageError = document.getElementById("page-error");
+
+    function showPageError(message) {
+      pageError.textContent = message;
+      pageError.hidden = false;
+    }
+
+    function makeTag(text) {
+      const li = document.createElement("li");
+      li.className = "tag";
+      li.textContent = text;
+      return li;
+    }
+
+    function renderCard(request) {
+      const card = document.createElement("li");
+      card.className = "card request-item";
+
+      const h3 = document.createElement("h3");
+      h3.textContent = request.title ?? "—";
+      card.appendChild(h3);
+
+      const buyer = request.users ?? {};
+      const tags = document.createElement("ul");
+      tags.className = "request-tags";
+      tags.appendChild(makeTag(`المشتري: ${buyer.full_name ?? "—"}`));
+      tags.appendChild(makeTag(`البريد: ${buyer.email ?? "—"}`));
+      tags.appendChild(
+        makeTag(`الفئة: ${CATEGORY_LABELS[request.category] ?? request.category ?? "—"}`)
+      );
+      tags.appendChild(makeTag(`المدينة: ${request.city ?? "—"}`));
+      tags.appendChild(makeTag(`الميزانية: ${request.budget ?? "—"}`));
+      tags.appendChild(makeTag(`الحالة: ${request.status ?? "—"}`));
+      tags.appendChild(makeTag(`التاريخ: ${request.created_at ?? "—"}`));
+      card.appendChild(tags);
+
+      if (request.description) {
+        const description = document.createElement("p");
+        description.textContent = request.description;
+        card.appendChild(description);
+      }
+
+      return card;
+    }
+
+    let requests;
+    try {
+      const { data, error } = await supabase
+        .from("property_requests")
+        .select("*, users!property_requests_buyer_id_fkey(full_name, email)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      requests = data;
+    } catch (err) {
+      console.error(err);
+      showPageError("تعذّر تحميل الطلبات");
+    } finally {
+      loadingMsg.hidden = true;
+    }
+
+    if (!requests || requests.length === 0) {
+      emptyMsg.hidden = false;
+    } else {
+      for (const request of requests) {
+        list.appendChild(renderCard(request));
+      }
+    }
+  </script>
+</body>
+</html>
