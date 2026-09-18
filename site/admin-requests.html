@@ -30,6 +30,40 @@
     </div>
 
     <p class="error-text" id="page-error" hidden></p>
+
+    <div class="filters">
+      <label>
+        الحالة
+        <select id="filter-status">
+          <option value="">الكل</option>
+          <option value="active">نشط</option>
+          <option value="inactive">غير نشط</option>
+          <option value="sold">مباع</option>
+          <option value="rented">مؤجَّر</option>
+        </select>
+      </label>
+
+      <label>
+        الفئة
+        <select id="filter-category">
+          <option value="">الكل</option>
+          <option value="residential">سكني</option>
+          <option value="commercial">تجاري</option>
+          <option value="land">أرض</option>
+        </select>
+      </label>
+
+      <label>
+        الترتيب
+        <select id="sort-by">
+          <option value="date-desc">الأحدث أولاً</option>
+          <option value="date-asc">الأقدم أولاً</option>
+          <option value="price-desc">الميزانية: من الأعلى</option>
+          <option value="price-asc">الميزانية: من الأدنى</option>
+        </select>
+      </label>
+    </div>
+
     <p id="loading-msg">جاري التحميل...</p>
 
     <div class="data-table-wrap">
@@ -53,7 +87,7 @@
 
     <div class="empty-state" hidden id="empty-msg">
       <h3>لا توجد طلبات</h3>
-      <p>لم يقدّم أي مشترٍ طلب عقار بعد.</p>
+      <p>لا يوجد طلبات تطابق الفلاتر الحالية.</p>
     </div>
   </main>
 
@@ -183,13 +217,43 @@
       loadingMsg.hidden = true;
     }
 
-    if (!requests || requests.length === 0) {
-      emptyMsg.hidden = false;
-    } else {
-      for (const request of requests) {
-        list.appendChild(renderRow(request));
+    const statusFilter = document.getElementById("filter-status");
+    const categoryFilter = document.getElementById("filter-category");
+    const sortBy = document.getElementById("sort-by");
+
+    function renderList() {
+      list.innerHTML = "";
+      emptyMsg.hidden = true;
+
+      let visible = (requests || []).filter((r) => {
+        if (statusFilter.value && r.status !== statusFilter.value) return false;
+        if (categoryFilter.value && r.category !== categoryFilter.value) return false;
+        return true;
+      });
+
+      const sortValue = sortBy.value;
+      visible = visible.slice().sort((a, b) => {
+        if (sortValue === "date-asc") return new Date(a.created_at) - new Date(b.created_at);
+        if (sortValue === "date-desc") return new Date(b.created_at) - new Date(a.created_at);
+        if (sortValue === "price-asc") return (a.max_price ?? 0) - (b.max_price ?? 0);
+        if (sortValue === "price-desc") return (b.max_price ?? 0) - (a.max_price ?? 0);
+        return 0;
+      });
+
+      if (visible.length === 0) {
+        emptyMsg.hidden = false;
+      } else {
+        for (const request of visible) {
+          list.appendChild(renderRow(request));
+        }
       }
     }
+
+    statusFilter.addEventListener("change", renderList);
+    categoryFilter.addEventListener("change", renderList);
+    sortBy.addEventListener("change", renderList);
+
+    renderList();
   </script>
 </body>
 </html>

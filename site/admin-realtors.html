@@ -61,6 +61,26 @@
       </div>
     </div>
 
+    <div class="filters">
+      <label>
+        الحالة
+        <select id="filter-verification">
+          <option value="">الكل</option>
+          <option value="verified">موثّق</option>
+          <option value="unverified">غير موثّق</option>
+        </select>
+      </label>
+
+      <label>
+        الترتيب
+        <select id="realtors-sort-by">
+          <option value="rating-desc">التقييم: من الأعلى</option>
+          <option value="rating-asc">التقييم: من الأدنى</option>
+          <option value="offers-desc">عدد العروض: من الأعلى</option>
+        </select>
+      </label>
+    </div>
+
     <p id="verified-loading">جاري التحميل...</p>
     <div class="data-table-wrap">
       <table class="data-table">
@@ -274,6 +294,40 @@
       return row;
     }
 
+    let realtors = [];
+    const verificationFilter = document.getElementById("filter-verification");
+    const realtorsSortBy = document.getElementById("realtors-sort-by");
+
+    function renderRealtorsList() {
+      verifiedList.innerHTML = "";
+      verifiedEmptyMsg.hidden = true;
+
+      let visible = realtors.filter((r) => {
+        if (verificationFilter.value === "verified") return r.verified_at != null;
+        if (verificationFilter.value === "unverified") return r.verified_at == null;
+        return true;
+      });
+
+      const sortValue = realtorsSortBy.value;
+      visible = visible.slice().sort((a, b) => {
+        if (sortValue === "rating-asc") return (a.average_rating ?? 0) - (b.average_rating ?? 0);
+        if (sortValue === "rating-desc") return (b.average_rating ?? 0) - (a.average_rating ?? 0);
+        if (sortValue === "offers-desc") return (b.total_offers ?? 0) - (a.total_offers ?? 0);
+        return 0;
+      });
+
+      if (visible.length === 0) {
+        verifiedEmptyMsg.hidden = false;
+      } else {
+        for (const realtor of visible) {
+          verifiedList.appendChild(renderVerifiedRow(realtor));
+        }
+      }
+    }
+
+    verificationFilter.addEventListener("change", renderRealtorsList);
+    realtorsSortBy.addEventListener("change", renderRealtorsList);
+
     try {
       const { data, error } = await supabase
         .from("realtors")
@@ -282,13 +336,8 @@
         )
         .order("verified_at", { ascending: false, nullsFirst: false });
       if (error) throw error;
-      if (!data || data.length === 0) {
-        verifiedEmptyMsg.hidden = false;
-      } else {
-        for (const realtor of data) {
-          verifiedList.appendChild(renderVerifiedRow(realtor));
-        }
-      }
+      realtors = data ?? [];
+      renderRealtorsList();
     } catch (err) {
       console.error(err);
       showPageError("تعذّر تحميل قائمة الوسطاء");
