@@ -161,19 +161,18 @@
         statusSelect.appendChild(option);
       }
 
-      const saveStatusBtn = document.createElement("button");
-      saveStatusBtn.type = "button";
-      saveStatusBtn.className = "btn btn-primary";
-      saveStatusBtn.textContent = "حفظ الحالة";
-      saveStatusBtn.addEventListener("click", async () => {
-        saveStatusBtn.disabled = true;
+      statusSelect.addEventListener("change", async () => {
+        const newStatus = statusSelect.value;
+        statusSelect.disabled = true;
         try {
-          await updateRequest(request.id, { status: statusSelect.value });
+          await updateRequest(request.id, { status: newStatus });
+          request.status = newStatus;
         } catch (err) {
           console.error(err);
           showPageError("تعذّر تحديث حالة الطلب");
+          statusSelect.value = request.status;
         } finally {
-          saveStatusBtn.disabled = false;
+          statusSelect.disabled = false;
         }
       });
 
@@ -195,7 +194,7 @@
         }
       });
 
-      actionsCell.append(statusSelect, saveStatusBtn, deleteBtn);
+      actionsCell.append(statusSelect, deleteBtn);
       row.appendChild(actionsCell);
 
       return row;
