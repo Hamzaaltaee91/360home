@@ -57,7 +57,7 @@
   </footer>
 
   <script type="module">
-    import { requireSession, mountProfileMenu } from "./js/auth.js";
+    import { requireSession, mountProfileMenu, getCurrentUserRole, getRoleHomePath } from "./js/auth.js";
     import { listMyRequests } from "./js/requests.js";
     import { subscribeToUnreadCount } from "./js/notifications.js";
     import { formatThousands } from "./js/numerals.js";
@@ -69,6 +69,11 @@
     };
 
     await requireSession();
+    const role = await getCurrentUserRole();
+    if (role !== "buyer") {
+      window.location.href = getRoleHomePath(role);
+      throw new Error("redirecting");
+    }
     await mountProfileMenu(document.getElementById("profile-menu-slot"));
 
     const loadingMsg = document.getElementById("loading-msg");

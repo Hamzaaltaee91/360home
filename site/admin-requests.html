@@ -44,7 +44,7 @@
     <div class="container footer-grid">
       <a href="index.html" class="brand">دبّرلي</a>
       <ul class="footer-links">
-        <li><a href="dashboard.html">طلباتي</a></li>
+        <li><a href="admin-requests.html">كل الطلبات</a></li>
         <li><a href="contact.html">اتصل بنا</a></li>
       </ul>
       <span>© ٢٠٢٦ دبّرلي</span>
@@ -54,15 +54,11 @@
   <script type="module">
     import { requireSession, mountProfileMenu } from "./js/auth.js";
     import { supabase } from "./js/supabase-client.js";
+    import { updateRequest, deleteRequest } from "./js/requests.js";
+    import { formatThousands } from "./js/numerals.js";
 
-    const CATEGORY_LABELS = {
-      apartment: "شقة",
-      villa: "فيلا",
-      land: "أرض",
-      office: "مكتب",
-      shop: "محل تجاري",
-      other: "أخرى",
-    };
+    const CATEGORY_LABELS = { residential: "سكني", commercial: "تجاري", land: "أرض" };
+    const STATUS_LABELS = { active: "نشط", inactive: "غير نشط", sold: "مباع", rented: "مؤجَّر" };
 
     await requireSession();
     await mountProfileMenu(document.getElementById("profile-menu-slot"));
@@ -101,8 +97,12 @@
         makeTag(`الفئة: ${CATEGORY_LABELS[request.category] ?? request.category ?? "—"}`)
       );
       tags.appendChild(makeTag(`المدينة: ${request.city ?? "—"}`));
-      tags.appendChild(makeTag(`الميزانية: ${request.budget ?? "—"}`));
-      tags.appendChild(makeTag(`الحالة: ${request.status ?? "—"}`));
+      tags.appendChild(
+        makeTag(
+          `الميزانية: ${request.max_price != null ? `${formatThousands(request.max_price)} ${request.currency ?? "د.ع"}` : "—"}`
+        )
+      );
+      tags.appendChild(makeTag(`الحالة: ${STATUS_LABELS[request.status] ?? request.status ?? "—"}`));
       tags.appendChild(makeTag(`التاريخ: ${request.created_at ?? "—"}`));
       card.appendChild(tags);
 
@@ -111,6 +111,58 @@
         description.textContent = request.description;
         card.appendChild(description);
       }
+
+      const actions = document.createElement("div");
+      actions.style.display = "flex";
+      actions.style.gap = "8px";
+      actions.style.marginTop = "12px";
+      actions.style.alignItems = "center";
+
+      const statusSelect = document.createElement("select");
+      for (const [value, label] of Object.entries(STATUS_LABELS)) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        if (value === request.status) option.selected = true;
+        statusSelect.appendChild(option);
+      }
+
+      const saveStatusBtn = document.createElement("button");
+      saveStatusBtn.type = "button";
+      saveStatusBtn.className = "btn btn-primary";
+      saveStatusBtn.textContent = "حفظ الحالة";
+      saveStatusBtn.addEventListener("click", async () => {
+        saveStatusBtn.disabled = true;
+        try {
+          await updateRequest(request.id, { status: statusSelect.value });
+        } catch (err) {
+          console.error(err);
+          showPageError("تعذّر تحديث حالة الطلب");
+        } finally {
+          saveStatusBtn.disabled = false;
+        }
+      });
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "btn btn-ghost";
+      deleteBtn.textContent = "حذف الطلب";
+      deleteBtn.addEventListener("click", async () => {
+        if (!window.confirm("هل أنت متأكد من حذف هذا الطلب؟")) return;
+        deleteBtn.disabled = true;
+        try {
+          await deleteRequest(request.id);
+          card.remove();
+          if (list.children.length === 0) emptyMsg.hidden = false;
+        } catch (err) {
+          console.error(err);
+          showPageError("تعذّر حذف الطلب");
+          deleteBtn.disabled = false;
+        }
+      });
+
+      actions.append(statusSelect, saveStatusBtn, deleteBtn);
+      card.appendChild(actions);
 
       return card;
     }

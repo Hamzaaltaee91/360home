@@ -59,6 +59,23 @@ export async function getCurrentUserDisplay() {
   return { full_name: data.full_name, email: data.email };
 }
 
+// Returns the signed-in user's public.users.role, or null when nobody is
+// signed in. Used by role-guarded pages (e.g. dashboard.html) to redirect
+// an admin/realtor account away from buyer-only content.
+export async function getCurrentUserRole() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("auth_id", user.id)
+    .single();
+  if (error) throw error;
+  return data.role;
+}
+
 // Renders an avatar button + dropdown (name, email, sign-out) into `container`.
 // Replaces a plain sign-out button in the nav. Renders nothing if unauthenticated.
 export async function mountProfileMenu(container) {
