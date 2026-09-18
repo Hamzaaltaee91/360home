@@ -55,6 +55,7 @@
     import { listOffersForRequest } from "./js/offers.js";
     import iraqLocations from "./js/iraq-locations.js";
 
+    const CATEGORY_LABELS = { residential: "سكني", commercial: "تجاري", land: "أرض" };
     const PURPOSE_LABELS = { rent: "إيجار", buy: "شراء" };
     const SUBTYPE_LABELS = { apartment: "شقة", house: "منزل", villa: "فيلا", duplex: "دوبلكس" };
     const RENTAL_PERIOD_LABELS = { daily: "يومي", weekly: "أسبوعي", monthly: "شهري", yearly: "سنوي" };
@@ -101,7 +102,7 @@
 
       const catTag = document.createElement("li");
       catTag.className = "tag tag-active";
-      catTag.textContent = request.category;
+      catTag.textContent = CATEGORY_LABELS[request.category] || request.category;
 
       const cityTag = document.createElement("li");
       cityTag.className = "tag";

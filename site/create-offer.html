@@ -216,6 +216,17 @@
         });
       }
 
+      document.querySelectorAll("[data-error-for]").forEach((errorEl) => {
+        const fieldId = errorEl.dataset.errorFor;
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        const eventName = field.tagName === "SELECT" || field.type === "checkbox" ? "change" : "input";
+        field.addEventListener(eventName, () => {
+          errorEl.hidden = true;
+          errorEl.textContent = "";
+        });
+      });
+
       function showFieldError(fieldId, message) {
         const el = document.querySelector(`[data-error-for="${fieldId}"]`);
         if (el) {

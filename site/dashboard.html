@@ -109,10 +109,6 @@
       cityTag.className = "tag";
       cityTag.textContent = r.city;
 
-      const governorateTag = document.createElement("li");
-      governorateTag.className = "tag";
-      governorateTag.textContent = r.governorate || "—";
-
       const purposeTag = document.createElement("li");
       purposeTag.className = "tag";
       purposeTag.textContent = r.purpose === "rent" ? "إيجار" : "شراء";
@@ -122,7 +118,7 @@
       budgetTag.textContent =
         r.max_price != null ? `${formatThousands(r.max_price)} د.ع` : "—";
 
-      tags.append(catTag, cityTag, governorateTag, purposeTag, budgetTag);
+      tags.append(catTag, cityTag, purposeTag, budgetTag);
 
       card.append(h3, tags);
       a.appendChild(card);
