@@ -692,6 +692,20 @@ a { color: inherit; text-decoration: none; }
 }
 .tag-active { color: var(--ink); background: var(--ink-soft); border-color: transparent; }
 
+.data-table-wrap { overflow-x: auto; padding-block-end: 3rem; }
+.data-table { width: 100%; border-collapse: collapse; font-size: var(--step--1); }
+.data-table th, .data-table td {
+  padding: .7em .85em;
+  text-align: start;
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
+}
+.data-table th { color: var(--text-muted); font-weight: 600; }
+.data-table td.wrap { white-space: normal; }
+.data-table tbody tr:hover { background: var(--surface-muted); }
+.data-table .btn { padding: .4em .9em; font-size: .8rem; }
+.data-table .row-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+
 .empty-state {
   text-align: center;
   padding: clamp(2.5rem, 6vw, 4.5rem) 1.5rem;

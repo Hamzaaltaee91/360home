@@ -32,7 +32,24 @@
     <p class="error-text" id="page-error" hidden></p>
     <p id="loading-msg">جاري التحميل...</p>
 
-    <ul class="request-list" id="requests-list"></ul>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>العنوان</th>
+            <th>المشتري</th>
+            <th>البريد</th>
+            <th>الفئة</th>
+            <th>المدينة</th>
+            <th>الميزانية</th>
+            <th>الحالة</th>
+            <th>التاريخ</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="requests-list"></tbody>
+      </table>
+    </div>
 
     <div class="empty-state" hidden id="empty-msg">
       <h3>لا توجد طلبات</h3>
@@ -73,50 +90,34 @@
       pageError.hidden = false;
     }
 
-    function makeTag(text) {
-      const li = document.createElement("li");
-      li.className = "tag";
-      li.textContent = text;
-      return li;
+    function cell(text, wrap) {
+      const td = document.createElement("td");
+      if (wrap) td.className = "wrap";
+      td.textContent = text;
+      return td;
     }
 
-    function renderCard(request) {
-      const card = document.createElement("li");
-      card.className = "card request-item";
-
-      const h3 = document.createElement("h3");
-      h3.textContent = request.title ?? "—";
-      card.appendChild(h3);
-
+    function renderRow(request) {
+      const row = document.createElement("tr");
       const buyer = request.users ?? {};
-      const tags = document.createElement("ul");
-      tags.className = "request-tags";
-      tags.appendChild(makeTag(`المشتري: ${buyer.full_name ?? "—"}`));
-      tags.appendChild(makeTag(`البريد: ${buyer.email ?? "—"}`));
-      tags.appendChild(
-        makeTag(`الفئة: ${CATEGORY_LABELS[request.category] ?? request.category ?? "—"}`)
-      );
-      tags.appendChild(makeTag(`المدينة: ${request.city ?? "—"}`));
-      tags.appendChild(
-        makeTag(
-          `الميزانية: ${request.max_price != null ? `${formatThousands(request.max_price)} ${request.currency ?? "د.ع"}` : "—"}`
-        )
-      );
-      tags.appendChild(makeTag(`الحالة: ${STATUS_LABELS[request.status] ?? request.status ?? "—"}`));
-      tags.appendChild(makeTag(`التاريخ: ${request.created_at ?? "—"}`));
-      card.appendChild(tags);
 
-      if (request.description) {
-        const description = document.createElement("p");
-        description.textContent = request.description;
-        card.appendChild(description);
-      }
+      row.append(
+        cell(request.title ?? "—", true),
+        cell(buyer.full_name ?? "—"),
+        cell(buyer.email ?? "—"),
+        cell(CATEGORY_LABELS[request.category] ?? request.category ?? "—"),
+        cell(request.city ?? "—"),
+        cell(
+          request.max_price != null
+            ? `${formatThousands(request.max_price)} ${request.currency ?? "د.ع"}`
+            : "—"
+        ),
+        cell(STATUS_LABELS[request.status] ?? request.status ?? "—"),
+        cell(request.created_at ? new Date(request.created_at).toLocaleDateString("ar-IQ") : "—")
+      );
 
-      const actions = document.createElement("div");
-      actions.style.display = "flex";
-      actions.style.gap = "8px";
-      actions.style.marginTop = "12px";
-      actions.style.alignItems = "center";
+      const actionsCell = document.createElement("td");
+      actionsCell.className = "row-actions";
 
       const statusSelect = document.createElement("select");
       for (const [value, label] of Object.entries(STATUS_LABELS)) {
@@ -152,7 +153,7 @@
         deleteBtn.disabled = true;
         try {
           await deleteRequest(request.id);
-          card.remove();
+          row.remove();
           if (list.children.length === 0) emptyMsg.hidden = false;
         } catch (err) {
           console.error(err);
@@ -161,10 +162,10 @@
         }
       });
 
-      actions.append(statusSelect, saveStatusBtn, deleteBtn);
-      card.appendChild(actions);
+      actionsCell.append(statusSelect, saveStatusBtn, deleteBtn);
+      row.appendChild(actionsCell);
 
-      return card;
+      return row;
     }
 
     let requests;
@@ -186,7 +187,7 @@
       emptyMsg.hidden = false;
     } else {
       for (const request of requests) {
-        list.appendChild(renderCard(request));
+        list.appendChild(renderRow(request));
       }
     }
   </script>

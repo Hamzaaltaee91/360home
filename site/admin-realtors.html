@@ -32,7 +32,22 @@
     <p id="page-error" role="status" hidden></p>
 
     <p id="loading-msg">جاري التحميل...</p>
-    <div class="request-list" id="applications-list"></div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>الاسم</th>
+            <th>البريد</th>
+            <th>الشركة</th>
+            <th>رقم الرخصة</th>
+            <th>تاريخ انتهاء الرخصة</th>
+            <th>المستند</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="applications-list"></tbody>
+      </table>
+    </div>
 
     <div class="empty-state" hidden id="empty-msg">
       <h3>لا توجد طلبات معلّقة</h3>
@@ -47,7 +62,22 @@
     </div>
 
     <p id="verified-loading">جاري التحميل...</p>
-    <div class="request-list" id="verified-list"></div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>الاسم</th>
+            <th>البريد</th>
+            <th>الشركة</th>
+            <th>التقييم</th>
+            <th>عدد العروض</th>
+            <th>الحالة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="verified-list"></tbody>
+      </table>
+    </div>
     <div class="empty-state" hidden id="verified-empty-msg">
       <h3>لا يوجد وسطاء بعد</h3>
     </div>
@@ -87,43 +117,37 @@
       pageError.hidden = false;
     }
 
-    function makeTag(text) {
-      const li = document.createElement("li");
-      li.className = "tag";
-      li.textContent = text;
-      return li;
+    function cell(text) {
+      const td = document.createElement("td");
+      td.textContent = text;
+      return td;
     }
 
-    function removeCard(card) {
-      card.remove();
+    function removeRow(row) {
+      row.remove();
       if (list.children.length === 0) {
         emptyMsg.hidden = false;
       }
     }
 
-    function renderCard(app) {
-      const card = document.createElement("article");
-      card.className = "card request-item";
+    function renderRow(app) {
+      const row = document.createElement("tr");
+      row.append(
+        cell(app.full_name ?? "—"),
+        cell(app.email ?? "—"),
+        cell(app.company_name ?? "—"),
+        cell(app.license_number ?? "—"),
+        cell(app.license_expiry ?? "—")
+      );
 
-      const h3 = document.createElement("h3");
-      h3.textContent = app.full_name ?? "—";
-      card.appendChild(h3);
-
-      const tags = document.createElement("ul");
-      tags.className = "request-tags";
-      tags.appendChild(makeTag(`البريد: ${app.email ?? "—"}`));
-      tags.appendChild(makeTag(`الشركة: ${app.company_name ?? "—"}`));
-      tags.appendChild(makeTag(`رقم الرخصة: ${app.license_number ?? "—"}`));
-      tags.appendChild(makeTag(`تاريخ انتهاء الرخصة: ${app.license_expiry ?? "—"}`));
-      card.appendChild(tags);
-
+      const docCell = document.createElement("td");
       if (app.document_url) {
         const docLink = document.createElement("a");
         docLink.className = "btn btn-ghost";
         docLink.target = "_blank";
         docLink.rel = "noopener noreferrer";
         docLink.textContent = "عرض المستند";
-        card.appendChild(docLink);
+        docCell.appendChild(docLink);
 
         getVerificationDocumentUrl(app.document_url)
           .then((signedUrl) => {
@@ -134,7 +158,10 @@
             docLink.remove();
             showPageError("تعذّر تحميل المستند");
           });
+      } else {
+        docCell.textContent = "—";
       }
+      row.appendChild(docCell);
 
       const approveBtn = document.createElement("button");
       approveBtn.className = "btn btn-primary";
@@ -144,17 +171,15 @@
       rejectBtn.className = "btn btn-ghost";
       rejectBtn.textContent = "رفض";
 
-      const actions = document.createElement("div");
-      actions.style.display = "flex";
-      actions.style.gap = "8px";
-      actions.style.marginTop = "12px";
+      const actionsCell = document.createElement("td");
+      actionsCell.className = "row-actions";
 
       approveBtn.addEventListener("click", async () => {
         approveBtn.disabled = true;
         rejectBtn.disabled = true;
         try {
           await approveRealtorApplication(app.verification_id);
-          removeCard(card);
+          removeRow(row);
         } catch (err) {
           console.error(err);
           showPageError("تعذّر قبول الطلب");
@@ -172,7 +197,7 @@
         rejectBtn.disabled = true;
         try {
           await rejectRealtorApplication(app.verification_id, reason);
-          removeCard(card);
+          removeRow(row);
         } catch (err) {
           console.error(err);
           showPageError("تعذّر رفض الطلب");
@@ -181,11 +206,10 @@
         }
       });
 
-      actions.appendChild(approveBtn);
-      actions.appendChild(rejectBtn);
-      card.appendChild(actions);
+      actionsCell.append(approveBtn, rejectBtn);
+      row.appendChild(actionsCell);
 
-      return card;
+      return row;
     }
 
     try {
@@ -194,7 +218,7 @@
         emptyMsg.hidden = false;
       } else {
         for (const app of applications) {
-          list.appendChild(renderCard(app));
+          list.appendChild(renderRow(app));
         }
       }
     } finally {
@@ -205,29 +229,22 @@
     const verifiedEmptyMsg = document.getElementById("verified-empty-msg");
     const verifiedLoading = document.getElementById("verified-loading");
 
-    function renderVerifiedCard(realtor) {
-      const card = document.createElement("article");
-      card.className = "card request-item";
-
-      const h3 = document.createElement("h3");
-      h3.textContent = realtor.users?.full_name ?? "—";
-      card.appendChild(h3);
-
+    function renderVerifiedRow(realtor) {
+      const row = document.createElement("tr");
       const isVerified = realtor.verified_at != null;
 
-      const tags = document.createElement("ul");
-      tags.className = "request-tags";
-      tags.appendChild(makeTag(`البريد: ${realtor.users?.email ?? "—"}`));
-      tags.appendChild(makeTag(`الشركة: ${realtor.company_name ?? "—"}`));
-      tags.appendChild(makeTag(`التقييم: ${realtor.average_rating ?? 0}`));
-      tags.appendChild(makeTag(`عدد العروض: ${realtor.total_offers ?? 0}`));
-      tags.appendChild(makeTag(isVerified ? "موثّق" : "غير موثّق"));
-      card.appendChild(tags);
+      row.append(
+        cell(realtor.users?.full_name ?? "—"),
+        cell(realtor.users?.email ?? "—"),
+        cell(realtor.company_name ?? "—"),
+        cell(String(realtor.average_rating ?? 0)),
+        cell(String(realtor.total_offers ?? 0)),
+        cell(isVerified ? "موثّق" : "غير موثّق")
+      );
 
       const toggleBtn = document.createElement("button");
       toggleBtn.className = "btn btn-ghost";
       toggleBtn.textContent = isVerified ? "إلغاء التوثيق" : "إعادة التوثيق";
-      toggleBtn.style.marginTop = "12px";
       toggleBtn.addEventListener("click", async () => {
         const confirmMsg = isVerified
           ? "هل أنت متأكد من إلغاء توثيق هذا الوسيط؟"
@@ -241,16 +258,20 @@
             .eq("id", realtor.id);
           if (error) throw error;
           realtor.verified_at = isVerified ? null : new Date().toISOString();
-          card.replaceWith(renderVerifiedCard(realtor));
+          row.replaceWith(renderVerifiedRow(realtor));
         } catch (err) {
           console.error(err);
           showPageError(isVerified ? "تعذّر إلغاء توثيق الوسيط" : "تعذّر إعادة توثيق الوسيط");
           toggleBtn.disabled = false;
         }
       });
-      card.appendChild(toggleBtn);
 
-      return card;
+      const actionsCell = document.createElement("td");
+      actionsCell.className = "row-actions";
+      actionsCell.appendChild(toggleBtn);
+      row.appendChild(actionsCell);
+
+      return row;
     }
 
     try {
@@ -265,7 +286,7 @@
         verifiedEmptyMsg.hidden = false;
       } else {
         for (const realtor of data) {
-          verifiedList.appendChild(renderVerifiedCard(realtor));
+          verifiedList.appendChild(renderVerifiedRow(realtor));
         }
       }
     } catch (err) {
