@@ -32,6 +32,16 @@ export async function deleteRequest(id) {
 }
 
 export async function listActiveRequestsForRealtor() {
+  // No pg_cron in this project — sweep stale requests to 'inactive'
+  // opportunistically, right before the realtor-facing query that
+  // actually depends on 'active' meaning "posted within the last
+  // month". Best-effort: a failed sweep shouldn't block browsing.
+  try {
+    await supabase.rpc("auto_expire_old_requests");
+  } catch (err) {
+    console.error(err);
+  }
+
   const { data, error } = await supabase
     .from("property_requests")
     .select("*")

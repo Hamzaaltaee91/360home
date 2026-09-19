@@ -746,7 +746,7 @@ select:focus {
 .data-table tbody tr:hover { background: var(--surface-muted); }
 .data-table .btn { padding: .4em .9em; font-size: .8rem; }
 .data-table select { padding: .4em 2em .4em .7em; font-size: .8rem; min-width: 0; }
-.data-table .row-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.data-table .row-actions { display: flex; gap: .5rem; flex-wrap: nowrap; }
 
 .empty-state {
   text-align: center;

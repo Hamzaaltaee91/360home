@@ -58,7 +58,7 @@
 
   <script type="module">
     import { requireSession, mountProfileMenu, getCurrentUserRole, getRoleHomePath } from "./js/auth.js";
-    import { listMyRequests } from "./js/requests.js";
+    import { listMyRequests, updateRequest } from "./js/requests.js";
     import { subscribeToUnreadCount } from "./js/notifications.js";
     import { formatThousands } from "./js/numerals.js";
 
@@ -67,6 +67,7 @@
       commercial: "تجاري",
       land: "أرض",
     };
+    const STATUS_LABELS = { active: "نشط", inactive: "غير نشط", sold: "مباع", rented: "مؤجَّر" };
 
     await requireSession();
     const role = await getCurrentUserRole();
@@ -92,16 +93,17 @@
       document.getElementById("empty-msg").hidden = false;
     }
     for (const r of requests || []) {
-      const a = document.createElement("a");
-      a.href = `request.html?id=${encodeURIComponent(r.id)}`;
-      a.style.textDecoration = "none";
-      a.style.color = "inherit";
-
       const card = document.createElement("article");
       card.className = "card request-item";
 
+      const titleLink = document.createElement("a");
+      titleLink.href = `request.html?id=${encodeURIComponent(r.id)}`;
+      titleLink.style.textDecoration = "none";
+      titleLink.style.color = "inherit";
       const h3 = document.createElement("h3");
       h3.textContent = r.title;
+      titleLink.appendChild(h3);
+      card.appendChild(titleLink);
 
       const tags = document.createElement("ul");
       tags.className = "request-tags";
@@ -123,11 +125,35 @@
       budgetTag.textContent =
         r.max_price != null ? `${formatThousands(r.max_price)} د.ع` : "—";
 
-      tags.append(catTag, cityTag, purposeTag, budgetTag);
+      const statusTag = document.createElement("li");
+      statusTag.className = "tag";
+      statusTag.textContent = STATUS_LABELS[r.status] ?? r.status;
 
-      card.append(h3, tags);
-      a.appendChild(card);
-      list.appendChild(a);
+      tags.append(catTag, cityTag, purposeTag, budgetTag, statusTag);
+      card.appendChild(tags);
+
+      if (r.status === "inactive") {
+        const reactivateBtn = document.createElement("button");
+        reactivateBtn.type = "button";
+        reactivateBtn.className = "btn btn-ghost";
+        reactivateBtn.textContent = "تنشيط";
+        reactivateBtn.style.marginTop = ".5rem";
+        reactivateBtn.addEventListener("click", async () => {
+          reactivateBtn.disabled = true;
+          try {
+            await updateRequest(r.id, { status: "active" });
+            r.status = "active";
+            statusTag.textContent = STATUS_LABELS.active;
+            reactivateBtn.remove();
+          } catch (err) {
+            console.error(err);
+            reactivateBtn.disabled = false;
+          }
+        });
+        card.appendChild(reactivateBtn);
+      }
+
+      list.appendChild(card);
     }
 
     try {
